@@ -12,7 +12,7 @@ import {
 } from "@/lib/games/missing-word";
 import { normalizeWord } from "@/lib/games/words";
 import { cn } from "@/lib/utils";
-import { GameError, GameOver, GameTitle, GiveUp } from "./game-parts";
+import { ActionBar, countText, GameError, GameResult, GameTitle, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
@@ -21,6 +21,7 @@ const TILE: Record<TileColor, string> = {
   present: "border-amber-500 bg-amber-500 text-white",
   absent: "border-stone-400 bg-stone-400 text-white",
 };
+const DOT: Record<TileColor, string> = { correct: "bg-emerald-600", present: "bg-amber-500", absent: "bg-stone-400" };
 const RANK: Record<TileColor, number> = { absent: 0, present: 1, correct: 2 };
 
 export function MissingWordGame({
@@ -91,36 +92,81 @@ export function MissingWordGame({
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const won = game.status === "won";
   const hidden = new Set(puzzle.hidden);
+  const resultShown = useResultShown(game.playing, game.state.gaveUp, 1400);
+  const left = MISSING_WORD_GUESSES - guesses.length;
+
+  // The verse with the hidden word as empty slots, or (once over) marked in.
+  const verse = (over: boolean, won: boolean) =>
+    puzzle.tokens.map((t, i) => (
+      <span key={i}>
+        {t.pre}
+        {hidden.has(i) ? (
+          over ? (
+            <mark
+              className={cn(
+                "rounded px-1 font-medium",
+                won
+                  ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100"
+                  : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+              )}
+            >
+              {t.word}
+            </mark>
+          ) : (
+            <span className="mx-0.5 inline-flex translate-y-0.5 gap-0.5 align-baseline" aria-label="hidden word">
+              {Array.from({ length }, (_, k) => (
+                <span key={k} className="inline-block h-5 w-3.5 rounded-sm border-b-2 border-primary/60 bg-primary/10" />
+              ))}
+            </span>
+          )
+        ) : (
+          t.word
+        )}
+        {t.post}
+      </span>
+    ));
+
+  if (resultShown) {
+    const won = game.status === "won";
+    return (
+      <div className="flex flex-1 flex-col">
+        <GameTitle name="Missing Word" />
+        <GameResult
+          won={won}
+          headline={won ? "You found it" : "Not this time"}
+          result={won ? `${guesses.length} of ${MISSING_WORD_GUESSES} guesses` : `The word was “${puzzle.answer}”`}
+          next={next}
+        >
+          {scored.length > 0 && (
+            <div className="mb-4 flex flex-col items-center gap-1" aria-hidden>
+              {scored.map((row, r) => (
+                <div key={r} className="flex gap-1">
+                  {row.map((c, i) => (
+                    <span key={i} className={cn("size-4 rounded-[3px]", DOT[c])} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+          <VerseCard reference={puzzle.reference} translation={puzzle.translation}>
+            {verse(true, won)}
+          </VerseCard>
+        </GameResult>
+        <GameError message={game.error} saving={game.saving} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Missing Word" detail={`${puzzle.reference} · ${puzzle.translation}`} />
+      <GameTitle name="Missing Word" />
 
-      <p className="font-serif text-lg leading-relaxed">
-        {puzzle.tokens.map((t, i) => (
-          <span key={i}>
-            {t.pre}
-            {hidden.has(i) ? (
-              game.playing ? (
-                <span className="mx-0.5 inline-flex translate-y-0.5 gap-0.5 align-baseline" aria-label="hidden word">
-                  {Array.from({ length }, (_, k) => (
-                    <span key={k} className="inline-block h-5 w-3.5 rounded-sm border-b-2 border-primary/60 bg-primary/10" />
-                  ))}
-                </span>
-              ) : (
-                <mark className={cn("rounded px-0.5", won ? "bg-emerald-100 dark:bg-emerald-900/60" : "bg-amber-100 dark:bg-amber-900/60")}>{t.word}</mark>
-              )
-            ) : (
-              t.word
-            )}
-            {t.post}
-          </span>
-        ))}
-      </p>
+      <VerseCard reference={puzzle.reference} translation={puzzle.translation} className="p-4 [&>div]:text-base [&>div]:leading-relaxed">
+        {verse(!game.playing, game.status === "won")}
+      </VerseCard>
 
-      <div className="mx-auto mt-6 grid gap-1.5" style={{ gridTemplateRows: `repeat(${MISSING_WORD_GUESSES}, 1fr)` }}>
+      <div className="mx-auto mt-4 grid gap-1.5" style={{ gridTemplateRows: `repeat(${MISSING_WORD_GUESSES}, 1fr)` }}>
         {Array.from({ length: MISSING_WORD_GUESSES }, (_, r) => {
           const guess = guesses[r];
           const current = r === guesses.length && game.playing;
@@ -138,8 +184,14 @@ export function MissingWordGame({
                     key={c}
                     style={guess ? { animationDelay: `${c * 90}ms` } : undefined}
                     className={cn(
-                      "flex size-11 items-center justify-center rounded-md border-2 text-xl font-semibold uppercase sm:size-12",
-                      color ? cn(TILE[color], "animate-flip") : ch ? "animate-pop border-foreground/40" : "border-border",
+                      "flex size-[clamp(2rem,4.4dvh,3rem)] items-center justify-center rounded-lg border-2 text-lg font-semibold uppercase",
+                      color
+                        ? cn(TILE[color], "animate-flip")
+                        : ch
+                          ? "animate-pop border-foreground/40"
+                          : current
+                            ? "border-primary/30"
+                            : "border-border",
                     )}
                   >
                     {ch}
@@ -151,46 +203,33 @@ export function MissingWordGame({
         })}
       </div>
 
-      <p className="mt-3 min-h-5 text-center text-sm text-muted-foreground" aria-live="polite">
-        {message}
-      </p>
-
-      {game.playing ? (
-        <>
-          <div className="mt-2 flex flex-col gap-1.5 select-none" aria-label="Keyboard">
-            {ROWS.map((row, r) => (
-              <div key={row} className="flex justify-center gap-1">
-                {r === 2 && (
-                  <Key onPress={() => press("enter")} wide>
-                    Enter
-                  </Key>
-                )}
-                {[...row].map((k) => (
-                  <Key key={k} onPress={() => press(k)} color={keyColors.get(normalizeWord(k))}>
-                    {k}
-                  </Key>
-                ))}
-                {r === 2 && (
-                  <Key onPress={() => press("back")} wide label="Delete">
-                    <Delete className="size-5" aria-hidden />
-                  </Key>
-                )}
-              </div>
-            ))}
-          </div>
-          <GiveUp
-            onConfirm={() => void game.finish({ guesses, gaveUp: true })}
-          />
-        </>
-      ) : (
-        <GameOver
-          won={won}
-          headline={won ? "You found it" : "Not this time"}
-          result={won ? `${guesses.length} of ${MISSING_WORD_GUESSES} guesses` : `The word was “${puzzle.answer}”.`}
-          verses={[{ reference: puzzle.reference, translation: puzzle.translation, text: puzzle.tokens.map((t) => t.pre + t.word + t.post).join("") }]}
-          next={next}
-        />
-      )}
+      <ActionBar
+        left={<span aria-live="polite" className={cn(message && "font-medium text-foreground")}>{message ?? countText(left, "guess", "guesses") + " left"}</span>}
+        disabled={!game.playing}
+        onGiveUp={() => void game.finish({ guesses, gaveUp: true })}
+      >
+        <div className="flex flex-col gap-1.5 select-none" aria-label="Keyboard">
+          {ROWS.map((row, r) => (
+            <div key={row} className="flex justify-center gap-1">
+              {r === 2 && (
+                <Key onPress={() => press("enter")} wide>
+                  Enter
+                </Key>
+              )}
+              {[...row].map((k) => (
+                <Key key={k} onPress={() => press(k)} color={keyColors.get(normalizeWord(k))}>
+                  {k}
+                </Key>
+              ))}
+              {r === 2 && (
+                <Key onPress={() => press("back")} wide label="Delete">
+                  <Delete className="size-5" aria-hidden />
+                </Key>
+              )}
+            </div>
+          ))}
+        </div>
+      </ActionBar>
       <GameError message={game.error} saving={game.saving} />
     </div>
   );
@@ -215,7 +254,7 @@ function Key({
       onClick={onPress}
       aria-label={label}
       className={cn(
-        "flex h-12 items-center justify-center rounded-md text-sm font-semibold uppercase transition-colors active:scale-95",
+        "flex h-[clamp(2.5rem,5.2dvh,3rem)] items-center justify-center rounded-lg text-sm font-semibold uppercase transition-[background-color,scale] active:scale-95",
         wide ? "min-w-14 px-2 text-xs" : "w-[8.5%] min-w-7 max-w-10",
         color ? TILE[color] : "bg-muted text-foreground hover:bg-muted/70",
       )}

@@ -2,6 +2,15 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.10.0 — Games redesign
+
+- All eight games share one layout: the verse on a card, a segmented progress bar, and a sticky bottom bar with the controls, progress, mistakes and Give up.
+- Fill the Blanks plays one verse per round, each with its own word bank; a finished verse stays up a moment before the next slides in.
+- The result replaces the board instead of appearing below it: a headline, a summary that adds something (per-verse rows, the guess grid, the swapped words, the matched pairs, round-by-round answers), and Next / Play again / All games.
+- Play again after finishing, as practice: judged in the browser, saved nowhere, so today's result, the streak and review schedules keep the first play.
+- Reference guesses show as colored chips with arrows (no legend); Missing Word's grid and keyboard fit on a phone screen.
+- Fix: submitting a guess in Reference no longer brings up the loading overlay.
+
 ## 0.9.0 — Themes
 
 - goodthemes: fourteen themes from the Bible story (Eden to Zion) in Settings, next to Kept's own look. Each changes colors, type, texture and radius, animates the switch, and can play moving scenery.

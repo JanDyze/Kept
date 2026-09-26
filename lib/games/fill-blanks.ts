@@ -63,3 +63,27 @@ export function blankOrder(puzzle: FillBlanksPuzzle) {
 export function isRightWord(choice: string, answer: string) {
   return normalizeWord(choice) === normalizeWord(answer);
 }
+
+// Rounds: each verse is played on its own. The round is the verse of the next blank to fill
+// (the last verse once all are filled), so saved games resume in the right round.
+export function roundAt(puzzle: FillBlanksPuzzle, filled: number) {
+  const order = blankOrder(puzzle);
+  return order[Math.min(filled, order.length - 1)]?.verseIndex ?? 0;
+}
+
+// A round's word choices: its own answers plus the puzzle's decoys, in the bank's shuffled order.
+export function roundBank(puzzle: FillBlanksPuzzle, round: number) {
+  const order = blankOrder(puzzle);
+  const decoys = [...puzzle.bank];
+  for (const b of order) {
+    const at = decoys.findIndex((w) => isRightWord(w, b.answer));
+    if (at !== -1) decoys.splice(at, 1);
+  }
+  const wanted = [...order.filter((b) => b.verseIndex === round).map((b) => b.answer), ...decoys];
+  return puzzle.bank.filter((word) => {
+    const at = wanted.findIndex((w) => isRightWord(w, word));
+    if (at === -1) return false;
+    wanted.splice(at, 1);
+    return true;
+  });
+}

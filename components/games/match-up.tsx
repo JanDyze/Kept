@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { matchUpOutcome, type MatchUpPuzzle, type MatchUpState } from "@/lib/games/match-up";
 import { cn } from "@/lib/utils";
-import { GameError, GameOver, GameTitle, GiveUp } from "./game-parts";
+import { ActionBar, GameError, GameResult, GameTitle, mistakesText, Segments, useResultShown } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function MatchUpGame({
@@ -27,13 +27,16 @@ export function MatchUpGame({
   );
   const [picked, setPicked] = useState<number | null>(null); // selected reference (pair index)
   const [wrong, setWrong] = useState<{ index: number; n: number } | null>(null);
-  const { matched, mistakes } = game.state;
+  const { matched, mistakes, gaveUp } = game.state;
+  const total = puzzle.pairs.length;
+  const resultShown = useResultShown(game.playing, gaveUp);
 
   function chooseText(pairIndex: number) {
     if (!game.playing || picked === null || matched.includes(pairIndex)) return;
     if (pairIndex === picked) {
       const state = { ...game.state, matched: [...matched, pairIndex] };
       setPicked(null);
+      setWrong(null);
       if (matchUpOutcome(puzzle, state) === "playing") game.update(state);
       else void game.finish(state);
     } else {
@@ -42,82 +45,101 @@ export function MatchUpGame({
     }
   }
 
-  const won = game.status === "won";
+  if (resultShown) {
+    const won = game.status === "won";
+    return (
+      <div className="flex flex-1 flex-col">
+        <GameTitle name="Match Up" />
+        <GameResult
+          won={won}
+          headline={won ? (mistakes === 0 ? "Perfect" : "All matched") : "Here they are"}
+          result={won ? mistakesText(mistakes) : "Gave up"}
+          next={next}
+        >
+          <ul className="divide-y rounded-2xl border bg-card">
+            {puzzle.pairs.map((p, i) => (
+              <li key={p.verseId} className="px-4 py-3.5">
+                <p className="flex items-center gap-1.5 text-sm font-medium">
+                  {matched.includes(i) && <Check className="size-4 text-primary" strokeWidth={3} aria-hidden />}
+                  {p.reference}
+                  <span className="font-normal text-muted-foreground">· {p.translation}</span>
+                </p>
+                <p className="mt-1 font-serif text-[1.02rem] leading-relaxed text-muted-foreground">{p.snippet}</p>
+              </li>
+            ))}
+          </ul>
+        </GameResult>
+        <GameError message={game.error} saving={game.saving} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Match Up" detail={`${puzzle.pairs.length} verses`} />
+      <GameTitle name="Match Up" />
+      <Segments parts={puzzle.pairs.map((_, k) => (k < matched.length ? 1 : 0))} />
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="References">
-        {puzzle.pairs.map((p, i) => {
-          const done = matched.includes(i) || !game.playing;
-          return (
-            <button
-              key={p.verseId}
-              type="button"
-              disabled={done}
-              onClick={() => setPicked(picked === i ? null : i)}
-              aria-pressed={picked === i}
-              className={cn(
-                "h-10 rounded-full border px-4 text-sm font-medium transition-colors",
-                done
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-                  : picked === i
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-input bg-card hover:bg-muted",
-              )}
-            >
-              {p.reference}
-            </button>
-          );
-        })}
-      </div>
-
-      <p className="mt-4 min-h-5 text-sm text-muted-foreground">
-        {game.playing ? (picked === null ? "Pick a reference" : `Now tap the text for ${puzzle.pairs[picked].reference}`) : null}
-      </p>
-
-      <ul className="mt-2 flex flex-col gap-2.5">
+      <ul className="mt-4 flex flex-col gap-2.5">
         {puzzle.textOrder.map((pairIndex) => {
           const p = puzzle.pairs[pairIndex];
-          const done = matched.includes(pairIndex) || !game.playing;
+          const done = matched.includes(pairIndex);
           return (
             <li key={p.verseId}>
               <button
                 key={`${pairIndex}-${wrong?.index === pairIndex ? wrong.n : 0}`}
                 type="button"
-                disabled={done || picked === null}
+                disabled={done || picked === null || !game.playing}
                 onClick={() => chooseText(pairIndex)}
                 className={cn(
-                  "w-full rounded-2xl border bg-card p-4 text-left transition-colors",
-                  done && "border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/40",
-                  !done && picked !== null && "hover:border-primary/40 hover:bg-muted/40",
-                  wrong?.index === pairIndex && "animate-shake border-destructive/50",
+                  "w-full rounded-2xl border bg-card p-4 text-left transition-[border-color,background-color,opacity]",
+                  done
+                    ? "border-primary/40"
+                    : picked === null
+                      ? "opacity-70"
+                      : "border-primary/30 hover:border-primary/60 hover:bg-muted/40",
+                  wrong?.index === pairIndex && "animate-shake border-destructive/60",
                 )}
               >
                 {done && (
-                  <span className="mb-1 inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                    <Check className="size-3.5" aria-hidden /> {p.reference}
+                  <span className="animate-pop mb-1 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    <Check className="size-4" strokeWidth={3} aria-hidden /> {p.reference}
                   </span>
                 )}
-                <span className="block font-serif text-[1.05rem] leading-relaxed">{p.snippet}</span>
+                <span className={cn("block font-serif text-[1.05rem] leading-relaxed", done && "text-muted-foreground")}>
+                  {p.snippet}
+                </span>
               </button>
             </li>
           );
         })}
       </ul>
 
-      {game.playing ? (
-        <GiveUp onConfirm={() => void game.finish({ ...game.state, gaveUp: true })} />
-      ) : (
-        <GameOver
-          won={won}
-          headline={won ? (mistakes === 0 ? "Perfect" : "All matched") : "Here they are"}
-          result={won ? (mistakes === 0 ? "No mistakes" : `${mistakes} ${mistakes === 1 ? "mistake" : "mistakes"}`) : "Gave up"}
-          verses={[]}
-          next={next}
-        />
-      )}
+      <ActionBar
+        left={`${matched.length} of ${total}`}
+        right={mistakesText(mistakes)}
+        disabled={!game.playing}
+        onGiveUp={() => void game.finish({ ...game.state, gaveUp: true })}
+      >
+        <div className="flex flex-wrap gap-2" role="group" aria-label="References">
+          {puzzle.pairs.map((p, i) =>
+            matched.includes(i) ? null : (
+              <button
+                key={p.verseId}
+                type="button"
+                disabled={!game.playing}
+                onClick={() => setPicked(picked === i ? null : i)}
+                aria-pressed={picked === i}
+                className={cn(
+                  "h-11 rounded-xl border px-4 font-medium transition-[background-color,border-color,color,scale] active:scale-95",
+                  picked === i ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
+                )}
+              >
+                {p.reference}
+              </button>
+            ),
+          )}
+        </div>
+      </ActionBar>
       <GameError message={game.error} saving={game.saving} />
     </div>
   );

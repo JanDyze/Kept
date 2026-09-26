@@ -61,7 +61,10 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
       if (form.method.toLowerCase() !== "get") return;
       const target = new URL(form.action);
       target.search = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
-      start(target);
+      // Forms handled in place (a game's guess) cancel the submit after this capture listener runs.
+      setTimeout(() => {
+        if (!e.defaultPrevented) start(target);
+      });
     };
     document.addEventListener("click", onClick, true);
     document.addEventListener("submit", onSubmit, true);

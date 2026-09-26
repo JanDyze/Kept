@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ratingFromMistakes, schedule } from "@/lib/srs";
-import { blankOrder, buildFillBlanks, isRightWord } from "./fill-blanks";
+import { blankOrder, buildFillBlanks, isRightWord, roundAt, roundBank } from "./fill-blanks";
 import { buildMissingWord, missingWordOutcome, scoreGuess } from "./missing-word";
 import { seededRandom, shuffle } from "./random";
 import { isValidGuess, referenceHint, referenceOutcome } from "./reference-wordle";
@@ -125,6 +125,24 @@ describe("Fill the Blanks", () => {
     const order = blankOrder(p);
     expect(order[0].verseIndex).toBe(0);
     expect(order[order.length - 1].verseIndex).toBe(1);
+  });
+
+  it("plays one verse per round, each with its own answers plus the decoys", () => {
+    const p = buildFillBlanks([verse(JOHN_3_16), verse("The LORD is my shepherd; I shall not want.", "v2")], pool, seededRandom("fb3"));
+    const order = blankOrder(p);
+    const firstOfSecond = order.findIndex((b) => b.verseIndex === 1);
+    expect(roundAt(p, 0)).toBe(0);
+    expect(roundAt(p, firstOfSecond)).toBe(1);
+    expect(roundAt(p, order.length)).toBe(1); // finished: stays on the last verse
+
+    const decoys = p.bank.filter((w) => !order.some((b) => isRightWord(w, b.answer)));
+    for (const round of [0, 1]) {
+      const bank = roundBank(p, round);
+      const answers = order.filter((b) => b.verseIndex === round).map((b) => b.answer);
+      expect(bank.length).toBe(answers.length + decoys.length);
+      for (const a of answers) expect(bank).toContain(a);
+      for (const d of decoys) expect(bank).toContain(d);
+    }
   });
 
   it("matches words regardless of case and curly apostrophes", () => {

@@ -4,20 +4,19 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { BOOKS } from "@/lib/bible/books";
 import {
-  formatGuess,
   isValidGuess,
   REFERENCE_GUESSES,
   referenceHint,
   referenceOutcome,
   type Direction,
+  type ReferenceGuess,
   type ReferenceWordlePuzzle,
   type ReferenceWordleState,
 } from "@/lib/games/reference-wordle";
 import { cn } from "@/lib/utils";
-import { GameError, GameOver, GameTitle, GiveUp } from "./game-parts";
+import { ActionBar, countText, GameError, GameResult, GameTitle, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function ReferenceWordleGame({
@@ -41,14 +40,18 @@ export function ReferenceWordleGame({
   const [shake, setShake] = useState(0);
   const { guesses } = game.state;
   const selected = BOOKS[Number(book) - 1];
+  const resultShown = useResultShown(game.playing, game.state.gaveUp, 1100);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const guess = { bookNumber: Number(book), chapter: Number(chapter), verse: Number(verse) };
-    if (!selected || !chapter || !verse) return reject("Pick a book, chapter and verse.");
+    if (!selected || !chapter || !verse) return reject("Pick a book, chapter and verse");
     if (!isValidGuess(guess)) {
-      const max = guess.chapter > selected.verses.length ? `${selected.name} has ${selected.verses.length} chapters.` : `${selected.name} ${guess.chapter} has ${selected.verses[guess.chapter - 1]} verses.`;
-      return reject(max);
+      return reject(
+        guess.chapter > selected.verses.length
+          ? `${selected.name} has ${selected.verses.length} chapters`
+          : `${selected.name} ${guess.chapter} has ${selected.verses[guess.chapter - 1]} verses`,
+      );
     }
     setMessage(null);
     const state = { guesses: [...guesses, guess] };
@@ -64,143 +67,183 @@ export function ReferenceWordleGame({
     setShake((n) => n + 1);
   }
 
-  const won = game.status === "won";
+  if (resultShown) {
+    const won = game.status === "won";
+    return (
+      <div className="flex flex-1 flex-col">
+        <GameTitle name="Reference" />
+        <GameResult
+          won={won}
+          headline={won ? "Right on" : "Not this time"}
+          result={won ? `${guesses.length} of ${REFERENCE_GUESSES} guesses` : `It was ${puzzle.reference}`}
+          next={next}
+        >
+          <VerseCard reference={puzzle.reference} translation={puzzle.translation} className="[&>div]:text-lg [&>div]:leading-relaxed">
+            {puzzle.text}
+          </VerseCard>
+          {guesses.length > 0 && (
+            <ol className="mt-4 flex flex-col gap-1.5">
+              {guesses.map((g, i) => (
+                <GuessRow key={i} guess={g} puzzle={puzzle} />
+              ))}
+            </ol>
+          )}
+        </GameResult>
+        <GameError message={game.error} saving={game.saving} />
+      </div>
+    );
+  }
+
+  const chapters = selected?.verses.length;
+  const versesInChapter = selected && Number(chapter) >= 1 ? selected.verses[Number(chapter) - 1] : undefined;
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Reference" detail={`Where is this verse? · ${puzzle.translation}`} />
+      <GameTitle name="Reference" />
 
-      <blockquote className="rounded-2xl bg-muted/60 p-4 font-serif text-lg leading-relaxed">{puzzle.text}</blockquote>
+      <VerseCard reference={puzzle.translation} className="[&>div]:text-lg [&>div]:leading-relaxed">
+        {puzzle.text}
+      </VerseCard>
 
-      <ol className="mt-5 flex flex-col gap-2">
-        {guesses.map((g, i) => {
-          const hint = referenceHint(g, puzzle.answer);
-          return (
-            <li key={i} className="animate-rise flex items-center justify-between gap-2 rounded-xl border bg-card p-3">
-              <span className="min-w-0 truncate font-medium">{formatGuess(g)}</span>
-              <span className="flex shrink-0 gap-1.5">
-                <Hint label="Book" dir={hint.book} extra={hint.book !== "correct" ? (hint.near ? "close" : hint.sameTestament ? "same testament" : "other testament") : undefined} />
-                <Hint label="Ch" dir={hint.chapter} />
-                <Hint label="V" dir={hint.verse} />
-              </span>
-            </li>
-          );
-        })}
+      <ol className="mt-4 flex flex-col gap-1.5">
+        {Array.from({ length: REFERENCE_GUESSES }, (_, i) =>
+          guesses[i] ? (
+            <GuessRow key={i} guess={guesses[i]} puzzle={puzzle} />
+          ) : (
+            <li key={i} className={cn("h-11 rounded-xl border border-dashed", i === guesses.length ? "border-primary/40" : "border-border")} />
+          ),
+        )}
       </ol>
-      {guesses.length > 0 && game.playing && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          ↑ later book or higher number · ↓ earlier or lower · amber = within 3 books
-        </p>
-      )}
 
-      {game.playing ? (
-        <>
-          <form key={shake} onSubmit={submit} className={cn("mt-5 flex flex-col gap-3", shake > 0 && message && "animate-shake")}>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="book">Book</Label>
-              <select
-                id="book"
-                value={book}
-                onChange={(e) => setBook(e.target.value)}
-                className="h-11 rounded-lg border border-input bg-background px-3 text-base"
-              >
-                <option value="">Choose a book</option>
-                <optgroup label="Old Testament">
-                  {BOOKS.slice(0, 39).map((b) => (
-                    <option key={b.number} value={b.number}>
-                      {b.name}
-                      {b.tl !== b.name ? ` · ${b.tl}` : ""}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="New Testament">
-                  {BOOKS.slice(39).map((b) => (
-                    <option key={b.number} value={b.number}>
-                      {b.name}
-                      {b.tl !== b.name ? ` · ${b.tl}` : ""}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="chapter">Chapter</Label>
-                <Input
-                  id="chapter"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={chapter}
-                  onChange={(e) => setChapter(e.target.value.replace(/\D/g, ""))}
-                  placeholder={selected ? `1–${selected.verses.length}` : ""}
-                  className="h-11 text-base"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="verse">Verse</Label>
-                <Input
-                  id="verse"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={verse}
-                  onChange={(e) => setVerse(e.target.value.replace(/\D/g, ""))}
-                  placeholder={selected && Number(chapter) >= 1 && selected.verses[Number(chapter) - 1] ? `1–${selected.verses[Number(chapter) - 1]}` : ""}
-                  className="h-11 text-base"
-                />
-              </div>
-            </div>
-            <p className="min-h-5 text-sm text-muted-foreground" aria-live="polite">
-              {message ?? `${REFERENCE_GUESSES - guesses.length} ${REFERENCE_GUESSES - guesses.length === 1 ? "guess" : "guesses"} left`}
-            </p>
-            <Button type="submit" className="h-12 text-base">
+      <ActionBar
+        left={<span aria-live="polite" className={cn(message && "font-medium text-foreground")}>{message ?? `${countText(REFERENCE_GUESSES - guesses.length, "guess", "guesses")} left`}</span>}
+        disabled={!game.playing}
+        onGiveUp={() => void game.finish({ guesses, gaveUp: true })}
+      >
+        <form key={shake} onSubmit={submit} className={cn("flex flex-col gap-2", shake > 0 && message && "animate-shake")}>
+          <select
+            id="book"
+            aria-label="Book"
+            value={book}
+            disabled={!game.playing}
+            onChange={(e) => setBook(e.target.value)}
+            className={cn("h-11 rounded-xl border border-input bg-card px-3 text-base", !book && "text-muted-foreground")}
+          >
+            <option value="">Book</option>
+            <optgroup label="Old Testament">
+              {BOOKS.slice(0, 39).map((b) => (
+                <option key={b.number} value={b.number}>
+                  {b.name}
+                  {b.tl !== b.name ? ` · ${b.tl}` : ""}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="New Testament">
+              {BOOKS.slice(39).map((b) => (
+                <option key={b.number} value={b.number}>
+                  {b.name}
+                  {b.tl !== b.name ? ` · ${b.tl}` : ""}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+          <div className="flex gap-2">
+            <Input
+              id="chapter"
+              aria-label="Chapter"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={chapter}
+              disabled={!game.playing}
+              onChange={(e) => setChapter(e.target.value.replace(/\D/g, ""))}
+              placeholder={chapters ? `Ch. 1–${chapters}` : "Chapter"}
+              className="h-11 min-w-0 flex-1 rounded-xl bg-card text-base"
+            />
+            <Input
+              id="verse"
+              aria-label="Verse"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={verse}
+              disabled={!game.playing}
+              onChange={(e) => setVerse(e.target.value.replace(/\D/g, ""))}
+              placeholder={versesInChapter ? `V. 1–${versesInChapter}` : "Verse"}
+              className="h-11 min-w-0 flex-1 rounded-xl bg-card text-base"
+            />
+            <Button type="submit" disabled={!game.playing} className="h-11 rounded-xl px-5 text-base">
               Guess
             </Button>
-          </form>
-          <GiveUp onConfirm={() => void game.finish({ guesses, gaveUp: true })} />
-        </>
-      ) : (
-        <GameOver
-          won={won}
-          headline={won ? "Right on" : "Not this time"}
-          result={won ? `${guesses.length} of ${REFERENCE_GUESSES} guesses` : `It was ${puzzle.reference}.`}
-          verses={[{ reference: puzzle.reference, translation: puzzle.translation, text: puzzle.text }]}
-          next={next}
-        />
-      )}
+          </div>
+        </form>
+      </ActionBar>
       <GameError message={game.error} saving={game.saving} />
     </div>
   );
 }
 
-function Hint({ label, dir, extra }: { label: string; dir: Direction | null; extra?: string }) {
-  const text = dir === null ? "not yet" : dir === "correct" ? "right" : dir === "higher" ? "later" : "earlier";
+// A guess as three chips: green when right, arrows toward the answer (up = later / higher).
+// A book within three of the answer is amber.
+function GuessRow({ guess, puzzle }: { guess: ReferenceGuess; puzzle: ReferenceWordlePuzzle }) {
+  const hint = referenceHint(guess, puzzle.answer);
+  const bookTone = hint.book === "correct" ? "right" : hint.near ? "close" : "off";
+  return (
+    <li className="animate-rise flex gap-1.5">
+      <Chip
+        dir={hint.book}
+        tone={bookTone}
+        className="min-w-0 flex-1"
+        label={`Book ${BOOKS[guess.bookNumber - 1].name}${!hint.sameTestament ? ", other testament" : ""}`}
+      >
+        <span className="truncate">{BOOKS[guess.bookNumber - 1].name}</span>
+        {!hint.sameTestament && <span className="shrink-0 text-[0.65rem] font-normal opacity-80">other T.</span>}
+      </Chip>
+      <Chip dir={hint.chapter} tone={hint.chapter === "correct" ? "right" : "off"} className="w-16" label={`Chapter ${guess.chapter}`}>
+        {guess.chapter}
+      </Chip>
+      <Chip dir={hint.verse} tone={hint.verse === "correct" ? "right" : "off"} className="w-16" label={`Verse ${guess.verse}`}>
+        {guess.verse}
+      </Chip>
+    </li>
+  );
+}
+
+function Chip({
+  dir,
+  tone,
+  label,
+  className,
+  children,
+}: {
+  dir: Direction | null;
+  tone: "right" | "close" | "off";
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const said = dir === null ? "" : dir === "correct" ? ": right" : dir === "higher" ? ": later" : ": earlier";
   return (
     <span
-      title={extra}
-      aria-label={`${label}: ${text}${extra ? `, ${extra}` : ""}`}
+      aria-label={label + said}
       className={cn(
-        "flex h-9 min-w-12 flex-col items-center justify-center rounded-lg px-1.5 text-[0.65rem] font-medium leading-tight",
-        dir === "correct"
+        "flex h-11 items-center justify-center gap-1 rounded-xl px-2.5 text-sm font-semibold",
+        tone === "right"
           ? "bg-emerald-600 text-white"
-          : dir === null
-            ? "bg-muted text-muted-foreground"
-            : extra === "close"
-              ? "bg-amber-500 text-white"
-              : "bg-stone-400 text-white",
+          : tone === "close"
+            ? "bg-amber-500 text-white"
+            : dir === null
+              ? "bg-muted text-muted-foreground"
+              : "bg-stone-400 text-white dark:bg-stone-600",
+        className,
       )}
     >
-      <span className="flex items-center gap-0.5">
-        {label}
-        {dir === "correct" ? (
-          <Check className="size-3" aria-hidden />
-        ) : dir === "higher" ? (
-          <ArrowUp className="size-3" aria-hidden />
-        ) : dir === "lower" ? (
-          <ArrowDown className="size-3" aria-hidden />
-        ) : null}
-      </span>
-      {extra && extra !== "close" && <span className="opacity-90">{extra === "same testament" ? "same T." : "other T."}</span>}
-      {extra === "close" && <span>close</span>}
+      {children}
+      {dir === "correct" ? (
+        <Check className="size-3.5 shrink-0" strokeWidth={3} aria-hidden />
+      ) : dir === "higher" ? (
+        <ArrowUp className="size-3.5 shrink-0" strokeWidth={3} aria-hidden />
+      ) : dir === "lower" ? (
+        <ArrowDown className="size-3.5 shrink-0" strokeWidth={3} aria-hidden />
+      ) : null}
     </span>
   );
 }

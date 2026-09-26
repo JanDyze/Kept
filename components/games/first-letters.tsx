@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { hint, sameWord, type FirstLettersPuzzle, type FirstLettersState } from "@/lib/games/first-letters";
 import { cn } from "@/lib/utils";
-import { GameError, GameOver, GameTitle, GiveUp } from "./game-parts";
+import { ActionBar, DoneBadge, GameError, GameResult, GameTitle, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function FirstLettersGame({
@@ -26,9 +26,10 @@ export function FirstLettersGame({
   );
   const [value, setValue] = useState("");
   const [shake, setShake] = useState(0);
-  const { typed, mistakes } = game.state;
+  const { typed, mistakes, gaveUp } = game.state;
   const total = puzzle.tokens.length;
   const current = puzzle.tokens[typed];
+  const resultShown = useResultShown(game.playing, gaveUp);
 
   function advance(extraMistake: boolean) {
     const state = { ...game.state, typed: typed + 1, mistakes: mistakes + (extraMistake ? 1 : 0) };
@@ -50,23 +51,49 @@ export function FirstLettersGame({
     setValue(next.replace(/^\s+/, ""));
   }
 
-  const won = game.status === "won";
+  const fullText = puzzle.tokens.map((t) => t.pre + t.word + t.post).join("");
+
+  if (resultShown) {
+    const won = game.status === "won";
+    return (
+      <div className="flex flex-1 flex-col">
+        <GameTitle name="First Letters" />
+        <GameResult
+          won={won}
+          headline={won ? (mistakes === 0 ? "Perfect" : "All typed") : "Here's the verse"}
+          result={won ? mistakesText(mistakes) : "Gave up"}
+          next={next}
+        >
+          <VerseCard reference={puzzle.reference} translation={puzzle.translation}>
+            {fullText}
+          </VerseCard>
+        </GameResult>
+        <GameError message={game.error} saving={game.saving} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="First Letters" detail={`${puzzle.reference} · ${puzzle.translation}`} />
+      <GameTitle name="First Letters" />
+      <Segments parts={[typed / total]} />
 
-      <p className="font-serif text-xl leading-loose">
+      <VerseCard
+        reference={puzzle.reference}
+        translation={puzzle.translation}
+        className="mt-4"
+        aside={typed === total && <DoneBadge />}
+      >
         {puzzle.tokens.map((t, i) => (
           <span key={i}>
             {t.pre}
-            {i < typed || !game.playing ? (
-              <span className={cn(i < typed ? "text-foreground" : "text-amber-700 dark:text-amber-300")}>{t.word}</span>
+            {i < typed ? (
+              <span className="animate-pop inline-block">{t.word}</span>
             ) : (
               <span
                 className={cn(
                   "rounded px-0.5 tracking-wider",
-                  i === typed ? "bg-primary/10 font-semibold text-primary ring-1 ring-primary/30" : "text-muted-foreground",
+                  i === typed ? "bg-primary/10 font-semibold text-primary ring-1 ring-primary/30" : "text-muted-foreground/70",
                 )}
               >
                 {hint(t.word)}
@@ -75,61 +102,49 @@ export function FirstLettersGame({
             {t.post}
           </span>
         ))}
-      </p>
+      </VerseCard>
 
-      {game.playing ? (
-        <>
-          <div className="sticky bottom-0 -mx-4 mt-6 border-t bg-background/90 px-4 pb-4 pt-3 backdrop-blur-md">
-            <p className="mb-2 flex justify-between text-sm text-muted-foreground">
-              <span>
-                {typed} of {total}
-              </span>
-              <span>{mistakes === 0 ? "No mistakes" : `${mistakes} ${mistakes === 1 ? "mistake" : "mistakes"}`}</span>
-            </p>
-            <div className="flex gap-2">
-              <input
-                key={shake}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onChange(`${value} `);
-                  }
-                }}
-                autoFocus
-                autoCapitalize="none"
-                autoCorrect="off"
-                autoComplete="off"
-                spellCheck={false}
-                enterKeyHint="next"
-                aria-label={`Type the word starting with ${current?.word.charAt(0) ?? ""}`}
-                placeholder={current ? `${current.word.charAt(0)}…` : ""}
-                className={cn(
-                  "h-12 min-w-0 flex-1 rounded-xl border border-input bg-card px-4 font-serif text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40",
-                  shake > 0 && "animate-shake",
-                )}
-              />
-              <button
-                type="button"
-                onClick={() => advance(true)}
-                className="h-12 shrink-0 rounded-xl border px-3 text-sm text-muted-foreground hover:bg-muted"
-              >
-                Show word
-              </button>
-            </div>
-          </div>
-          <GiveUp onConfirm={() => void game.finish({ ...game.state, gaveUp: true })} />
-        </>
-      ) : (
-        <GameOver
-          won={won}
-          headline={won ? (mistakes === 0 ? "Perfect" : "All typed") : "Here's the verse"}
-          result={won ? (mistakes === 0 ? "No mistakes" : `${mistakes} ${mistakes === 1 ? "mistake" : "mistakes"}`) : "Gave up"}
-          verses={[{ reference: puzzle.reference, translation: puzzle.translation, text: puzzle.tokens.map((t) => t.pre + t.word + t.post).join("") }]}
-          next={next}
-        />
-      )}
+      <ActionBar
+        left={`${typed} of ${total}`}
+        right={mistakesText(mistakes)}
+        disabled={!game.playing}
+        onGiveUp={() => void game.finish({ ...game.state, gaveUp: true })}
+      >
+        <div className="flex gap-2">
+          <input
+            key={shake}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                onChange(`${value} `);
+              }
+            }}
+            disabled={!game.playing}
+            autoFocus
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
+            aria-label={`Type the word starting with ${current?.word.charAt(0) ?? ""}`}
+            placeholder={current ? `${current.word.charAt(0)}…` : ""}
+            className={cn(
+              "h-12 min-w-0 flex-1 rounded-xl border border-input bg-card px-4 font-serif text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40",
+              shake > 0 && "animate-shake border-destructive/50",
+            )}
+          />
+          <button
+            type="button"
+            disabled={!game.playing}
+            onClick={() => advance(true)}
+            className="h-12 shrink-0 rounded-xl border px-3.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            Show word
+          </button>
+        </div>
+      </ActionBar>
       <GameError message={game.error} saving={game.saving} />
     </div>
   );
