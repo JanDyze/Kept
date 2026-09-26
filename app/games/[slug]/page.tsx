@@ -6,6 +6,7 @@ import { FirstLettersGame } from "@/components/games/first-letters";
 import { MatchUpGame } from "@/components/games/match-up";
 import { MissingWordGame } from "@/components/games/missing-word";
 import { ReferenceWordleGame } from "@/components/games/reference-wordle";
+import { Replayable } from "@/components/games/replay";
 import { SpotChangeGame } from "@/components/games/spot-change";
 import { TwoTonguesGame } from "@/components/games/two-tongues";
 import { UnscrambleGame } from "@/components/games/unscramble";
@@ -13,6 +14,7 @@ import { Screen } from "@/components/screen";
 import { buttonVariants } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { wordsOfLength } from "@/lib/bible/vocab";
+import type { DailyGame } from "@/lib/db/schema";
 import { today } from "@/lib/day";
 import type { FillBlanksPuzzle, FillBlanksState } from "@/lib/games/fill-blanks";
 import { getOrCreateDay } from "@/lib/games/daily";
@@ -60,46 +62,50 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
     (g) => g.status === "in_progress",
   );
   const next = after ? { href: `/games/${gameById(after.game).slug}`, name: gameById(after.game).name } : undefined;
-  const common = { id: game.id, initialStatus: game.status, next };
-
-  let body: React.ReactNode;
-  switch (game.game) {
-    case "missing_word": {
-      const puzzle = game.puzzle as MissingWordPuzzle;
-      const dictionary = await wordsOfLength(puzzle.translation, puzzle.answer.length, puzzle.answer);
-      body = (
-        <MissingWordGame {...common} puzzle={puzzle} initialState={game.state as MissingWordState} dictionary={dictionary} />
-      );
-      break;
-    }
-    case "reference_wordle":
-      body = (
-        <ReferenceWordleGame
-          {...common}
-          puzzle={game.puzzle as ReferenceWordlePuzzle}
-          initialState={game.state as ReferenceWordleState}
-        />
-      );
-      break;
-    case "fill_blanks":
-      body = <FillBlanksGame {...common} puzzle={game.puzzle as FillBlanksPuzzle} initialState={game.state as FillBlanksState} />;
-      break;
-    case "unscramble":
-      body = <UnscrambleGame {...common} puzzle={game.puzzle as UnscramblePuzzle} initialState={game.state as UnscrambleState} />;
-      break;
-    case "first_letters":
-      body = <FirstLettersGame {...common} puzzle={game.puzzle as FirstLettersPuzzle} initialState={game.state as FirstLettersState} />;
-      break;
-    case "spot_change":
-      body = <SpotChangeGame {...common} puzzle={game.puzzle as SpotChangePuzzle} initialState={game.state as SpotChangeState} />;
-      break;
-    case "match_up":
-      body = <MatchUpGame {...common} puzzle={game.puzzle as MatchUpPuzzle} initialState={game.state as MatchUpState} />;
-      break;
-    case "two_tongues":
-      body = <TwoTonguesGame {...common} puzzle={game.puzzle as TwoTonguesPuzzle} initialState={game.state as TwoTonguesState} />;
-      break;
+  let dictionary: string[] = [];
+  if (game.game === "missing_word") {
+    const { translation, answer } = game.puzzle as MissingWordPuzzle;
+    dictionary = await wordsOfLength(translation, answer.length, answer);
   }
 
-  return <Screen back={{ href: "/games", label: "Games" }}>{body}</Screen>;
+  // The game from a given state: today's (saved) one, and a blank one for practice replays.
+  const render = (state: unknown, status: DailyGame["status"]): React.ReactElement => {
+    const common = { id: game.id, initialStatus: status, next };
+    const puzzle = game.puzzle;
+    switch (game.game) {
+      case "missing_word":
+        return (
+          <MissingWordGame
+            {...common}
+            puzzle={puzzle as MissingWordPuzzle}
+            initialState={state as MissingWordState}
+            dictionary={dictionary}
+          />
+        );
+      case "reference_wordle":
+        return (
+          <ReferenceWordleGame {...common} puzzle={puzzle as ReferenceWordlePuzzle} initialState={state as ReferenceWordleState} />
+        );
+      case "fill_blanks":
+        return <FillBlanksGame {...common} puzzle={puzzle as FillBlanksPuzzle} initialState={state as FillBlanksState} />;
+      case "unscramble":
+        return <UnscrambleGame {...common} puzzle={puzzle as UnscramblePuzzle} initialState={state as UnscrambleState} />;
+      case "first_letters":
+        return <FirstLettersGame {...common} puzzle={puzzle as FirstLettersPuzzle} initialState={state as FirstLettersState} />;
+      case "spot_change":
+        return <SpotChangeGame {...common} puzzle={puzzle as SpotChangePuzzle} initialState={state as SpotChangeState} />;
+      case "match_up":
+        return <MatchUpGame {...common} puzzle={puzzle as MatchUpPuzzle} initialState={state as MatchUpState} />;
+      case "two_tongues":
+        return <TwoTonguesGame {...common} puzzle={puzzle as TwoTonguesPuzzle} initialState={state as TwoTonguesState} />;
+    }
+  };
+
+  return (
+    <Screen back={{ href: "/games", label: "Games" }}>
+      <Replayable game={game.game} puzzle={game.puzzle} fresh={render({}, "in_progress")}>
+        {render(game.state, game.status)}
+      </Replayable>
+    </Screen>
+  );
 }

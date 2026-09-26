@@ -3,13 +3,9 @@ import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { dailyGames, reviews, verses, type DailyGame } from "@/lib/db/schema";
-import { blankOrder, type FillBlanksPuzzle } from "@/lib/games/fill-blanks";
-import { missingWordOutcome, type MissingWordPuzzle, type MissingWordState } from "@/lib/games/missing-word";
-import { referenceOutcome, type ReferenceWordlePuzzle } from "@/lib/games/reference-wordle";
-import type { FirstLettersPuzzle, FirstLettersState } from "@/lib/games/first-letters";
-import { matchUpOutcome, type MatchUpPuzzle, type MatchUpState } from "@/lib/games/match-up";
-import { spotOutcome, type SpotChangePuzzle, type SpotChangeState } from "@/lib/games/spot-change";
-import { twoTonguesOutcome, type TwoTonguesPuzzle, type TwoTonguesState } from "@/lib/games/two-tongues";
+import { blankOrder, type FillBlanksPuzzle, type FillBlanksState } from "@/lib/games/fill-blanks";
+import type { FirstLettersPuzzle } from "@/lib/games/first-letters";
+import { gameOutcome } from "@/lib/games/outcome";
 import type { UnscramblePuzzle } from "@/lib/games/unscramble";
 import { ratingFromMistakes, schedule, type ReviewRating } from "@/lib/srs";
 
@@ -53,60 +49,32 @@ export async function saveProgress(userId: string, id: string, state: unknown) {
 type Finish = { status: "won" | "lost"; ratings: { verseId: string; rating: ReviewRating }[] };
 
 function judge(game: DailyGame, state: unknown): Finish | null {
+  const status = gameOutcome(game.game, game.puzzle, state);
+  if (!status) return null;
+  const gaveUp = Boolean((state as { gaveUp?: boolean }).gaveUp);
   switch (game.game) {
-    case "missing_word": {
-      const outcome = missingWordOutcome(game.puzzle as MissingWordPuzzle, state as MissingWordState);
-      return outcome === "playing" ? null : { status: outcome, ratings: [] };
-    }
-    case "reference_wordle": {
-      const outcome = referenceOutcome(game.puzzle as ReferenceWordlePuzzle, state as never);
-      return outcome === "playing" ? null : { status: outcome, ratings: [] };
-    }
     case "fill_blanks": {
       const puzzle = game.puzzle as FillBlanksPuzzle;
-      const s = state as { filled: number; mistakes: number[]; gaveUp?: boolean };
+      const s = state as FillBlanksState;
       const order = blankOrder(puzzle);
-      if (!s.gaveUp && s.filled < order.length) return null;
       return {
-        status: s.gaveUp ? "lost" : "won",
+        status,
         ratings: puzzle.verses.map((v, i) => {
           // A verse finished before giving up is still rated on its mistakes.
           const lastBlank = order.findLastIndex((b) => b.verseIndex === i);
-          const unfinished = Boolean(s.gaveUp) && s.filled <= lastBlank;
+          const unfinished = gaveUp && s.filled <= lastBlank;
           return { verseId: v.verseId, rating: ratingFromMistakes(s.mistakes[i] ?? 0, unfinished) };
         }),
       };
     }
-    case "unscramble": {
-      const puzzle = game.puzzle as UnscramblePuzzle;
-      const s = state as { used: number[]; mistakes: number; gaveUp?: boolean };
-      if (!s.gaveUp && s.used.length < puzzle.chunks.length) return null;
-      return {
-        status: s.gaveUp ? "lost" : "won",
-        ratings: [{ verseId: puzzle.verseId, rating: ratingFromMistakes(s.mistakes, Boolean(s.gaveUp)) }],
-      };
-    }
+    case "unscramble":
     case "first_letters": {
-      const puzzle = game.puzzle as FirstLettersPuzzle;
-      const s = state as FirstLettersState;
-      if (!s.gaveUp && s.typed < puzzle.tokens.length) return null;
-      return {
-        status: s.gaveUp ? "lost" : "won",
-        ratings: [{ verseId: puzzle.verseId, rating: ratingFromMistakes(s.mistakes, Boolean(s.gaveUp)) }],
-      };
+      const puzzle = game.puzzle as UnscramblePuzzle | FirstLettersPuzzle;
+      const { mistakes } = state as { mistakes: number };
+      return { status, ratings: [{ verseId: puzzle.verseId, rating: ratingFromMistakes(mistakes, gaveUp) }] };
     }
-    case "spot_change": {
-      const outcome = spotOutcome(game.puzzle as SpotChangePuzzle, state as SpotChangeState);
-      return outcome === "playing" ? null : { status: outcome, ratings: [] };
-    }
-    case "match_up": {
-      const outcome = matchUpOutcome(game.puzzle as MatchUpPuzzle, state as MatchUpState);
-      return outcome === "playing" ? null : { status: outcome, ratings: [] };
-    }
-    case "two_tongues": {
-      const outcome = twoTonguesOutcome(game.puzzle as TwoTonguesPuzzle, state as TwoTonguesState);
-      return outcome === "playing" ? null : { status: outcome, ratings: [] };
-    }
+    default:
+      return { status, ratings: [] };
   }
 }
 

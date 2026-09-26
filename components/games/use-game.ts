@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { finishGame, saveGameState } from "@/app/games/actions";
 import type { DailyGame } from "@/lib/db/schema";
+import { useReplay } from "./replay";
 
 export type GameStatus = DailyGame["status"];
 
@@ -15,14 +16,22 @@ export function useGame<S>(id: string, initialState: S, initialStatus: GameStatu
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const finishing = useRef(false);
+  const replay = useReplay();
+  const practice = Boolean(replay?.practice);
 
   function update(next: S) {
     setState(next);
+    if (practice) return;
     void saveGameState(id, next).catch(() => setError("Couldn't save your progress. Check your connection."));
   }
 
   async function finish(next: S) {
     setState(next);
+    if (practice) {
+      const outcome = replay?.judge(next);
+      if (outcome) setStatus(outcome);
+      return;
+    }
     if (finishing.current) return;
     finishing.current = true;
     setSaving(true);
@@ -40,5 +49,5 @@ export function useGame<S>(id: string, initialState: S, initialStatus: GameStatu
     }
   }
 
-  return { state, status, update, finish, error, saving, playing: status === "in_progress" };
+  return { state, status, update, finish, error, saving, practice, playing: status === "in_progress" };
 }

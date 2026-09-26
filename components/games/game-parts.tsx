@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Loader2, PartyPopper } from "lucide-react";
+import { ChevronRight, Loader2, PartyPopper, RotateCcw } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useReplay } from "./replay";
 
 export function GameTitle({ name, detail }: { name: string; detail?: string }) {
   return (
@@ -46,6 +47,7 @@ export function GameOver({
   note?: string;
   next?: { href: string; name: string };
 }) {
+  const replay = useReplay();
   return (
     <section className="animate-rise mt-6 rounded-2xl border bg-card p-5" aria-live="polite">
       <div className="flex items-center gap-3">
@@ -83,18 +85,29 @@ export function GameOver({
         >
           All games
         </Link>
+        {replay && (
+          <button
+            type="button"
+            onClick={replay.replay}
+            className={cn(buttonVariants({ variant: "ghost" }), "h-11 gap-1.5 px-4 text-base")}
+          >
+            <RotateCcw className="size-4" aria-hidden /> Play again
+          </button>
+        )}
       </div>
     </section>
   );
 }
 
 export function GiveUp({ onConfirm, disabled }: { onConfirm: () => void; disabled?: boolean }) {
+  const practice = useReplay()?.practice;
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={() => {
-        if (window.confirm("Give up and see the answer? This counts as today's result.")) onConfirm();
+        const question = practice ? "Give up and see the answer?" : "Give up and see the answer? This counts as today's result.";
+        if (window.confirm(question)) onConfirm();
       }}
       className="mt-8 self-center py-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
     >
