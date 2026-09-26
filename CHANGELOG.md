@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.8.0 — Home
+
+- Today card with progress and streak (opens Progress), cards for Games, My verses, Bible and Settings, and Discover; fits within 80% of the screen.
+- Icons drawn from the Kept icon sheet (`brand/KeptIcons.png`).
+- README.
+
 ## 0.7.0 — Progress
 
 - Current and best streak, games played, a 12-week calendar, per-game results, verse counts, and most-missed and strongest verses.

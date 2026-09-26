@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kept
 
-## Getting Started
+A personal Bible verse memorization app: save verses, play daily games built from them, and let a spaced-repetition schedule decide which verses come back when. Claude can read and update them over MCP.
 
-First, run the development server:
+## What's in it
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Home**: today's games progress and streak, plus cards for Games, My verses, Bible and Settings.
+- **Games** (`/games`): four daily puzzles from your own verses, each playable once a day.
+  - *Fill the Blanks* and *Unscramble* are recall games: finishing one rates each verse (0 mistakes = Good, 1–2 = Hard, 3+ or give up = Again) and moves its ts-fsrs review schedule.
+  - *Missing Word* (Wordle) and *Reference* (guess book, chapter, verse) are for fun and don't touch the schedule.
+  - Puzzles are built and saved the first time a day is opened (`daily_games`), so they stay the same across devices. The day follows the phone's time zone.
+- **My verses** (`/verses`): Bible-order list, tag filter, archive. ESV and MBBTAG text is locked to your imported copy.
+- **Bible** (`/bible`): read any chapter in ESV or MBBTAG, tap verses, and keep them.
+- **Find verses** (`/search`): search a topic, feeling or occasion ("depression", "birthdays", "mothers"), in English or common Tagalog words ("kaarawan", "nanay"), plus exact wording. Topics come from the [OpenBible.info Topical Bible](https://www.openbible.info/topics/) (CC BY 4.0); load them once with `npm run topics:import`.
+
+Next.js (App Router) · Supabase (Postgres + Auth) · Drizzle · Tailwind + shadcn/ui · ts-fsrs · Vercel
+
+## Setup
+
+### 1. Supabase project
+
+1. Create a project at [supabase.com](https://supabase.com) (free tier).
+2. **Authentication → Sign In / Providers → Email**: keep "Enable email provider" on, turn on "Require current password when updating", and set the minimum password length to 12 or more.
+3. **Authentication → Sign In / Providers → User Signups**: turn **off** "Allow new users to sign up".
+4. **Authentication → Users → Add user → Create new user**: add your email and password and tick **Auto Confirm User**. This is the only account.
+
+### 2. Environment
+
+```sh
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Where to find it |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API Keys → Publishable key |
+| `DATABASE_URL` | Connect → Transaction pooler (port 6543) |
+| `DIRECT_URL` | Connect → Session pooler (port 5432) |
+| `CRON_SECRET` | Any long random string |
+| `MCP_TOKEN` | Any long random string (used from Day 5) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Generate random strings with `node -e "console.log(crypto.randomBytes(32).toString('base64url'))"`.
 
-## Learn More
+### 3. Database
 
-To learn more about Next.js, take a look at the following resources:
+```sh
+npm run db:migrate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This creates the `verses`, `reviews` and `bible_verses` tables with row level security on and no policies. The app reaches them through Drizzle, and Supabase's public API can't.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Bible text (for auto-fill)
 
-## Deploy on Vercel
+```sh
+npm run bible:import
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Loads the local `ESV/` and `MBBTAG/` copies into `bible_verses` so the add-verse form can fill in text. Safe to re-run. Where MBBTAG prints several verses as one, a lookup widens the reference to the whole passage. Verses ESV leaves out (like Acts 8:37) are reported as missing.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Run
+
+```sh
+npm run dev
+```
+
+Open http://localhost:3000 and sign in.
+
+## Scripts
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run typecheck` | TypeScript check |
+| `npm run lint` | ESLint |
+| `npm run db:generate` | Create a migration after editing `lib/db/schema.ts` |
+| `npm run db:migrate` | Apply migrations |
+| `npm run db:studio` | Browse the database |
+| `npm run bible:import` | Load ESV and MBBTAG text for auto-fill |
+| `npm run topics:import` | Load the OpenBible topic data for search (re-run to refresh) |
+| `npm test` | Unit tests for game rules and scheduling (Vitest) |
+
+Adding a game: write its rules in `lib/games/<game>.ts` (pure and tested), a screen in `components/games/`, its puzzle builder in `lib/games/daily.ts`, and a line in `lib/games/registry.ts`.
+
+## Deploy (Vercel)
+
+1. Push to a **private** GitHub repo and import it in Vercel.
+2. Add the same environment variables in Vercel → Settings → Environment Variables.
+3. `vercel.json` schedules `/api/cron/keepalive` daily so the free Supabase project isn't paused, and pins functions to `bom1` (Mumbai), next to the Supabase database, since every page makes database round trips.
+
+## Access rules
+
+- Every page needs a session except `/login`, `/api/mcp` and `/api/cron/*`.
+- `proxy.ts` redirects signed-out visitors early. Pages and server actions check again with `requireUser()` from `lib/auth.ts`, and every query filters by that user's id.
+- `/api/cron/*` requires `Authorization: Bearer $CRON_SECRET`. `/api/mcp` will require `Authorization: Bearer $MCP_TOKEN`.
+
+## Bible text
+
+`ESV/` and `MBBTAG/` hold personal copies of copyrighted translations. They're gitignored and must never be committed or published.
