@@ -12,7 +12,7 @@ A personal Bible verse memorization app: save verses, play daily games built fro
 - **My verses** (`/verses`): Bible-order list, tag filter, archive. ESV and MBBTAG text is locked to your imported copy.
 - **Bible** (`/bible`): read any chapter in ESV or MBBTAG, tap verses, and keep them.
 - **Find verses** (`/search`): search a topic, feeling or occasion ("depression", "birthdays", "mothers"), in English or common Tagalog words ("kaarawan", "nanay"), plus exact wording. Topics come from the [OpenBible.info Topical Bible](https://www.openbible.info/topics/) (CC BY 4.0); load them once with `npm run topics:import`.
-- **Themes** (Settings): Kept's own navy look, or one of the [goodthemes](../goodthemes) themes (Eden, Exile, Deluge, ... Zion), each with its own colors, type, texture, switch animation and optional moving scenery. The choice is saved on the device.
+- **Themes** (Settings): Kept's own navy look, or one of the [goodthemes](../goodthemes) themes (First Garden, Exile, Great Flood, ... Pearl Gates), each with its own colors, type, texture, switch animation and optional moving scenery. The choice is saved on the device.
 
 Next.js (App Router) · Supabase (Postgres + Auth) · Drizzle · Tailwind + shadcn/ui · ts-fsrs · Vercel
 

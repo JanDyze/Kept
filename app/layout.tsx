@@ -6,7 +6,7 @@ import { AppFeel } from "@/components/app-feel";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TimezoneSync } from "@/components/timezone-sync";
-import { THEME_OPTIONS } from "@/lib/theme";
+import { THEME_MIGRATION, THEME_OPTIONS } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${scripture.variable} ${brand.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_MIGRATION }} />
         <ThemeScript {...THEME_OPTIONS} />
       </head>
       <body className="flex min-h-full flex-col">

@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.10.1 — goodthemes 0.2
+
+- goodthemes 0.2.0: nine themes renamed away from proper names (Eden is now First Garden, Zion is Pearl Gates, and so on), Shepherd's light mode is meadow green, and updated sigils.
+- A theme saved under its old name carries over to the new one.
+
 ## 0.10.0 — Games redesign
 
 - All eight games share one layout: the verse on a card, a segmented progress bar, and a sticky bottom bar with the controls, progress, mistakes and Give up.
