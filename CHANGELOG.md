@@ -2,6 +2,13 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.9.0 — Themes
+
+- goodthemes: fourteen themes from the Bible story (Eden to Zion) in Settings, next to Kept's own look. Each changes colors, type, texture and radius, animates the switch, and can play moving scenery.
+- The today card, icons, headings and verse text follow the theme; the phone's status bar takes its background.
+- Light / dark / system now comes from goodthemes (replaces next-themes).
+- goodthemes is vendored as `vendor/goodthemes.tgz` so it builds on Vercel; `npm run themes:update` refreshes it.
+
 ## 0.8.0 — Home
 
 - Today card with progress and streak (opens Progress), cards for Games, My verses, Bible and Settings, and Discover; fits within 80% of the screen.

@@ -12,6 +12,7 @@ A personal Bible verse memorization app: save verses, play daily games built fro
 - **My verses** (`/verses`): Bible-order list, tag filter, archive. ESV and MBBTAG text is locked to your imported copy.
 - **Bible** (`/bible`): read any chapter in ESV or MBBTAG, tap verses, and keep them.
 - **Find verses** (`/search`): search a topic, feeling or occasion ("depression", "birthdays", "mothers"), in English or common Tagalog words ("kaarawan", "nanay"), plus exact wording. Topics come from the [OpenBible.info Topical Bible](https://www.openbible.info/topics/) (CC BY 4.0); load them once with `npm run topics:import`.
+- **Themes** (Settings): Kept's own navy look, or one of the [goodthemes](../goodthemes) themes (Eden, Exile, Deluge, ... Zion), each with its own colors, type, texture, switch animation and optional moving scenery. The choice is saved on the device.
 
 Next.js (App Router) · Supabase (Postgres + Auth) · Drizzle · Tailwind + shadcn/ui · ts-fsrs · Vercel
 
@@ -80,6 +81,7 @@ Open http://localhost:3000 and sign in.
 | `npm run db:studio` | Browse the database |
 | `npm run bible:import` | Load ESV and MBBTAG text for auto-fill |
 | `npm run topics:import` | Load the OpenBible topic data for search (re-run to refresh) |
+| `npm run themes:update` | Rebuild `../goodthemes` and reinstall it from `vendor/goodthemes.tgz` |
 | `npm test` | Unit tests for game rules and scheduling (Vitest) |
 
 Adding a game: write its rules in `lib/games/<game>.ts` (pure and tested), a screen in `components/games/`, its puzzle builder in `lib/games/daily.ts`, and a line in `lib/games/registry.ts`.

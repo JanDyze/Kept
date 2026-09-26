@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
+import { ThemeScript } from "goodthemes/script";
 import { AppFeel } from "@/components/app-feel";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TimezoneSync } from "@/components/timezone-sync";
+import { THEME_OPTIONS } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +47,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${scripture.variable} ${brand.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <ThemeScript {...THEME_OPTIONS} />
+      </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <TimezoneSync />

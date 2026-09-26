@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "goodthemes/styles.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -25,8 +26,9 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  --font-serif: var(--font-scripture);
-  --font-brand: var(--font-brand);
+  /* A goodthemes theme brings its own serif and display faces; otherwise Kept's. */
+  --font-serif: var(--gt-font-serif, var(--font-scripture));
+  --font-brand: var(--gt-font-display, var(--font-brand));
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-icon-ink: var(--icon-ink);
@@ -153,6 +155,23 @@
   --sidebar-accent-foreground: oklch(0.96 0.006 250);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.7 0.06 240);
+}
+
+/* Under a goodthemes theme, Kept's own tokens take the theme's colors: the today card in its
+   primary, the icons in its primary and second chart color on a primary-tinted tile. */
+:is(:root, [data-gt-scope])[data-theme] {
+  --brand: var(--primary);
+  --brand-foreground: var(--primary-foreground);
+  --icon-ink: var(--primary);
+  --icon-accent: var(--chart-2);
+  --icon-tile: color-mix(in oklch, var(--primary) 10%, var(--card));
+  --icon-paper: var(--icon-tile);
+}
+/* Dark primaries are light, so the today card goes deep instead, like Kept's own dark navy. */
+:is(:root, [data-gt-scope])[data-theme].dark {
+  --brand: color-mix(in oklch, var(--primary) 24%, var(--card));
+  --brand-foreground: var(--foreground);
+  --icon-tile: color-mix(in oklch, var(--primary) 12%, var(--card));
 }
 
 @layer base {

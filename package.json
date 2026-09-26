@@ -1,6 +1,6 @@
 {
   "name": "kept",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "bible:import": "node scripts/import-bible.mjs",
     "test": "vitest run",
-    "topics:import": "node scripts/import-topics.mjs"
+    "topics:import": "node scripts/import-topics.mjs",
+    "themes:update": "node scripts/update-themes.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -22,9 +23,9 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "drizzle-orm": "^0.45.3",
+    "goodthemes": "file:vendor/goodthemes.tgz",
     "lucide-react": "^1.48.0",
     "next": "16.3.6",
-    "next-themes": "^0.4.6",
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",

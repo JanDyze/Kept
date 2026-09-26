@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { LogOut } from "lucide-react";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
+import { ThemePicker } from "@/components/theme-picker";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone } from "@/lib/day";
@@ -29,6 +30,13 @@ export default async function SettingsPage() {
           Appearance
         </h2>
         <ThemeToggle />
+      </section>
+
+      <section aria-labelledby="theme" className="mt-6">
+        <h2 id="theme" className="mb-2 text-sm font-medium text-muted-foreground">
+          Theme
+        </h2>
+        <ThemePicker />
       </section>
 
       <section className="mt-6 divide-y rounded-2xl border bg-card">
