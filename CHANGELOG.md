@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.6.0 — Daily games
+
+- Eight games, each once a day: Fill the Blanks, Unscramble and First Letters (recall games that update the ts-fsrs review schedule), Missing Word, Reference, Spot the Change, Match Up and Two Tongues.
+- Puzzles are built and saved when the day is first opened, resumable across devices; the day follows the device time zone; streaks.
+- App-grid shelf with an icon and result per game; unit tests for the game rules and scheduling.
+
 ## 0.5.0 — Bible
 
 - Read any chapter in ESV or MBBTAG (Tagalog book names); tap a verse or range and keep it.
