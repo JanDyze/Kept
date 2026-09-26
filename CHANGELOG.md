@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.2.0 — Bible text
+
+- `npm run bible:import` loads your local ESV and MBBTAG copies into `bible_verses` (the source folders stay out of git).
+- Reference parser: abbreviations, ordinals, Roman numerals and Tagalog book names (`jn 3 16`, `II Tim 3:16`, `Juan 3:16`).
+- Passage lookup that widens MBBTAG's merged verses and reports verses ESV omits.
+
 ## 0.1.0 — Foundation
 
 - Next.js 16 (App Router) with Supabase email/password auth for a single account; `proxy.ts` redirects signed-out visitors and pages re-check the session.
