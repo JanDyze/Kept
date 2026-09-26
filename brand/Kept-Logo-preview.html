@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kept Logo Preview</title>
+<style>
+  :root { --bg: #f4f5f7; --card: #ffffff; --ink: #283D4E; --muted: #6b7785; --line: #e3e6ea; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  h1 { font-size: 20px; margin: 0; }
+  button { font: inherit; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .card { border-radius: 14px; border: 1px solid var(--line); padding: 28px; display: grid; place-items: center; min-height: 380px; position: relative; }
+  .card.light { background: #fff; }
+  .card.dark { background: #0f1720; border-color: #0f1720; }
+  .card .label { position: absolute; top: 12px; left: 14px; font-size: 12px; color: var(--muted); }
+  .card img { width: min(300px, 100%); height: auto; }
+  .dark img.logo { filter: brightness(0) invert(1); }
+  .sizes { margin-top: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-wrap: wrap; gap: 28px; align-items: end; }
+  .sizes figure { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+  .sizes img { display: block; margin: 0 auto 6px; }
+  .compare { margin-top: 16px; }
+  .compare .card { min-height: 300px; }
+  .compare img { width: min(240px, 100%); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Kept — animated logo</h1>
+    <div>
+      <button class="primary" id="replay">Replay animation</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card light"><span class="label">On light</span><img class="logo anim" src="Kept-Logo-animated.svg" alt="Kept logo, animated"></div>
+    <div class="card dark"><span class="label" style="color:#8b98a6">On dark (inverted)</span><img class="logo anim" src="Kept-Logo-animated.svg" alt="Kept logo, animated, inverted"></div>
+  </div>
+
+  <div class="sizes">
+    <figure><img class="anim" src="Kept-Logo-animated.svg" width="128" alt=""><figcaption>128px</figcaption></figure>
+    <figure><img class="anim" src="Kept-Logo-animated.svg" width="64" alt=""><figcaption>64px</figcaption></figure>
+    <figure><img class="anim" src="Kept-Logo-animated.svg" width="32" alt=""><figcaption>32px</figcaption></figure>
+    <figure><img src="Kept-Logo.svg" width="16" alt=""><figcaption>16px static</figcaption></figure>
+  </div>
+
+  <div class="grid compare">
+    <div class="card light"><span class="label">Original PNG</span><img src="Kept-Logo.png" alt="Original logo"></div>
+    <div class="card light"><span class="label">Static SVG trace</span><img src="Kept-Logo.svg" alt="Traced SVG logo"></div>
+  </div>
+</main>
+<script>
+  document.getElementById('replay').addEventListener('click', () => {
+    const t = Date.now();
+    document.querySelectorAll('img.anim').forEach(img => { img.src = 'Kept-Logo-animated.svg?t=' + t; });
+  });
+</script>
+</body>
+</html>

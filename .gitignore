@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+!.env.example
+
+# personal Bible text copies: copyrighted, never commit
+/ESV/
+/MBBTAG/
+
+# downloaded datasets (see scripts/import-topics.mjs)
+/data/
