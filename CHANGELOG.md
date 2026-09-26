@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.5.0 — Bible
+
+- Read any chapter in ESV or MBBTAG (Tagalog book names); tap a verse or range and keep it.
+- Bible search: a reference or chapter jumps there, a book opens it, other text searches the exact words.
+
 ## 0.4.0 — Discover
 
 - Topic search from the OpenBible.info Topical Bible (CC BY): feelings and occasions ("depression", "birthdays"), common Tagalog words, and exact-word matches (`npm run topics:import`).
