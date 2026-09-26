@@ -30,11 +30,11 @@ export function ThemePicker() {
     <>
       <link rel="stylesheet" href={NAMES_FONT_HREF} precedence="default" />
       <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Theme">
-        <Tile selected={current === null} label="Kept" onClick={(e) => setTheme(null, e)}>
+        <Tile selected={current === null} label="Original" onClick={(e) => setTheme(null, e)}>
           <span className="flex size-full flex-col items-center justify-center gap-2 rounded-[1.125rem] border border-black/10 bg-white text-[#283D4E] dark:border-white/10 dark:bg-[oklch(0.205_0.017_250)] dark:text-[oklch(0.96_0.006_250)]">
             <Image src="/logo.svg" alt="" width={34} height={34} unoptimized className="dark:brightness-0 dark:invert" />
             <span className="text-[15px] font-semibold leading-none" style={{ fontFamily: "var(--font-brand)" }}>
-              Kept
+              Original
             </span>
           </span>
         </Tile>

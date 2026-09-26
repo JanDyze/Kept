@@ -59,10 +59,11 @@ export default async function HomePage() {
   ];
 
   // Takes 80% of the visible height (dvh follows mobile browser bars): the today card and
-  // Discover keep their size, the four cards share what's left.
+  // Discover keep their size, the four cards share what's left. With a mouse (desktop) the
+  // window can be far taller than a phone, so the cards stop growing at a phone-like height.
   return (
     <Screen header={false} className="pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="flex h-[80dvh] min-h-[30rem] flex-col gap-3">
+      <div className="flex h-[80dvh] min-h-[30rem] flex-col gap-3 pointer-fine:max-h-[37rem]">
         <Link
           href={todayHref}
           transitionTypes={["nav-forward"]}
