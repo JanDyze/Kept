@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.4.0 — Discover
+
+- Topic search from the OpenBible.info Topical Bible (CC BY): feelings and occasions ("depression", "birthdays"), common Tagalog words, and exact-word matches (`npm run topics:import`).
+- Popular list: verses kept by the most other users first, then OpenBible's most-loved.
+
 ## 0.3.0 — My verses
 
 - Add, edit and archive verses with tags and notes; ESV and MBBTAG text fills in from your copies and can't be edited (enforced server-side).
