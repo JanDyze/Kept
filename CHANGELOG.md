@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.3.0 — My verses
+
+- Add, edit and archive verses with tags and notes; ESV and MBBTAG text fills in from your copies and can't be edited (enforced server-side).
+- Library: instant filter, capitalized tag chips, grouped by book, and a Text / Reference-only view with peek (remembered).
+
 ## 0.2.0 — Bible text
 
 - `npm run bible:import` loads your local ESV and MBBTAG copies into `bible_verses` (the source folders stay out of git).
