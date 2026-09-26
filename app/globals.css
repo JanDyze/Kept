@@ -184,6 +184,10 @@
   html {
     @apply font-sans;
   }
+  /* Tailwind v4's reset leaves buttons with the arrow cursor (goodthemes fixes it only under a theme). */
+  :where(button, [role="button"], [role="switch"], [role="tab"], [role="radio"], summary, select, label[for]):not(:disabled, [aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 /* ---------- Page transitions (React <ViewTransition>, see components/page-transition.tsx) ---------- */
 
