@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.7.0 — Progress
+
+- Current and best streak, games played, a 12-week calendar, per-game results, verse counts, and most-missed and strongest verses.
+
 ## 0.6.0 — Daily games
 
 - Eight games, each once a day: Fill the Blanks, Unscramble and First Letters (recall games that update the ts-fsrs review schedule), Missing Word, Reference, Spot the Change, Match Up and Two Tongues.
