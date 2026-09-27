@@ -17,6 +17,7 @@ import { GAMES, type GameId } from "./registry";
 import { buildSpotChange } from "./spot-change";
 import { buildTwoTongues } from "./two-tongues";
 import { buildUnscramble } from "./unscramble";
+import { tokenize } from "./words";
 
 const MAX_RECALL_VERSES = 3;
 
@@ -90,9 +91,11 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
   const fillVerses = byNeed.slice(0, Math.min(MAX_RECALL_VERSES, Math.max(1, needing)));
   // Decoys: words from your other verses plus common words, so wrong answers look plausible.
   const translation = fillVerses[0].translation;
+  // Whole words only, and none with a capital, which may be a name ("Jose").
   const fromOtherVerses = pool
     .filter((v) => v.translation === translation && !fillVerses.includes(v))
-    .flatMap((v) => v.text.split(/[^\p{L}'’]+/u));
+    .flatMap((v) => tokenize(v.text).map((t) => t.word))
+    .filter((w) => !/^\p{Lu}/u.test(w));
   const decoys = [...fromOtherVerses, ...(await commonWords(translation).catch(() => [] as string[]))];
   add("fill_blanks", fillVerses, buildFillBlanks(fillVerses.map(asInput), decoys, rng("fill_blanks")));
 

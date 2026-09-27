@@ -33,7 +33,28 @@ export async function wordsOfLength(translation: string, length: number, answer:
   return [...set];
 }
 
-// Everyday words only (no rare names like "Iphtahel"), so decoys are plausible.
-export async function commonWords(translation: string, limit = 1500) {
-  return (await vocabulary(translation)).slice(0, limit);
+// Everyday words for decoys: the most frequent ones, so no rare words like "Iphtahel"; hyphenated
+// words kept whole ("kataas-taasang", not "taasang"); and no names ("Jose", "Jerusalem"), told
+// apart as the words written with a capital most of the time.
+const common = new Map<string, Promise<string[]>>();
+const COMMON_LIMIT = 1500;
+
+export function commonWords(translation: string): Promise<string[]> {
+  let words = common.get(translation);
+  if (!words) {
+    words = db
+      .execute<{ w: string }>(
+        sql`select lower(w) as w
+            from bible_verses, regexp_split_to_table(text, '[^[:alpha:]''’-]+') as w
+            where translation = ${translation} and length(w) between 3 and 12 and w ~ '^[[:alpha:]].*[[:alpha:]]$'
+            group by 1
+            having count(*) filter (where w ~ '^[[:lower:]]') * 2 > count(*)
+            order by count(*) desc
+            limit ${COMMON_LIMIT}`,
+      )
+      .then((rows) => [...new Set(rows.map((r) => normalizeWord(r.w)))]);
+    words.catch(() => common.delete(translation));
+    common.set(translation, words);
+  }
+  return words;
 }
