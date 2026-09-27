@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
 
@@ -25,20 +25,23 @@ export const PSALM_119_11: OverlayVerse = {
 export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: OverlayVerse[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // The URL a navigation started from; null when nothing is pending.
-  const [from, setFrom] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
+  // Each navigation gets an id, and the overlay shows only while the navigation its timer was
+  // started for is still pending. The show timer can fire after the page has already arrived
+  // (React commits inside the view transition, so the cleanup can land late); it must not
+  // bring the overlay back over a finished page.
+  const nextId = useRef(0);
+  const [pending, setPending] = useState<number | null>(null);
+  const [shownFor, setShownFor] = useState<number | null>(null);
   const [cycle, setCycle] = useState(0);
   const [verse, setVerse] = useState(0);
   const url = `${pathname}?${searchParams}`;
-  const pending = from !== null;
+  const visible = pending !== null && shownFor === pending;
 
   // Arrived: the rendered URL changed (the new page has committed), so stop waiting.
   const [renderedUrl, setRenderedUrl] = useState(url);
   if (url !== renderedUrl) {
     setRenderedUrl(url);
-    setFrom(null);
-    setVisible(false);
+    setPending(null);
   }
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
     const start = (target: URL) => {
       if (target.origin !== window.location.origin) return;
       if (`${target.pathname}?${target.searchParams}` === current()) return; // same page or #hash only
-      setFrom(current());
+      setPending(++nextId.current);
       setVerse(Math.floor(Math.random() * verses.length));
     };
     // Capture phase: Next's <Link> calls preventDefault in its own handler, so listen before it.
@@ -75,12 +78,9 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
   }, [verses.length]);
 
   useEffect(() => {
-    if (!pending) return;
-    const show = setTimeout(() => setVisible(true), DELAY_MS);
-    const giveUp = setTimeout(() => {
-      setFrom(null);
-      setVisible(false);
-    }, GIVE_UP_MS);
+    if (pending === null) return;
+    const show = setTimeout(() => setShownFor(pending), DELAY_MS);
+    const giveUp = setTimeout(() => setPending((p) => (p === pending ? null : p)), GIVE_UP_MS);
     return () => {
       clearTimeout(show);
       clearTimeout(giveUp);

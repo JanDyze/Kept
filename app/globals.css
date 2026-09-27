@@ -215,16 +215,27 @@
     200ms ease-out 120ms both fade,
     360ms cubic-bezier(0.4, 0, 0.2, 1) both slide;
 }
-/* The sticky header is the fixed point while content slides. */
+/* The sticky header is the fixed point while content slides. Chromium copies its backdrop blur
+   onto the group, which would leave a blurred strip over the content when the header leaves
+   (going home), so the group gets none. */
 ::view-transition-group(site-header) {
   animation: none;
   z-index: 10;
+  backdrop-filter: none;
 }
 ::view-transition-old(site-header) {
   display: none;
 }
 ::view-transition-new(site-header) {
   animation: none;
+}
+/* Home has no header: it fades out with the old page, and back in with the new one. */
+::view-transition-old(site-header):only-child {
+  display: block;
+  animation: 140ms ease-in both fade reverse;
+}
+::view-transition-new(site-header):only-child {
+  animation: 200ms ease-out 120ms both fade;
 }
 
 @keyframes fade {
