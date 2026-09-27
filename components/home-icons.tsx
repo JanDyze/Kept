@@ -46,9 +46,16 @@ export function GamesIcon({ className }: { className?: string }) {
 export function VersesIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      {/* cards stacked behind, fanning out a little more on hover */}
+      {/* cards stacked behind, fanning out on hover while the front card tips forward */}
       <g transform="rotate(8 34 24)">
-        <rect x="16" y="2" width="35" height="40" rx="7" className={`${part} fill-icon-accent motion-safe:group-engaged:rotate-3`} />
+        <rect
+          x="16"
+          y="2"
+          width="35"
+          height="40"
+          rx="7"
+          className={`${part} delay-75 fill-icon-accent motion-safe:group-engaged:translate-x-1 motion-safe:group-engaged:rotate-12`}
+        />
       </g>
       <g transform="rotate(4 28 28)">
         <rect
@@ -57,16 +64,18 @@ export function VersesIcon({ className }: { className?: string }) {
           width="35"
           height="41"
           rx="7"
-          className={`${part} fill-icon-accent stroke-icon-paper motion-safe:group-engaged:rotate-2`}
+          className={`${part} fill-icon-accent stroke-icon-paper motion-safe:group-engaged:translate-x-0.5 motion-safe:group-engaged:rotate-6`}
           {...gap}
         />
       </g>
       {/* front card with a curled corner */}
-      <rect x="3" y="12" width="36" height="42" rx="7" className="fill-icon-ink stroke-icon-paper" {...gap} />
-      <path d="M39 38C38 45 33 51 24 54" fill="none" strokeWidth="2.4" strokeLinecap="round" className="stroke-icon-paper" />
-      <g className="fill-icon-paper">
-        <path d={COMMA} transform="translate(14.5 25) scale(1.35)" />
-        <path d={COMMA} transform="translate(25 25) scale(1.35)" />
+      <g className={`${part} motion-safe:group-engaged:-translate-x-0.5 motion-safe:group-engaged:-rotate-6`}>
+        <rect x="3" y="12" width="36" height="42" rx="7" className="fill-icon-ink stroke-icon-paper" {...gap} />
+        <path d="M39 38C38 45 33 51 24 54" fill="none" strokeWidth="2.4" strokeLinecap="round" className="stroke-icon-paper" />
+        <g className="fill-icon-paper">
+          <path d={COMMA} transform="translate(14.5 25) scale(1.35)" />
+          <path d={COMMA} transform="translate(25 25) scale(1.35)" />
+        </g>
       </g>
     </svg>
   );
@@ -114,26 +123,16 @@ export function SettingsIcon({ className }: { className?: string }) {
 export function DiscoverIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      {/* two arms opening around the card */}
-      <g fill="none" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round" className="stroke-icon-ink">
-        <path
-          d="M13 50C7 48 4.5 44 4.5 38V31C4.5 26 6.5 23 10.5 19L19 11.5C21.5 9.5 24.5 10 25 13.5"
-          className={`${part} motion-safe:group-engaged:-translate-x-1 motion-safe:group-engaged:-rotate-3`}
-        />
-        <path
-          d="M43 50C49 48 51.5 44 51.5 38V31C51.5 26 49.5 23 45.5 19L37 11.5C34.5 9.5 31.5 10 31 13.5"
-          className={`${part} motion-safe:group-engaged:translate-x-1 motion-safe:group-engaged:rotate-3`}
-        />
+      <circle cx="28" cy="28" r="23" fill="none" strokeWidth="6.5" className="stroke-icon-ink" />
+      {/* marks at north, east, south and west */}
+      <g strokeWidth="3.5" strokeLinecap="round" className="stroke-icon-ink">
+        <path d="M28 12.5v3M43.5 28h-3M28 43.5v-3M12.5 28h3" />
       </g>
-      {/* the card with a verse on it */}
-      <g transform="rotate(6 28 33)">
-        <g className={`${part} motion-safe:group-engaged:-translate-y-1`}>
-          <rect x="17.5" y="20" width="21" height="26" rx="4.5" className="fill-icon-accent" />
-          <g className="fill-icon-paper">
-            <rect x="22" y="27" width="12" height="3.6" rx="1.8" />
-            <rect x="22" y="34" width="8.5" height="3.6" rx="1.8" />
-          </g>
-        </g>
+      {/* needle: accent half toward the top right, ink half toward the bottom left; it spins on hover */}
+      <g className="origin-[28px_28px] transition-transform duration-700 ease-out motion-safe:group-engaged:rotate-[315deg]">
+        <path d="M40.5 15.5L32.2 32.2 23.8 23.8z" className="fill-icon-accent" />
+        <path d="M15.5 40.5L23.8 23.8 32.2 32.2z" className="fill-icon-ink" />
+        <circle cx="28" cy="28" r="2.6" className="fill-icon-paper" />
       </g>
     </svg>
   );
