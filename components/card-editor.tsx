@@ -2,19 +2,23 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { AlignCenter, AlignLeft, Check, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { AlignCenter, AlignLeft, Check, ImagePlus, Loader2, Move, Trash2 } from "lucide-react";
 import { saveCard } from "@/app/verses/[id]/card/actions";
 import { cardFontClass, MemoryCard } from "@/components/memory-card";
+import { TextCard, type LibraryItem } from "@/components/verse-library";
 import { Button } from "@/components/ui/button";
 import {
   CARD_COLORS,
   CARD_FONTS,
+  cardColors,
   cardImageUrl,
   DEFAULT_CARD,
   IMAGE_DEFAULTS,
   type CardColor,
   type CardFont,
   type CardStyle,
+  TEXT_COLORS,
+  type TextColor,
 } from "@/lib/cards/style";
 import { cn } from "@/lib/utils";
 
@@ -36,21 +40,21 @@ async function shrink(file: File): Promise<Blob> {
   );
 }
 
+type Preview = "card" | "list";
+
 export function CardEditor({
-  verseId,
-  reference,
-  translation,
-  text,
+  item,
   saved,
   images: initialImages,
 }: {
-  verseId: string;
-  reference: string;
-  translation: string;
-  text: string;
+  item: Omit<LibraryItem, "card">; // the verse as My verses shows it
   saved: CardStyle | null;
   images: string[];
 }) {
+  const verseId = item.id;
+  const reference = item.localReference ?? item.reference;
+  const { translation, text } = item;
+  const [preview, setPreview] = useState<Preview>("card");
   const [style, setStyle] = useState<CardStyle>(saved ?? DEFAULT_CARD);
   const [images, setImages] = useState(initialImages);
   const [tab, setTab] = useState<Tab>("background");
@@ -62,6 +66,30 @@ export function CardEditor({
   const set = (patch: Partial<CardStyle>) => setStyle((s) => ({ ...s, ...patch }));
   const bg = style.bg;
   const changed = !saved || JSON.stringify(saved) !== JSON.stringify(style);
+
+  // Dragging the photo in the preview moves it; like panning, the photo follows the finger.
+  const drag = useRef<{ x: number; y: number; focusX: number; focus: number; width: number; height: number } | null>(null);
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (bg.kind !== "image") return;
+    const box = e.currentTarget.getBoundingClientRect();
+    drag.current = { x: e.clientX, y: e.clientY, focusX: bg.focusX, focus: bg.focus, width: box.width, height: box.height };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || bg.kind !== "image") return;
+    const clamp = (v: number) => Math.round(Math.min(100, Math.max(0, v)));
+    set({
+      bg: {
+        ...bg,
+        focusX: clamp(d.focusX - ((e.clientX - d.x) / d.width) * 160),
+        focus: clamp(d.focus - ((e.clientY - d.y) / d.height) * 160),
+      },
+    });
+  };
+  const endDrag = () => {
+    drag.current = null;
+  };
 
   const pickImage = (id: string) =>
     set({ bg: bg.kind === "image" ? { ...bg, image: id } : { kind: "image", image: id, ...IMAGE_DEFAULTS } });
@@ -105,15 +133,51 @@ export function CardEditor({
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* live preview, kept in view while the controls scroll */}
+      {/* live preview, kept in view while the controls scroll: the card itself, or its tile in
+          My verses (wide, so a photo crops differently there) */}
       <div className="sticky top-16 z-10 -mx-4 bg-background/90 px-4 pt-1 pb-4 backdrop-blur-md">
-        <MemoryCard
-          style={style}
-          reference={reference}
-          translation={translation}
-          text={text}
-          className="mx-auto max-w-[15rem] transition-[max-width]"
-        />
+        <div role="radiogroup" aria-label="Preview" className="mx-auto mb-3 flex w-fit gap-1 rounded-full bg-muted p-1">
+          {(["card", "list"] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              role="radio"
+              aria-checked={preview === p}
+              onClick={() => setPreview(p)}
+              className={cn(
+                "h-7 rounded-full px-3.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                preview === p ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {p === "card" ? "Card" : "In the list"}
+            </button>
+          ))}
+        </div>
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          className={cn(
+            "relative mx-auto select-none",
+            preview === "card" ? "max-w-[15rem]" : "max-w-xl",
+            bg.kind === "image" && "cursor-grab touch-none active:cursor-grabbing",
+          )}
+        >
+          {preview === "card" ? (
+            <MemoryCard style={style} reference={reference} translation={translation} text={text} />
+          ) : (
+            <TextCard v={{ ...item, card: style }} />
+          )}
+          {bg.kind === "image" && (
+            <span
+              className="pointer-events-none absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm"
+              aria-hidden
+            >
+              <Move className="size-3.5" />
+            </span>
+          )}
+        </div>
       </div>
 
       <Segmented
@@ -202,12 +266,22 @@ export function CardEditor({
               <Slider label="Dim" value={bg.dim} max={85} unit="%" onChange={(dim) => set({ bg: { ...bg, dim } })} />
               <Slider label="Blur" value={bg.blur} max={20} onChange={(blur) => set({ bg: { ...bg, blur } })} />
               <Slider
-                label="Position"
-                value={bg.focus}
-                max={100}
-                format={(v) => (v < 34 ? "Top" : v > 66 ? "Bottom" : "Center")}
-                onChange={(focus) => set({ bg: { ...bg, focus } })}
+                label="Zoom"
+                value={bg.zoom}
+                min={100}
+                max={300}
+                format={(v) => `${(v / 100).toFixed(1)}×`}
+                onChange={(zoom) => set({ bg: { ...bg, zoom } })}
               />
+              {(bg.focusX !== 50 || bg.focus !== 50) && (
+                <button
+                  type="button"
+                  onClick={() => set({ bg: { ...bg, focusX: 50, focus: 50 } })}
+                  className="-my-1 self-start text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Center photo
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => void removeImage(bg.image)}
@@ -260,6 +334,28 @@ export function CardEditor({
                   <span className={cn("text-2xl leading-none text-foreground", cardFontClass(f))}>Aa</span>
                   <span className="text-xs">{CARD_FONTS[f].name}</span>
                 </button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Color">
+            <div className="flex flex-wrap gap-3">
+              <Swatch
+                label="Auto"
+                selected={style.text === "auto"}
+                onClick={() => set({ text: "auto" })}
+                className={cn("font-brand text-base font-semibold", style.bg.kind === "theme" && "border bg-card")}
+                style={{ backgroundColor: cardColors(style.bg).bg, color: cardColors(style.bg).fg }}
+              >
+                A
+              </Swatch>
+              {(Object.keys(TEXT_COLORS) as TextColor[]).map((c) => (
+                <Swatch
+                  key={c}
+                  label={TEXT_COLORS[c].name}
+                  selected={style.text === c}
+                  onClick={() => set({ text: c })}
+                  style={{ backgroundColor: TEXT_COLORS[c].color, color: c === "ink" || c === "black" ? "#fff" : "#111" }}
+                />
               ))}
             </div>
           </Field>
@@ -351,12 +447,14 @@ function Swatch({
   onClick,
   className,
   style,
+  children,
 }: {
   label: string;
   selected: boolean;
   onClick: () => void;
   className?: string;
   style?: React.CSSProperties;
+  children?: React.ReactNode;
 }) {
   return (
     <button
@@ -372,7 +470,7 @@ function Swatch({
         className,
       )}
     >
-      {selected && <Check className="size-4" aria-hidden />}
+      {selected && !children ? <Check className="size-4" aria-hidden /> : children}
     </button>
   );
 }
@@ -420,6 +518,7 @@ function Segmented<T extends string>({
 function Slider({
   label,
   value,
+  min = 0,
   max,
   unit = "",
   format,
@@ -427,6 +526,7 @@ function Slider({
 }: {
   label: string;
   value: number;
+  min?: number;
   max: number;
   unit?: string;
   format?: (value: number) => string;
@@ -440,7 +540,7 @@ function Slider({
       </span>
       <input
         type="range"
-        min={0}
+        min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}

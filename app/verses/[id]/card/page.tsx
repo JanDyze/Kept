@@ -24,10 +24,15 @@ export default async function CardPage({ params }: PageProps<"/verses/[id]/card"
   return (
     <Screen back={{ href: `/verses/${verse.id}`, label: verse.reference }} title="Card" className="pb-0">
       <CardEditor
-        verseId={verse.id}
-        reference={tagalog ? verse.reference.replace(verse.book, tagalog) : verse.reference}
-        translation={verse.translation}
-        text={verse.text}
+        item={{
+          id: verse.id,
+          reference: verse.reference,
+          localReference: tagalog && tagalog !== verse.book ? verse.reference.replace(verse.book, tagalog) : null,
+          book: verse.book,
+          translation: verse.translation,
+          text: verse.text,
+          tags: verse.tags,
+        }}
         saved={readCardStyle(verse.card)}
         images={images.map((i) => i.id)}
       />

@@ -78,11 +78,13 @@ export function CardBackdrop({
             draggable={false}
             className="-z-30 object-cover"
             style={{
-              objectPosition: `50% ${bg.focus}%`,
+              objectPosition: `${bg.focusX}% ${bg.focus}%`,
+              transformOrigin: `${bg.focusX}% ${bg.focus}%`,
               filter: bg.blur
                 ? `blur(${(bg.blur * 0.16).toFixed(2)}cqw)`
                 : undefined,
-              transform: bg.blur ? `scale(${1 + bg.blur * 0.006})` : undefined,
+              // zoom in, plus a little extra with blur so its soft edges stay off the card
+              transform: `scale(${((bg.zoom / 100) * (1 + bg.blur * 0.006)).toFixed(3)})`,
             }}
           />
           <div
@@ -116,7 +118,7 @@ export function MemoryCard({
   text: string;
   className?: string;
 }) {
-  const colors = cardColors(style.bg);
+  const colors = cardColors(style.bg, style.text);
   const photo = style.bg.kind === "image";
   const caption = (
     <figcaption

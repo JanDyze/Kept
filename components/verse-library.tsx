@@ -180,7 +180,7 @@ export function VerseLibrary({
                 {g.verses.map((v, i) => (
                   <li key={v.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
                     {view === "text" ? (
-                      <TextCard v={v} />
+                      <TextCard v={v} href={`/verses/${v.id}`} />
                     ) : (
                       <ReferenceRow v={v} open={peeking.has(v.id)} onPeek={() => togglePeek(v.id)} />
                     )}
@@ -217,21 +217,14 @@ export function VerseLibrary({
 
 
 // A verse with a card shows its background, photo and font here too.
-function TextCard({ v }: { v: LibraryItem }) {
+// Without an href it's a still preview (the card editor shows one).
+export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
   const card = v.card;
-  const colors = card ? cardColors(card.bg) : {};
-  const styled = Boolean(colors.bg);
+  const colors = card ? cardColors(card.bg, card.text) : {};
+  const styled = Boolean(colors.bg || colors.fg);
   const quiet = styled ? "opacity-70" : "text-muted-foreground";
-  return (
-    <Link
-      href={`/verses/${v.id}`}
-      transitionTypes={["nav-forward"]}
-      style={{ backgroundColor: colors.bg, color: colors.fg }}
-      className={cn(
-        "@container relative isolate block overflow-hidden rounded-2xl p-4 transition-[transform,background-color] active:scale-[0.99]",
-        styled ? "hover:brightness-105" : "border bg-card hover:bg-muted/40",
-      )}
-    >
+  const body = (
+    <>
       {card && <CardBackdrop style={card} sizes="36rem" />}
       <p className="font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
       <p className={cn("text-xs", quiet)}>
@@ -258,6 +251,27 @@ function TextCard({ v }: { v: LibraryItem }) {
           ))}
         </div>
       )}
+    </>
+  );
+  const surface = "@container relative isolate block overflow-hidden rounded-2xl p-4";
+  if (!href)
+    return (
+      <div style={{ backgroundColor: colors.bg, color: colors.fg }} className={cn(surface, !styled && "border bg-card")}>
+        {body}
+      </div>
+    );
+  return (
+    <Link
+      href={href}
+      transitionTypes={["nav-forward"]}
+      style={{ backgroundColor: colors.bg, color: colors.fg }}
+      className={cn(
+        surface,
+        "transition-[transform,background-color] active:scale-[0.99]",
+        styled ? "hover:brightness-105" : "border bg-card hover:bg-muted/40",
+      )}
+    >
+      {body}
     </Link>
   );
 }

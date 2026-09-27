@@ -20,6 +20,20 @@ export const CARD_COLORS = {
 export type CardColor = keyof typeof CARD_COLORS;
 const colorIds = Object.keys(CARD_COLORS) as [CardColor, ...CardColor[]];
 
+// Text colors to override the background's own; "auto" keeps the one that reads on it.
+export const TEXT_COLORS = {
+  white: { name: "White", color: "#ffffff" },
+  cream: { name: "Cream", color: "#f4ecd8" },
+  gold: { name: "Gold", color: "#e9b54f" },
+  mint: { name: "Mint", color: "#cff5e7" },
+  blush: { name: "Blush", color: "#f2cfc6" },
+  sky: { name: "Sky", color: "#cfe3f2" },
+  ink: { name: "Ink", color: "#1d2a31" },
+  black: { name: "Black", color: "#111111" },
+} as const;
+export type TextColor = keyof typeof TEXT_COLORS;
+const textColorIds = Object.keys(TEXT_COLORS) as [TextColor, ...TextColor[]];
+
 export const CARD_FONTS = {
   serif: { name: "Serif" },
   classic: { name: "Classic" },
@@ -38,13 +52,19 @@ const background = z.discriminatedUnion("kind", [
     image: z.uuid(),
     dim: z.number().int().min(0).max(85), // % black laid over the photo so the text reads
     blur: z.number().int().min(0).max(20), // softens a busy photo
-    focus: z.number().int().min(0).max(100), // vertical position of the crop, top to bottom
+    // Which part of the photo shows (0–100, left to right and top to bottom), and how far it's
+    // zoomed in. Zoom is what gives a landscape photo room to move on the portrait card. Defaults
+    // keep cards saved before these existed readable.
+    focusX: z.number().int().min(0).max(100).default(50),
+    focus: z.number().int().min(0).max(100),
+    zoom: z.number().int().min(100).max(300).default(100),
   }),
 ]);
 
 export const cardStyleSchema = z.object({
   bg: background,
   grain: z.boolean(),
+  text: z.enum(["auto", ...textColorIds]).default("auto"),
   font: z.enum(fontIds),
   size: z.enum(["s", "m", "l"]),
   align: z.enum(["left", "center"]),
@@ -57,13 +77,14 @@ export type CardBackground = CardStyle["bg"];
 export const DEFAULT_CARD: CardStyle = {
   bg: { kind: "color", color: "ink" },
   grain: false,
+  text: "auto",
   font: "serif",
   size: "m",
   align: "center",
   reference: "bottom",
 };
 
-export const IMAGE_DEFAULTS = { dim: 35, blur: 0, focus: 50 } as const;
+export const IMAGE_DEFAULTS = { dim: 35, blur: 0, focusX: 50, focus: 50, zoom: 100 } as const;
 
 // Anything stored that no longer parses (an old shape, a removed color) shows as the plain page.
 export function readCardStyle(value: unknown): CardStyle | null {
@@ -73,9 +94,10 @@ export function readCardStyle(value: unknown): CardStyle | null {
 
 export const cardImageUrl = (id: string) => `/api/card-images/${id}`;
 
-// Text color and surface for a background; photos always get light text over the dimmed image.
-export function cardColors(bg: CardBackground): { bg?: string; fg?: string } {
-  if (bg.kind === "color") return CARD_COLORS[bg.color];
-  if (bg.kind === "image") return { bg: "#101214", fg: "#ffffff" };
-  return {};
+// Surface and text color for a card. Unless a text color is chosen, each background brings the one
+// that reads on it: its own for colors, white over photos, the theme's on the theme card.
+export function cardColors(bg: CardBackground, text: CardStyle["text"] = "auto"): { bg?: string; fg?: string } {
+  const base: { bg?: string; fg?: string } =
+    bg.kind === "color" ? { bg: CARD_COLORS[bg.color].bg, fg: CARD_COLORS[bg.color].fg } : bg.kind === "image" ? { bg: "#101214", fg: "#ffffff" } : {};
+  return text === "auto" ? base : { ...base, fg: TEXT_COLORS[text].color };
 }
