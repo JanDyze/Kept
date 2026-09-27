@@ -9,6 +9,7 @@ All notable changes to Kept, one version per feature.
 - A game's name is in the top bar instead of a big heading on the page.
 - Wrong choices in Fill the Blanks and swapped words in Spot the Change are never names (no more “jose”) or pieces of hyphenated words (“taasang”).
 - Names, God and Diyos keep their capital in the word bank and in Missing Word's answer.
+- Add / Edit verse redesigned: the title in the top bar, no keyboard popping up on open, a large reference field that checks itself, a segmented translation switch, the verse shown as a card once found, tags as chips, tags and notes folded away, and Save in a sticky bar.
 
 ## 0.10.1 — goodthemes 0.2
 

@@ -18,8 +18,11 @@ export default async function NewVersePage({ searchParams }: PageProps<"/verses/
   const fromBible = Boolean(ref);
 
   return (
-    <Screen back={fromBible ? { href: "/bible", label: "Bible" } : { href: "/verses", label: "My verses" }}>
-      <h1 className="mb-6 font-brand text-3xl font-semibold tracking-tight">Add verse</h1>
+    <Screen
+      back={fromBible ? { href: "/bible", label: "Bible" } : { href: "/verses", label: "My verses" }}
+      title="Add verse"
+      className="pb-0"
+    >
       <VerseForm
         allTags={tags}
         lastTranslation={t ?? translation}

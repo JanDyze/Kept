@@ -17,8 +17,7 @@ export default async function EditVersePage({ params }: PageProps<"/verses/[id]/
   if (!verse) notFound();
 
   return (
-    <Screen back={{ href: `/verses/${verse.id}`, label: verse.reference }}>
-      <h1 className="mb-6 font-brand text-3xl font-semibold tracking-tight">Edit verse</h1>
+    <Screen back={{ href: `/verses/${verse.id}`, label: verse.reference }} title="Edit verse" className="pb-0">
       <VerseForm
         allTags={tags}
         initial={{

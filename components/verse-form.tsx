@@ -1,11 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Loader2, Lock } from "lucide-react";
+import { Check, ChevronDown, Loader2, Plus, X } from "lucide-react";
 import { lookupPassage, saveVerse, type VerseFormState } from "@/app/verses/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatReference, parseReference } from "@/lib/bible/books";
 import { isLookupTranslation, LOOKUP_TRANSLATIONS } from "@/lib/bible/translations";
@@ -30,7 +29,11 @@ type Preview =
   | { state: "error"; key: string; message: string };
 
 const OTHER = "other";
+const label = "text-sm font-medium text-muted-foreground";
 
+// Add or edit a verse: the reference and translation up top, the verse itself as it will be kept,
+// tags and notes folded away until wanted, and Save in a sticky bar. Nothing is focused on open, so
+// the keyboard stays down until a field is tapped.
 export function VerseForm({
   initial,
   allTags,
@@ -49,9 +52,11 @@ export function VerseForm({
   const [otherName, setOtherName] = useState(isLookupTranslation(startTranslation) ? "" : startTranslation);
   // Only "Other" translations have typed text. ESV / MBBTAG text is locked to the imported copy.
   const [text, setText] = useState(initial && !isLookupTranslation(initial.translation) ? initial.text : "");
-  const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [draftTag, setDraftTag] = useState("");
   // Controlled so React's post-action form reset can't wipe it when validation fails.
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [extrasOpen, setExtrasOpen] = useState(Boolean(initial?.tags.length || initial?.notes));
   const [refTouched, setRefTouched] = useState(false);
   const [preview, setPreview] = useState<Preview>(
     initial?.text && isLookupTranslation(initial.translation)
@@ -87,47 +92,65 @@ export function VerseForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewKey]);
 
-  const current = normalizeTags(tags);
-  const suggestions = allTags.filter((t) => !current.includes(t)).slice(0, 12);
+  const addTag = (raw: string) => {
+    const next = normalizeTags([...tags, ...raw.split(",")]);
+    setTags(next);
+    setDraftTag("");
+  };
+  const suggestions = allTags.filter((t) => !tags.includes(t)).slice(0, 12);
   const errors = state.errors ?? {};
   const refError = errors.reference ?? (refTouched && parsed && !parsed.ok ? parsed.error : undefined);
+  const ready = Boolean(canonical) && (locked ? shown?.state === "filled" : Boolean(translation && text.trim()));
+  const extrasCount = tags.length + (notes.trim() ? 1 : 0);
 
   return (
-    <form action={action} className="flex flex-col gap-6">
+    <form action={action} className="flex flex-1 flex-col">
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="translation" value={translation} />
+      <input type="hidden" name="tags" value={normalizeTags([...tags, draftTag]).join(", ")} />
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="reference">Reference</Label>
-        <Input
-          id="reference"
-          name="reference"
-          value={reference}
-          onChange={(e) => setReference(e.target.value)}
-          onBlur={() => setRefTouched(true)}
-          placeholder="John 3:16, Rom 8:28-29, Juan 3:16"
-          autoComplete="off"
-          autoCapitalize="words"
-          autoFocus={!editing}
-          aria-invalid={Boolean(refError)}
-          aria-describedby="reference-hint"
-          className="h-11 text-base"
-        />
-        <p id="reference-hint" className={cn("min-h-5 text-sm", refError ? "text-destructive" : "text-muted-foreground")}>
-          {refError ??
-            (canonical ? (
-              <span className="inline-flex items-center gap-1">
-                <Check className="size-3.5" aria-hidden /> {canonical}
-              </span>
-            ) : (
-              "Type a book, chapter and verse."
-            ))}
-        </p>
+        <label htmlFor="reference" className={label}>
+          Reference
+        </label>
+        <div className="relative">
+          <Input
+            id="reference"
+            name="reference"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            onBlur={() => setRefTouched(true)}
+            placeholder="John 3:16"
+            autoComplete="off"
+            autoCapitalize="words"
+            enterKeyHint="done"
+            aria-invalid={Boolean(refError)}
+            aria-describedby={refError || canonical ? "reference-status" : undefined}
+            className="h-14 rounded-xl bg-card pr-12 pl-4 font-brand text-xl font-semibold tracking-tight placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal md:text-xl"
+          />
+          {canonical && (
+            <Check className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-primary" aria-hidden />
+          )}
+        </div>
+        {refError ? (
+          <p id="reference-status" className="text-sm text-destructive">
+            {refError}
+          </p>
+        ) : (
+          canonical &&
+          canonical !== reference.trim() && (
+            <p id="reference-status" className="text-sm text-muted-foreground">
+              {canonical}
+            </p>
+          )
+        )}
       </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">Translation</legend>
-        <div className="grid grid-cols-3 gap-2" role="radiogroup">
+      <div className="mt-6 flex flex-col gap-2">
+        <span id="translation-label" className={label}>
+          Translation
+        </span>
+        <div role="radiogroup" aria-labelledby="translation-label" className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
           {[...LOOKUP_TRANSLATIONS, OTHER].map((t) => (
             <button
               key={t}
@@ -136,10 +159,11 @@ export function VerseForm({
               aria-checked={choice === t}
               onClick={() => setChoice(t)}
               className={cn(
-                "h-11 rounded-lg border text-sm font-medium transition-colors",
+                "h-9 rounded-lg text-sm font-medium transition-[background-color,color,box-shadow] duration-200",
+                "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 choice === t
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-background hover:bg-muted",
+                  ? "bg-background text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t === OTHER ? "Other" : t}
@@ -151,114 +175,156 @@ export function VerseForm({
             aria-label="Translation name"
             value={otherName}
             onChange={(e) => setOtherName(e.target.value)}
-            placeholder="e.g. NIV, ADB"
-            className="h-11 text-base"
+            placeholder="NIV, ADB…"
+            autoCapitalize="characters"
+            className="h-11 rounded-xl bg-card px-4 text-base"
           />
         )}
         {errors.translation && <p className="text-sm text-destructive">{errors.translation}</p>}
-      </fieldset>
+      </div>
 
+      {/* The verse as it will be kept */}
       {locked ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium" id="text-label">
-              Text
-            </span>
-            <Lock className="size-3.5 text-muted-foreground" aria-hidden />
-            <span className="text-xs text-muted-foreground">From your {translation} copy · can&apos;t be edited</span>
-          </div>
-          <div
-            aria-labelledby="text-label"
-            aria-live="polite"
-            className={cn(
-              "min-h-28 rounded-lg border bg-muted/40 px-3 py-2.5 font-serif text-lg leading-relaxed",
-              !shown || shown.state !== "filled" ? "text-muted-foreground" : "",
-            )}
-          >
-            {shown?.state === "filled" ? (
-              shown.text
-            ) : shown?.state === "loading" ? (
-              <span className="inline-flex items-center gap-1.5 font-sans text-sm">
-                <Loader2 className="size-3.5 animate-spin" aria-hidden /> Looking it up…
-              </span>
+        shown && (
+          <figure aria-live="polite" className="animate-rise mt-6 rounded-2xl border bg-card p-5">
+            <figcaption className="text-sm font-medium text-muted-foreground">
+              {canonical} · {translation}
+            </figcaption>
+            {shown.state === "filled" ? (
+              <p className="mt-2 whitespace-pre-line font-serif text-xl leading-relaxed">{shown.text}</p>
+            ) : shown.state === "loading" ? (
+              <p className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" aria-hidden /> Looking it up…
+              </p>
             ) : (
-              <span className="font-sans text-sm">The verse appears here once the reference is complete.</span>
+              <p className="mt-2 text-sm text-destructive">{shown.message}</p>
             )}
-          </div>
-          {(shown?.state === "error" || (shown?.state === "filled" && shown.note)) && (
-            <p className={cn("text-sm", shown.state === "error" ? "text-destructive" : "text-muted-foreground")}>
-              {shown.state === "error" ? shown.message : shown.note}
-            </p>
-          )}
-        </div>
+            {shown.state === "filled" && shown.note && <p className="mt-3 text-sm text-muted-foreground">{shown.note}</p>}
+          </figure>
+        )
       ) : (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="text">Text</Label>
+        <div className="mt-6 flex flex-col gap-2">
+          <label htmlFor="text" className={label}>
+            Verse
+          </label>
           <Textarea
             id="text"
             name="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={5}
-            placeholder="Paste the verse text."
+            placeholder="Paste the verse"
             aria-invalid={Boolean(errors.text)}
-            className="min-h-32 font-serif text-lg leading-relaxed"
+            className="min-h-36 rounded-2xl bg-card p-5 font-serif text-xl leading-relaxed md:text-xl"
           />
           {errors.text && <p className="text-sm text-destructive">{errors.text}</p>}
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="tags">Tags</Label>
-        <Input
-          id="tags"
-          name="tags"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="faith, peace, anxiety"
-          autoComplete="off"
-          autoCapitalize="none"
-          className="h-11 text-base"
-        />
-        {suggestions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTags([...current, t].join(", "))}
-                className="h-8 rounded-full border border-input px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                + {tagLabel(t)}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Tags and notes, folded away until wanted */}
+      <div className="mt-6 rounded-2xl border bg-card">
+        <button
+          type="button"
+          aria-expanded={extrasOpen}
+          aria-controls="verse-extras"
+          onClick={() => setExtrasOpen((o) => !o)}
+          className="flex h-13 w-full items-center gap-3 rounded-2xl px-4 text-left focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <span className="flex-1 font-medium">Tags and notes</span>
+          {!extrasOpen && extrasCount > 0 && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
+              {extrasCount}
+            </span>
+          )}
+          <ChevronDown
+            className={cn("size-4 text-muted-foreground transition-transform duration-200", extrasOpen && "rotate-180")}
+            aria-hidden
+          />
+        </button>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          name="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          placeholder="Why this verse, context, cross-references"
-          aria-invalid={Boolean(errors.notes)}
-        />
-        {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
+        <div id="verse-extras" hidden={!extrasOpen} className="border-t px-4 pt-4 pb-5">
+          <label htmlFor="tag-input" className={label}>
+            Tags
+          </label>
+          <div className="mt-2 flex min-h-11 flex-wrap items-center gap-1.5 rounded-xl border border-input px-2 py-1.5 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+            {tags.map((t) => (
+              <span key={t} className="inline-flex h-8 items-center gap-1 rounded-full bg-muted pr-1 pl-3 text-sm">
+                {tagLabel(t)}
+                <button
+                  type="button"
+                  onClick={() => setTags(tags.filter((x) => x !== t))}
+                  aria-label={`Remove ${tagLabel(t)}`}
+                  className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
+                >
+                  <X className="size-3.5" aria-hidden />
+                </button>
+              </span>
+            ))}
+            <input
+              id="tag-input"
+              value={draftTag}
+              onChange={(e) => (e.target.value.includes(",") ? addTag(e.target.value) : setDraftTag(e.target.value))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (draftTag.trim()) addTag(draftTag);
+                } else if (e.key === "Backspace" && !draftTag && tags.length) {
+                  setTags(tags.slice(0, -1));
+                }
+              }}
+              onBlur={() => draftTag.trim() && addTag(draftTag)}
+              placeholder={tags.length ? "" : "Faith, peace…"}
+              autoComplete="off"
+              autoCapitalize="none"
+              enterKeyHint="enter"
+              className="h-8 min-w-24 flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+          {suggestions.length > 0 && (
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {suggestions.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => addTag(t)}
+                  className="inline-flex h-8 items-center gap-1 rounded-full border border-input pr-3 pl-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Plus className="size-3.5" aria-hidden /> {tagLabel(t)}
+                </button>
+              ))}
+            </div>
+          )}
+          {errors.tags && <p className="mt-2 text-sm text-destructive">{errors.tags}</p>}
+
+          <label htmlFor="notes" className={cn(label, "mt-5 block")}>
+            Notes
+          </label>
+          <Textarea
+            id="notes"
+            name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            placeholder="Why this verse"
+            aria-invalid={Boolean(errors.notes)}
+            className="mt-2 rounded-xl px-3 py-2.5 text-base md:text-base"
+          />
+          {errors.notes && <p className="mt-2 text-sm text-destructive">{errors.notes}</p>}
+        </div>
       </div>
 
       {errors.form && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="mt-4 text-sm text-destructive">
           {errors.form}
         </p>
       )}
 
-      <Button type="submit" disabled={pending} className="h-12 text-base">
-        {pending ? "Saving…" : editing ? "Save changes" : "Save verse"}
-      </Button>
+      <div className="sticky bottom-0 -mx-4 mt-auto bg-background/90 px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md">
+        <Button type="submit" disabled={pending || !ready} aria-busy={pending} className="h-12 w-full gap-2 text-base">
+          {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
+          {editing ? "Save changes" : "Save verse"}
+        </Button>
+      </div>
     </form>
   );
 }
