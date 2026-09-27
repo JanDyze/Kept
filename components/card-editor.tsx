@@ -135,7 +135,7 @@ export function CardEditor({
     <div className="flex flex-1 flex-col">
       {/* live preview, kept in view while the controls scroll: the card itself, or its tile in
           My verses (wide, so a photo crops differently there) */}
-      <div className="sticky top-16 z-10 -mx-4 bg-background/90 px-4 pt-1 pb-4 backdrop-blur-md">
+      <div className="sticky top-(--header-offset) z-10 transition-[top] duration-300 ease-out -mx-4 bg-background/90 px-4 pt-1 pb-4 backdrop-blur-md">
         <div role="radiogroup" aria-label="Preview" className="mx-auto mb-3 flex w-fit gap-1 rounded-full bg-muted p-1">
           {(["card", "list"] as const).map((p) => (
             <button

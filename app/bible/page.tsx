@@ -24,7 +24,7 @@ export default async function BiblePage({ searchParams }: PageProps<"/bible">) {
       subtitle={t === "MBBTAG" ? "Magandang Balita Biblia" : "English Standard Version"}
     >
       {/* Action bar: sticks under the top bar like the one in My verses. */}
-      <div className="sticky top-16 z-20 -mx-4 -mt-2 mb-3 flex items-center gap-2 bg-background/85 px-4 pb-3 pt-3 backdrop-blur-md">
+      <div className="sticky top-(--header-offset) z-20 transition-[top] duration-300 ease-out -mx-4 -mt-2 mb-3 flex items-center gap-2 bg-background/85 px-4 pb-3 pt-3 backdrop-blur-md">
         <Form action="/bible/search" role="search" className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <input

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { HideOnScroll } from "@/components/hide-on-scroll";
 import { cn } from "@/lib/utils";
 
 export type BackLink = { href: string; label: string };
@@ -9,7 +10,8 @@ export type BackLink = { href: string; label: string };
 // - title: icon-only back arrow + page title and subtitle (e.g. "My verses", "6 verses")
 // - back only: "‹ Label" link
 // - neither: the Kept wordmark
-// It keeps a fixed view-transition name so it stays put while pages slide underneath.
+// It keeps a fixed view-transition name so it stays put while pages slide underneath, and hides
+// while scrolling down (HideOnScroll).
 export function AppHeader({
   back,
   title,
@@ -22,7 +24,7 @@ export function AppHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <header
+    <HideOnScroll
       style={{ viewTransitionName: "site-header" }}
       className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md"
     >
@@ -61,6 +63,6 @@ export function AppHeader({
         )}
         {children}
       </div>
-    </header>
+    </HideOnScroll>
   );
 }

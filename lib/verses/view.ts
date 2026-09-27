@@ -1,5 +1,3 @@
-// My verses display mode: full text, or references only (for testing yourself).
-export type LibraryView = "text" | "reference";
-
-// Remembers the Text / Reference choice between visits.
-export const VIEW_COOKIE = "kept-verses-view";
+// My verses order: newest first (the default), or Bible order grouped by book.
+export type LibrarySort = "recent" | "book";
+export const SORT_COOKIE = "kept-verses-sort";

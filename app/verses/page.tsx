@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
 import { readCardStyle } from "@/lib/cards/style";
 import { listVerses, verseCounts } from "@/lib/verses/queries";
-import { VIEW_COOKIE, type LibraryView } from "@/lib/verses/view";
+import { SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
 
 export const metadata: Metadata = { title: "My verses" };
 
@@ -18,9 +18,10 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
   const tag = typeof sp.tag === "string" ? sp.tag : undefined;
 
   const [list, counts, jar] = await Promise.all([listVerses(user.id, { archived }), verseCounts(user.id), cookies()]);
-  const view: LibraryView = jar.get(VIEW_COOKIE)?.value === "reference" ? "reference" : "text";
+  const sort: LibrarySort = jar.get(SORT_COOKIE)?.value === "book" ? "book" : "recent";
 
-  const items: LibraryItem[] = list.map((v) => {
+  // listVerses returns Bible order (archived: most recently archived first); `bibleOrder` keeps it.
+  const items: LibraryItem[] = list.map((v, i) => {
     const tl = v.translation === "MBBTAG" ? bookByName(v.book)?.tl : undefined;
     return {
       id: v.id,
@@ -31,6 +32,8 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       text: v.text,
       tags: v.tags,
       card: readCardStyle(v.card),
+      bibleOrder: archived ? v.bookNumber * 1e6 + v.chapter * 1e3 + v.verseStart : i,
+      addedAt: (archived && v.archivedAt ? v.archivedAt : v.createdAt).getTime(),
     };
   });
 
@@ -40,7 +43,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       title={archived ? "Archived" : "My verses"}
       subtitle={`${list.length} ${list.length === 1 ? "verse" : "verses"}`}
     >
-      <VerseLibrary items={items} archived={archived} initialView={view} initialTag={tag} />
+      <VerseLibrary items={items} archived={archived} initialSort={sort} initialTag={tag} />
 
       {!archived && counts.archived > 0 && (
         <footer className="mt-10 text-center text-sm text-muted-foreground">
