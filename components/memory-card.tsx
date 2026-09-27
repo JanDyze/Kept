@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Morph, morphName } from "@/components/verse-morph";
 import { cardFontVariables } from "@/lib/cards/fonts";
 import {
   cardColors,
@@ -110,14 +111,24 @@ export function MemoryCard({
   reference,
   translation,
   text,
+  morphId,
   className,
 }: {
   style: CardStyle;
   reference: string;
   translation: string;
   text: string;
+  morphId?: string; // the verse id, so the card morphs from / into its tile (verse-morph.tsx)
   className?: string;
 }) {
+  const morph = (name: (id: string) => string, node: React.ReactElement) =>
+    morphId ? (
+      <Morph name={name(morphId)} fill={name === morphName.surface}>
+        {node}
+      </Morph>
+    ) : (
+      node
+    );
   const colors = cardColors(style.bg, style.text);
   const photo = style.bg.kind === "image";
   const caption = (
@@ -134,33 +145,39 @@ export function MemoryCard({
   // The wrapper is the size container; the card inside measures itself against it.
   return (
     <div className={cn("@container w-full", className)}>
-      <figure
-        className={cn(
-          "relative isolate flex aspect-[4/5] w-full flex-col overflow-hidden rounded-[6.5cqw] p-[8.5cqw]",
-          style.bg.kind === "theme"
-            ? "border bg-card text-card-foreground"
-            : "shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)]",
-        )}
-        style={{ backgroundColor: colors.bg, color: colors.fg }}
-      >
-        <CardBackdrop style={style} />
-        {style.reference === "top" && caption}
-        <blockquote
+      {morph(
+        morphName.surface,
+        <figure
           className={cn(
-            "my-auto py-[5cqw] whitespace-pre-line text-pretty",
-            cardFontClass(style.font),
-            style.font === "hand" ? "leading-[1.22]" : "leading-[1.45]",
-            style.align === "center" ? "text-center" : "text-left",
+            "relative isolate flex aspect-[4/5] w-full flex-col overflow-hidden rounded-[6.5cqw] p-[8.5cqw]",
+            style.bg.kind === "theme"
+              ? "border bg-card text-card-foreground"
+              : "shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)]",
           )}
-          style={{
-            fontSize: `${textSize(style, text.length).toFixed(2)}cqw`,
-            textShadow: photo ? "0 1px 14px rgb(0 0 0 / 0.35)" : undefined,
-          }}
+          style={{ backgroundColor: colors.bg, color: colors.fg }}
         >
-          {text}
-        </blockquote>
-        {style.reference === "bottom" && caption}
-      </figure>
+          <CardBackdrop style={style} />
+          {style.reference === "top" && caption}
+          {morph(
+            morphName.text,
+            <blockquote
+              className={cn(
+                "my-auto py-[5cqw] whitespace-pre-line text-pretty",
+                cardFontClass(style.font),
+                style.font === "hand" ? "leading-[1.22]" : "leading-[1.45]",
+                style.align === "center" ? "text-center" : "text-left",
+              )}
+              style={{
+                fontSize: `${textSize(style, text.length).toFixed(2)}cqw`,
+                textShadow: photo ? "0 1px 14px rgb(0 0 0 / 0.35)" : undefined,
+              }}
+            >
+              {text}
+            </blockquote>,
+          )}
+          {style.reference === "bottom" && caption}
+        </figure>,
+      )}
     </div>
   );
 }

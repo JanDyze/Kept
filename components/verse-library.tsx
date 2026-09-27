@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDownUp, Plus, Search, X } from "lucide-react";
 import { CardBackdrop, cardFontClass } from "@/components/memory-card";
+import { Morph, morphName } from "@/components/verse-morph";
 import { buttonVariants } from "@/components/ui/button";
 import { cardColors, type CardStyle } from "@/lib/cards/style";
 import { cn } from "@/lib/utils";
@@ -202,11 +203,18 @@ export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
   const body = (
     <>
       {card && <CardBackdrop style={card} sizes="36rem" />}
-      <p className="font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
+      {card ? (
+        <p className="font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
+      ) : (
+        <Morph name={morphName.reference(v.id)}>
+          <p className="w-fit font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
+        </Morph>
+      )}
       <p className={cn("text-xs", quiet)}>
         {v.translation}
         {v.localReference && ` · ${v.reference}`}
       </p>
+      <Morph name={morphName.text(v.id)}>
       <p
         className={cn(
           "mt-2.5 line-clamp-3",
@@ -218,6 +226,7 @@ export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
       >
         {v.text}
       </p>
+      </Morph>
       {v.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {v.tags.map((t) => (
@@ -232,11 +241,14 @@ export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
   const surface = "@container relative isolate block overflow-hidden rounded-2xl p-4";
   if (!href)
     return (
-      <div style={{ backgroundColor: colors.bg, color: colors.fg }} className={cn(surface, !styled && "border bg-card")}>
-        {body}
-      </div>
+      <Morph name={morphName.surface(v.id)} fill>
+        <div style={{ backgroundColor: colors.bg, color: colors.fg }} className={cn(surface, !styled && "border bg-card")}>
+          {body}
+        </div>
+      </Morph>
     );
   return (
+    <Morph name={morphName.surface(v.id)} fill>
     <Link
       href={href}
       transitionTypes={["nav-forward"]}
@@ -249,6 +261,7 @@ export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
     >
       {body}
     </Link>
+    </Morph>
   );
 }
 

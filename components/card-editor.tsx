@@ -165,7 +165,7 @@ export function CardEditor({
           )}
         >
           {preview === "card" ? (
-            <MemoryCard style={style} reference={reference} translation={translation} text={text} />
+            <MemoryCard style={style} reference={reference} translation={translation} text={text} morphId={verseId} />
           ) : (
             <TextCard v={{ ...item, card: style }} />
           )}

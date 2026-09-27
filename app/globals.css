@@ -217,6 +217,57 @@
     200ms ease-out 120ms both fade,
     360ms cubic-bezier(0.4, 0, 0.2, 1) both slide;
 }
+/* A verse's tile, card and text morph between My verses, the verse page and the card editor
+   (components/verse-morph.tsx), softened mid-flight so scaled text doesn't shimmer. */
+::view-transition-group(.morph),
+::view-transition-group(.morph-fill) {
+  animation-duration: 440ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-image-pair(.morph),
+::view-transition-image-pair(.morph-fill) {
+  animation: 440ms ease both morph-soften;
+}
+/* A surface changing shape (wide tile → tall card) fills its frame, clipped to rounded corners. */
+::view-transition-image-pair(.morph-fill) {
+  overflow: clip;
+  border-radius: 1.25rem;
+}
+::view-transition-old(.morph-fill),
+::view-transition-new(.morph-fill) {
+  height: 100%;
+  object-fit: cover;
+}
+/* Surfaces: the old one stays solid underneath while the new one fades in over it, so the card
+   never turns see-through mid-flight. Text hands off instead of showing a double exposure: the old
+   lines leave before the new ones settle in. */
+::view-transition-old(.morph-fill) {
+  animation: none;
+}
+::view-transition-new(.morph-fill) {
+  animation: 240ms ease-out both morph-in;
+}
+::view-transition-old(.morph) {
+  animation: 160ms ease-out both morph-out;
+}
+::view-transition-new(.morph) {
+  animation: 240ms ease-in 110ms both morph-in;
+}
+@keyframes morph-soften {
+  35% {
+    filter: blur(2px);
+  }
+}
+@keyframes morph-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes morph-in {
+  from {
+    opacity: 0;
+  }
+}
 /* The sticky header is the fixed point while content slides. Chromium copies its backdrop blur
    onto the group, which would leave a blurred strip over the content when the header leaves
    (going home), so the group gets none. */

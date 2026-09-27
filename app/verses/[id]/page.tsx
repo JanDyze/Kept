@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Archive, ArchiveRestore, Palette, Pencil } from "lucide-react";
 import { z } from "zod";
 import { MemoryCard } from "@/components/memory-card";
+import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
@@ -63,7 +64,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               reference={localRef ?? verse.reference}
               translation={verse.translation}
               text={verse.text}
-              className="animate-rise"
+              morphId={verse.id}
             />
           </>
         ) : (
@@ -72,10 +73,14 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               <Badge variant="secondary">{verse.translation}</Badge>
               {archived && <Badge variant="outline">Archived</Badge>}
             </div>
-            <h1 className="mt-3 font-brand text-3xl font-semibold tracking-tight">{verse.reference}</h1>
+            <Morph name={morphName.reference(verse.id)}>
+              <h1 className="mt-3 w-fit font-brand text-3xl font-semibold tracking-tight">{verse.reference}</h1>
+            </Morph>
             {localRef && <p className="text-muted-foreground">{localRef}</p>}
 
-            <p className="mt-5 whitespace-pre-line font-serif text-[1.35rem] leading-relaxed">{verse.text}</p>
+            <Morph name={morphName.text(verse.id)}>
+              <p className="mt-5 whitespace-pre-line font-serif text-[1.35rem] leading-relaxed">{verse.text}</p>
+            </Morph>
           </>
         )}
 

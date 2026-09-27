@@ -10,6 +10,7 @@ All notable changes to Kept, one version per feature.
 - Photos: drag in the preview to move them and zoom in, so landscape photos can be framed on the portrait card too. The preview switches between the card and its tile in My verses.
 - The card shows on the verse page and in My verses, in its colors, photo and font. "Plain page" goes back to the old look.
 - My verses: newest first by default, with a Recent / Book switch (remembered); always shows the verses' text (the references-only view is gone).
+- Opening a verse from My verses morphs it into place: its tile grows into the card (colors and photo carried across) and the text flies to its spot; plain verses carry their reference and text. Going back plays it in reverse, and the card morphs into the card editor's preview.
 - The top bar hides while scrolling down and comes back when scrolling up; sticky bars below it move up with it.
 - Photos are shrunk in the browser before upload, kept per user, reusable across verses, and can be deleted (cards using one go back to plain). For now they're stored on the dev machine's disk (`data/card-images`); `lib/cards/storage.ts` is the one place to switch to cloud storage before deploying.
 
