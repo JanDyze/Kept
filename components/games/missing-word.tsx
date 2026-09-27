@@ -12,7 +12,7 @@ import {
 } from "@/lib/games/missing-word";
 import { normalizeWord } from "@/lib/games/words";
 import { cn } from "@/lib/utils";
-import { ActionBar, countText, GameError, GameResult, GameTitle, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
@@ -131,7 +131,6 @@ export function MissingWordGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Missing Word" />
         <GameResult
           won={won}
           headline={won ? "You found it" : "Not this time"}
@@ -160,7 +159,6 @@ export function MissingWordGame({
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Missing Word" />
 
       <VerseCard reference={puzzle.reference} translation={puzzle.translation} className="p-4 [&>div]:text-base [&>div]:leading-relaxed">
         {verse(!game.playing, game.status === "won")}

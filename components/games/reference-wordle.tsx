@@ -16,7 +16,7 @@ import {
   type ReferenceWordleState,
 } from "@/lib/games/reference-wordle";
 import { cn } from "@/lib/utils";
-import { ActionBar, countText, GameError, GameResult, GameTitle, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function ReferenceWordleGame({
@@ -71,7 +71,6 @@ export function ReferenceWordleGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Reference" />
         <GameResult
           won={won}
           headline={won ? "Right on" : "Not this time"}
@@ -99,7 +98,6 @@ export function ReferenceWordleGame({
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Reference" />
 
       <VerseCard reference={puzzle.translation} className="[&>div]:text-lg [&>div]:leading-relaxed">
         {puzzle.text}

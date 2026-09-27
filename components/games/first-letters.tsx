@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { hint, sameWord, type FirstLettersPuzzle, type FirstLettersState } from "@/lib/games/first-letters";
 import { cn } from "@/lib/utils";
-import { ActionBar, DoneBadge, GameError, GameResult, GameTitle, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, DoneBadge, GameError, GameResult, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function FirstLettersGame({
@@ -57,7 +57,6 @@ export function FirstLettersGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="First Letters" />
         <GameResult
           won={won}
           headline={won ? (mistakes === 0 ? "Perfect" : "All typed") : "Here's the verse"}
@@ -75,7 +74,6 @@ export function FirstLettersGame({
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="First Letters" />
       <Segments parts={[typed / total]} />
 
       <VerseCard

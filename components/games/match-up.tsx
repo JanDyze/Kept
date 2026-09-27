@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { matchUpOutcome, type MatchUpPuzzle, type MatchUpState } from "@/lib/games/match-up";
 import { cn } from "@/lib/utils";
-import { ActionBar, GameError, GameResult, GameTitle, mistakesText, Segments, useResultShown } from "./game-parts";
+import { ActionBar, GameError, GameResult, mistakesText, Segments, useResultShown } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function MatchUpGame({
@@ -49,7 +49,6 @@ export function MatchUpGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Match Up" />
         <GameResult
           won={won}
           headline={won ? (mistakes === 0 ? "Perfect" : "All matched") : "Here they are"}
@@ -76,7 +75,6 @@ export function MatchUpGame({
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Match Up" />
       <Segments parts={puzzle.pairs.map((_, k) => (k < matched.length ? 1 : 0))} />
 
       <ul className="mt-4 flex flex-col gap-2.5">

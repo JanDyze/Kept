@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { isNextChunk, type UnscramblePuzzle, type UnscrambleState } from "@/lib/games/unscramble";
 import { cn } from "@/lib/utils";
-import { ActionBar, DoneBadge, GameError, GameResult, GameTitle, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, DoneBadge, GameError, GameResult, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function UnscrambleGame({
@@ -46,7 +46,6 @@ export function UnscrambleGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Unscramble" />
         <GameResult
           won={won}
           headline={won ? (mistakes === 0 ? "Perfect" : "Back in order") : "Here's the verse"}
@@ -65,7 +64,6 @@ export function UnscrambleGame({
   const done = used.length === total;
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Unscramble" />
       <Segments parts={[used.length / total]} />
 
       <VerseCard

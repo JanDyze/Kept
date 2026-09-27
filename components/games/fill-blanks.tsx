@@ -12,7 +12,7 @@ import {
   type FillBlanksVerse,
 } from "@/lib/games/fill-blanks";
 import { cn } from "@/lib/utils";
-import { ActionBar, countText, DoneBadge, GameError, GameResult, GameTitle, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, countText, DoneBadge, GameDetail, GameError, GameResult, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 type Blank = ReturnType<typeof blankOrder>[number];
@@ -95,7 +95,6 @@ export function FillBlanksGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Fill the Blanks" />
         <GameResult
           won={won}
           headline={won ? (totalMistakes === 0 ? "Perfect" : "All filled in") : "Here's the rest"}
@@ -111,7 +110,7 @@ export function FillBlanksGame({
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Fill the Blanks" detail={rounds > 1 ? `Verse ${shown + 1} of ${rounds}` : undefined} />
+      <GameDetail text={rounds > 1 ? `Verse ${shown + 1} of ${rounds}` : undefined} />
 
       <Segments
         parts={puzzle.verses.map((_, vi) => {

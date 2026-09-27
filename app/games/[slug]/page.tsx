@@ -43,9 +43,8 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
 
   if (!game) {
     return (
-      <Screen back={{ href: "/games", label: "Games" }}>
-        <h1 className="font-brand text-3xl font-semibold tracking-tight">{info.name}</h1>
-        <p className="mt-2 text-muted-foreground">
+      <Screen back={{ href: "/games", label: "Games" }} title={info.name}>
+        <p className="text-muted-foreground">
           {games.length === 0
             ? "Games are made from your saved verses. Add one to start."
             : "None of your verses fit this game today. Longer verses work best."}
@@ -102,7 +101,7 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
   };
 
   return (
-    <Screen back={{ href: "/games", label: "Games" }}>
+    <Screen back={{ href: "/games", label: "Games" }} title={info.name}>
       <Replayable game={game.game} puzzle={game.puzzle} fresh={render({}, "in_progress")}>
         {render(game.state, game.status)}
       </Replayable>

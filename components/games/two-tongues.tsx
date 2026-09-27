@@ -5,7 +5,7 @@ import { Check, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { correctCount, twoTonguesOutcome, type TwoTonguesPuzzle, type TwoTonguesState } from "@/lib/games/two-tongues";
 import { cn } from "@/lib/utils";
-import { ActionBar, GameError, GameResult, GameTitle, Segments, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, GameDetail, GameError, GameResult, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function TwoTonguesGame({
@@ -43,7 +43,6 @@ export function TwoTonguesGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Two Tongues" />
         <GameResult
           won={won}
           headline={won ? "Bilingual" : "Not this time"}
@@ -80,7 +79,7 @@ export function TwoTonguesGame({
 
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Two Tongues" detail={`Round ${shown + 1} of ${total}`} />
+      <GameDetail text={`Round ${shown + 1} of ${total}`} />
       <Segments parts={puzzle.rounds.map((_, i) => (i < answers.length ? 1 : 0))} />
 
       <div key={shown} className="animate-rise">

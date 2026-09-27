@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { SPOT_LIVES, spotOutcome, type SpotChangePuzzle, type SpotChangeState } from "@/lib/games/spot-change";
 import { cn } from "@/lib/utils";
-import { ActionBar, countText, DoneBadge, GameError, GameResult, GameTitle, Segments, useResultShown, VerseCard } from "./game-parts";
+import { ActionBar, countText, DoneBadge, GameError, GameResult, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function SpotChangeGame({
@@ -59,7 +59,6 @@ export function SpotChangeGame({
     const won = game.status === "won";
     return (
       <div className="flex flex-1 flex-col">
-        <GameTitle name="Spot the Change" />
         <GameResult
           won={won}
           headline={won ? "Sharp eyes" : "Not this time"}
@@ -92,7 +91,6 @@ export function SpotChangeGame({
   const lives = SPOT_LIVES - misses;
   return (
     <div className="flex flex-1 flex-col">
-      <GameTitle name="Spot the Change" />
       <Segments parts={puzzle.changed.map((_, k) => (k < found.length ? 1 : 0))} />
 
       <VerseCard

@@ -7,13 +7,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useReplay } from "./replay";
 
-export function GameTitle({ name, detail }: { name: string; detail?: string }) {
-  return (
-    <div className="mb-5">
-      <h1 className="font-brand text-3xl font-semibold tracking-tight">{name}</h1>
-      {detail && <p className="text-sm text-muted-foreground">{detail}</p>}
-    </div>
-  );
+// Which round is showing ("Verse 2 of 3"); the game's name is in the top bar.
+export function GameDetail({ text }: { text?: string }) {
+  if (!text) return null;
+  return <p className="mb-3 text-sm text-muted-foreground">{text}</p>;
 }
 
 // Saving indicator while a game's result is recorded, or the error if that failed.
