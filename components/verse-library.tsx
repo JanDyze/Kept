@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDownUp, Plus, Search, X } from "lucide-react";
 import { CardBackdrop, cardFontClass } from "@/components/memory-card";
 import { Morph, morphName } from "@/components/verse-morph";
 import { buttonVariants } from "@/components/ui/button";
 import { cardColors, type CardStyle } from "@/lib/cards/style";
+import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/lib/scroll-memory";
 import { cn } from "@/lib/utils";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
@@ -43,6 +44,26 @@ export function VerseLibrary({
   const [sort, setSort] = useState<LibrarySort>(initialSort);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | undefined>(initialTag);
+
+  // Coming back from a verse: put the filters back, then (once the list shows them) the scroll
+  // spot. Layout effects, so it lands before paint and the verse morphs back into the right tile.
+  const restoring = useRef<ListMemory | null>(null);
+  useLayoutEffect(() => {
+    const memory = takeListMemory(currentPath());
+    if (!memory) return;
+    restoring.current = memory;
+    /* eslint-disable react-hooks/set-state-in-effect -- restoring saved UI state before paint */
+    setQuery(memory.query ?? "");
+    setTag(memory.tag);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+  useLayoutEffect(() => {
+    const memory = restoring.current;
+    if (!memory || (memory.query ?? "") !== query || memory.tag !== tag) return;
+    restoring.current = null;
+    window.scrollTo(0, memory.y);
+  }, [query, tag]);
+  const rememberSpot = () => rememberList(currentPath(), { y: window.scrollY, query, tag });
 
   function toggleSort() {
     const next = sort === "recent" ? "book" : "recent";
@@ -160,7 +181,7 @@ export function VerseLibrary({
               <ul className="flex flex-col gap-3">
                 {g.verses.map((v, i) => (
                   <li key={v.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
-                    <TextCard v={v} href={`/verses/${v.id}`} />
+                    <TextCard v={v} href={`/verses/${v.id}`} onOpen={rememberSpot} />
                   </li>
                 ))}
               </ul>
@@ -195,7 +216,7 @@ export function VerseLibrary({
 
 // A verse with a card shows its background, photo and font here too.
 // Without an href it's a still preview (the card editor shows one).
-export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
+export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; onOpen?: () => void }) {
   const card = v.card;
   const colors = card ? cardColors(card.bg, card.text) : {};
   const styled = Boolean(colors.bg || colors.fg);
@@ -251,6 +272,7 @@ export function TextCard({ v, href }: { v: LibraryItem; href?: string }) {
     <Morph name={morphName.surface(v.id)} fill>
     <Link
       href={href}
+      onClick={onOpen}
       transitionTypes={["nav-forward"]}
       style={{ backgroundColor: colors.bg, color: colors.fg }}
       className={cn(

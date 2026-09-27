@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { BackNavLink } from "@/components/back-link";
 import { HideOnScroll } from "@/components/hide-on-scroll";
 import { cn } from "@/lib/utils";
 
@@ -32,14 +33,14 @@ export function AppHeader({
         {title ? (
           <div className="flex min-w-0 items-center gap-1">
             {back && (
-              <Link
+              <BackNavLink
                 href={back.href}
                 transitionTypes={["nav-back"]}
                 aria-label={`Back to ${back.label}`}
                 className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <ChevronLeft className="size-5" aria-hidden />
-              </Link>
+              </BackNavLink>
             )}
             <div className="min-w-0">
               <h1 className="truncate font-brand text-2xl font-semibold leading-tight tracking-tight">{title}</h1>
@@ -47,14 +48,14 @@ export function AppHeader({
             </div>
           </div>
         ) : back ? (
-          <Link
+          <BackNavLink
             href={back.href}
             transitionTypes={["nav-back"]}
             className="-ml-2 flex h-11 min-w-0 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="size-4 shrink-0" aria-hidden />
             <span className="truncate">{back.label}</span>
-          </Link>
+          </BackNavLink>
         ) : (
           <Link href="/" transitionTypes={["nav-back"]} className="flex items-center gap-2">
             <Image src="/logo-animated.svg" alt="" width={30} height={30} unoptimized className="dark:brightness-0 dark:invert" />
