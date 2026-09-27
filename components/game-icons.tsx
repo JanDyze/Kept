@@ -1,6 +1,6 @@
 import type { GameId } from "@/lib/games/registry";
 
-// Game icons, drawn from brand/GameIcons.png (Fill the Blanks from brand/KeptIcons.png): two
+// Game icons, drawn from brand/GameIcons.png (Fill the Blanks from the user's single drawing): two
 // tones, deep teal ink and an amber accent (--icon-* in globals.css), with small marks and gaps in
 // the tile color; both flip for dark mode. Parts move a little when the tile is hovered, held or
 // focused (the `group-engaged` variant); `motion-safe:` keeps them still. SVGs are
@@ -20,9 +20,35 @@ type IconProps = { className?: string };
 function FillBlanksIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      <rect x="2" y="12" width="52" height="32" rx="9" className={ink} />
-      <rect x="9" y="25.5" width="11" height="5" rx="2.5" className={mark} />
-      <rect x="25" y="22" width="22" height="12" rx="6" className={`${part} ${accent} motion-safe:group-engaged:-translate-x-1.5`} />
+      {/* a verse with an empty blank, underlined */}
+      <rect x="2" y="16" width="52" height="38" rx="9" className={ink} />
+      <g className={mark}>
+        <rect x="9" y="23" width="29" height="4" rx="2" />
+        <rect x="9" y="32.5" width="6" height="4" rx="2" />
+        <rect x="41" y="32.5" width="6" height="4" rx="2" />
+        <rect x="9" y="45" width="35" height="4" rx="2" />
+      </g>
+      <rect x="19.5" y="30" width="17" height="9" rx="3.5" fill="none" strokeWidth="2.4" className="stroke-icon-paper" />
+      <rect x="19" y="41" width="18.5" height="2.6" rx="1.3" className={accent} />
+      {/* the word tile, sparkling, about to drop in */}
+      <g
+        strokeWidth="3"
+        strokeLinecap="round"
+        className={`${part} stroke-icon-accent motion-safe:group-engaged:-translate-y-1 motion-safe:group-engaged:scale-110`}
+      >
+        <path d="M38 1v4M28 4.5l2.8 2.8M48 4.5l-2.8 2.8" />
+      </g>
+      <g transform="rotate(10 38 15)">
+        <rect
+          x="30"
+          y="9"
+          width="16"
+          height="12"
+          rx="3.5"
+          className={`${part} ${accent} stroke-icon-paper motion-safe:group-engaged:-translate-x-1 motion-safe:group-engaged:translate-y-1 motion-safe:group-engaged:-rotate-6`}
+          {...gap}
+        />
+      </g>
     </svg>
   );
 }
