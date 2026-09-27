@@ -2,9 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
-## 0.10.2 — New home icons
+## 0.10.2 — New icons
 
 - Home icons redrawn from the new sheet (`brand/HomeIcons.png`): puzzle pieces for Games, a stack of quote cards for My Verses, a closed Bible with a cross, a compass for Discover, and sliders for Settings. My Verses fans its cards out on hover.
+- Game icons redrawn from the new sheet (`brand/GameIcons.png`): lettered tiles and an arrow for Unscramble, A B C beside lines for First Letters, a verse with a ? gap for Missing Word, a Bible marked 3:16 for Reference, two pages with the change circled for Spot the Change, fitted puzzle pieces for Match Up, and A / 文 speech bubbles for Two Tongues. Fill the Blanks keeps its icon.
 
 ## 0.10.1 — goodthemes 0.2
 
