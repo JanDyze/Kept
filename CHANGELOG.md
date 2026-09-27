@@ -7,6 +7,8 @@ All notable changes to Kept, one version per feature.
 - Home icons redrawn from the new sheet (`brand/HomeIcons.png`): puzzle pieces for Games, a stack of quote cards for My Verses, a closed Bible with a cross, a compass for Discover, and sliders for Settings. My Verses fans its cards out on hover.
 - Game icons redrawn from the new sheet (`brand/GameIcons.png`): lettered tiles and an arrow for Unscramble, A B C beside lines for First Letters, a verse with a ? gap for Missing Word, a Bible marked 3:16 for Reference, two pages with the change circled for Spot the Change, fitted puzzle pieces for Match Up, and A / 文 speech bubbles for Two Tongues. Fill the Blanks shows an empty, underlined blank with a sparkling word tile above it.
 - A game's name is in the top bar instead of a big heading on the page.
+- Wrong choices in Fill the Blanks and swapped words in Spot the Change are never names (no more “jose”) or pieces of hyphenated words (“taasang”).
+- Names, God and Diyos keep their capital in the word bank and in Missing Word's answer.
 
 ## 0.10.1 — goodthemes 0.2
 

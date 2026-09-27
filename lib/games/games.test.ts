@@ -5,7 +5,7 @@ import { buildMissingWord, missingWordOutcome, scoreGuess } from "./missing-word
 import { seededRandom, shuffle } from "./random";
 import { isValidGuess, referenceHint, referenceOutcome } from "./reference-wordle";
 import { buildUnscramble, chunkVerse, isNextChunk } from "./unscramble";
-import { isStopword, tokenize } from "./words";
+import { isName, isStopword, tokenize } from "./words";
 
 const JOHN_3_16 =
   "“For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.";
@@ -27,6 +27,18 @@ describe("tokenize", () => {
     expect(isStopword("The")).toBe(true);
     expect(isStopword("ang")).toBe(true);
     expect(isStopword("world")).toBe(false);
+  });
+
+  it("tells names from words that just start a sentence", () => {
+    const tokens = tokenize("Jesus wept. Then God spoke to Moses: “Go.”");
+    const at = (w: string) => tokens.findIndex((t) => t.word === w);
+    expect(isName(tokens, at("Jesus"))).toBe(false); // opens the verse: unknown without the Bible's word list
+    expect(isName(tokens, at("Jesus"), new Set(["jesus"]))).toBe(true);
+    expect(isName(tokens, at("Then"))).toBe(false);
+    expect(isName(tokens, at("God"))).toBe(true);
+    expect(isName(tokens, at("Moses"))).toBe(true);
+    expect(isName(tokens, at("Go"))).toBe(false);
+    expect(isName(tokens, at("wept"))).toBe(false);
   });
 });
 
@@ -142,6 +154,18 @@ describe("Fill the Blanks", () => {
       expect(bank.length).toBe(answers.length + decoys.length);
       for (const a of answers) expect(bank).toContain(a);
       for (const d of decoys) expect(bank).toContain(d);
+    }
+  });
+
+  it("keeps the capital on names in the word bank", () => {
+    const text = "“For God so loved the world, that he gave his only Son”";
+    for (const seed of ["n1", "n2", "n3", "n4", "n5"]) {
+      const p = buildFillBlanks([verse(text)], pool, seededRandom(seed));
+      const answers = p.verses[0].blanks.map((i) => p.verses[0].tokens[i].word);
+      if (answers.includes("God")) expect(p.bank).toContain("God");
+      if (answers.includes("Son")) expect(p.bank).toContain("Son");
+      if (answers.includes("loved")) expect(p.bank).toContain("loved");
+      for (const w of p.bank) if (!["God", "Son"].includes(w)) expect(w).toBe(w.toLowerCase());
     }
   });
 

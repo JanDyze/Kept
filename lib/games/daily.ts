@@ -3,7 +3,7 @@ import { and, asc, desc, eq, gte, isNull, ne, notBetween, sql } from "drizzle-or
 import { bookByNumber } from "@/lib/bible/books";
 import { getPassage } from "@/lib/bible/lookup";
 import { isLookupTranslation } from "@/lib/bible/translations";
-import { commonWords } from "@/lib/bible/vocab";
+import { commonWords, properNames } from "@/lib/bible/vocab";
 import { addDays } from "@/lib/day";
 import { db } from "@/lib/db";
 import { bibleVerses, dailyGames, verses, type DailyGame, type Verse } from "@/lib/db/schema";
@@ -97,7 +97,8 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
     .flatMap((v) => tokenize(v.text).map((t) => t.word))
     .filter((w) => !/^\p{Lu}/u.test(w));
   const decoys = [...fromOtherVerses, ...(await commonWords(translation).catch(() => [] as string[]))];
-  add("fill_blanks", fillVerses, buildFillBlanks(fillVerses.map(asInput), decoys, rng("fill_blanks")));
+  const names = await properNames(translation).catch(() => new Set<string>());
+  add("fill_blanks", fillVerses, buildFillBlanks(fillVerses.map(asInput), decoys, rng("fill_blanks"), names));
 
   for (const v of fresh(byNeed)) {
     const puzzle = buildUnscramble(asInput(v), rng("unscramble"));
@@ -114,7 +115,11 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
   );
 
   for (const v of fresh(byStaleness)) {
-    const puzzle = buildMissingWord(asInput(v), rng("missing_word"));
+    const puzzle = buildMissingWord(
+      asInput(v),
+      rng("missing_word"),
+      await properNames(v.translation).catch(() => undefined),
+    );
     if (puzzle) {
       add("missing_word", [v], puzzle);
       break;

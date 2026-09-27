@@ -33,28 +33,38 @@ export async function wordsOfLength(translation: string, length: number, answer:
   return [...set];
 }
 
-// Everyday words for decoys: the most frequent ones, so no rare words like "Iphtahel"; hyphenated
-// words kept whole ("kataas-taasang", not "taasang"); and no names ("Jose", "Jerusalem"), told
-// apart as the words written with a capital most of the time.
-const common = new Map<string, Promise<string[]>>();
-const COMMON_LIMIT = 1500;
+// Words split by case, most frequent first. Hyphenated words stay whole ("kataas-taasang", not
+// "taasang"). A word counts as capitalized when it's written with a capital most of the time: a
+// name ("Jose", "Jerusalem") or "God", "Diyos", "LORD".
+const byCase = new Map<string, Promise<{ lower: string[]; capitalized: string[] }>>();
 
-export function commonWords(translation: string): Promise<string[]> {
-  let words = common.get(translation);
+function wordsByCase(translation: string) {
+  let words = byCase.get(translation);
   if (!words) {
     words = db
-      .execute<{ w: string }>(
-        sql`select lower(w) as w
+      .execute<{ w: string; capitalized: boolean }>(
+        sql`select lower(w) as w, count(*) filter (where w ~ '^[[:lower:]]') * 2 <= count(*) as capitalized
             from bible_verses, regexp_split_to_table(text, '[^[:alpha:]''’-]+') as w
             where translation = ${translation} and length(w) between 3 and 12 and w ~ '^[[:alpha:]].*[[:alpha:]]$'
             group by 1
-            having count(*) filter (where w ~ '^[[:lower:]]') * 2 > count(*)
-            order by count(*) desc
-            limit ${COMMON_LIMIT}`,
+            order by count(*) desc`,
       )
-      .then((rows) => [...new Set(rows.map((r) => normalizeWord(r.w)))]);
-    words.catch(() => common.delete(translation));
-    common.set(translation, words);
+      .then((rows) => ({
+        lower: [...new Set(rows.filter((r) => !r.capitalized).map((r) => normalizeWord(r.w)))],
+        capitalized: [...new Set(rows.filter((r) => r.capitalized).map((r) => normalizeWord(r.w)))],
+      }));
+    words.catch(() => byCase.delete(translation));
+    byCase.set(translation, words);
   }
   return words;
+}
+
+// Everyday words for decoys: the most frequent ones (no rare words like "Iphtahel") and no names.
+export async function commonWords(translation: string, limit = 1500) {
+  return (await wordsByCase(translation)).lower.slice(0, limit);
+}
+
+// Names and the like, which keep their capital when shown.
+export async function properNames(translation: string) {
+  return new Set((await wordsByCase(translation)).capitalized);
 }

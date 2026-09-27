@@ -1,5 +1,5 @@
 import { pick, type Rng } from "./random";
-import { isPlainWord, isStopword, normalizeWord, tokenize, type Token } from "./words";
+import { isName, isPlainWord, isStopword, normalizeWord, tokenize, type Token } from "./words";
 
 export const MISSING_WORD_GUESSES = 6;
 const MIN = 4;
@@ -11,6 +11,7 @@ export type MissingWordPuzzle = {
   translation: string;
   tokens: Token[];
   answer: string; // normalized (lowercase, no accents)
+  shown?: string; // the answer as printed when it's a name ("Diyos"), for the result
   hidden: number[]; // token indexes shown as tiles (every occurrence of the answer)
 };
 
@@ -22,6 +23,7 @@ export type TileColor = "correct" | "present" | "absent";
 export function buildMissingWord(
   verse: { id: string; reference: string; translation: string; text: string },
   rng: Rng,
+  names?: Set<string>,
 ): MissingWordPuzzle | null {
   const tokens = tokenize(verse.text);
   const candidates = tokens
@@ -30,16 +32,23 @@ export function buildMissingWord(
   if (candidates.length === 0) return null;
 
   const weighted = candidates.flatMap(({ t, i }) => {
-    const sentenceStart = i === 0 || /[.!?]["”’)]*\s*$/.test(tokens[i - 1].post);
-    const isName = /^\p{Lu}/u.test(t.word) && !sentenceStart;
-    const weight = t.word.length - MIN + 1 + (isName ? 3 : 0);
+    const weight = t.word.length - MIN + 1 + (isName(tokens, i, names) ? 3 : 0);
     return Array.from({ length: weight }, () => i);
   });
   const chosen = tokens[pick(weighted, rng)];
   const answer = normalizeWord(chosen.word);
   const hidden = tokens.flatMap((t, i) => (normalizeWord(t.word) === answer ? [i] : []));
+  const name = hidden.find((i) => isName(tokens, i, names));
 
-  return { verseId: verse.id, reference: verse.reference, translation: verse.translation, tokens, answer, hidden };
+  return {
+    verseId: verse.id,
+    reference: verse.reference,
+    translation: verse.translation,
+    tokens,
+    answer,
+    hidden,
+    ...(name !== undefined && { shown: tokens[name].word }),
+  };
 }
 
 // Wordle coloring, handling repeated letters: greens first, then yellows up to the remaining count.

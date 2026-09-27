@@ -134,7 +134,7 @@ export function MissingWordGame({
         <GameResult
           won={won}
           headline={won ? "You found it" : "Not this time"}
-          result={won ? `${guesses.length} of ${MISSING_WORD_GUESSES} guesses` : `The word was “${puzzle.answer}”`}
+          result={won ? `${guesses.length} of ${MISSING_WORD_GUESSES} guesses` : `The word was “${puzzle.shown ?? puzzle.answer}”`}
           next={next}
         >
           {scored.length > 0 && (

@@ -1,5 +1,5 @@
 import { shuffle, type Rng } from "./random";
-import { isStopword, normalizeWord, tokenize, type Token } from "./words";
+import { isName, isStopword, normalizeWord, tokenize, type Token } from "./words";
 
 const BLANK_SHARE = 0.35;
 const MAX_BLANKS_PER_VERSE = 8;
@@ -15,7 +15,7 @@ export type FillBlanksVerse = {
 
 export type FillBlanksPuzzle = {
   verses: FillBlanksVerse[];
-  bank: string[]; // answers plus decoys, shuffled, lowercase
+  bank: string[]; // answers plus decoys, shuffled, lowercase except names
 };
 
 // Blanks are filled in reading order across all verses; mistakes are tracked per verse.
@@ -25,6 +25,7 @@ export function buildFillBlanks(
   verses: { id: string; reference: string; translation: string; text: string }[],
   decoyPool: string[],
   rng: Rng,
+  names?: Set<string>,
 ): FillBlanksPuzzle {
   const built = verses.map((v) => {
     const tokens = tokenize(v.text);
@@ -36,7 +37,9 @@ export function buildFillBlanks(
     return { verseId: v.id, reference: v.reference, translation: v.translation, tokens, blanks };
   });
 
-  const answers = built.flatMap((v) => v.blanks.map((i) => bankWord(v.tokens[i].word)));
+  const answers = built.flatMap((v) =>
+    v.blanks.map((i) => (isName(v.tokens, i, names) ? v.tokens[i].word.replace(/’/g, "'") : bankWord(v.tokens[i].word))),
+  );
   const taken = new Set(answers.map(normalizeWord));
   const lengths = new Set(answers.map((a) => a.length));
   const decoys = shuffle(

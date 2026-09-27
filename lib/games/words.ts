@@ -49,6 +49,16 @@ const STOPWORDS = new Set(
     .filter(Boolean),
 );
 
+// A name (or "God", "Diyos", "LORD"), shown with its capital rather than in lowercase: capitalized
+// where a sentence doesn't start, or a word the Bible nearly always capitalizes (`names`, which
+// catches "Jesus" opening a sentence).
+export function isName(tokens: Token[], i: number, names?: Set<string>) {
+  const word = tokens[i].word;
+  if (!/^\p{Lu}/u.test(word)) return false;
+  const sentenceStart = i === 0 || /[.!?:]["”’)]*\s*$/.test(tokens[i - 1].post) || /[“"‘(]/.test(tokens[i].pre);
+  return !sentenceStart || !!names?.has(normalizeWord(word));
+}
+
 export function isStopword(word: string) {
   return STOPWORDS.has(normalizeWord(word));
 }
