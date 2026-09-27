@@ -2,6 +2,14 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.11.0 — Verse cards
+
+- Any verse can become a card: "Make it a card" on the verse page opens an editor with a live preview.
+- Background: the theme's card, ten colors (Ink, Night, Teal, Forest, Plum, Clay, Gold, Sand, Mist, Paper), or your own photo with dim, blur and position; paper grain on top of any of them.
+- Text: five fonts (Serif, Classic, Display, Sans, Hand), three sizes, left or centered, and the reference at the top or bottom. Long passages set smaller on their own.
+- The card shows on the verse page and in My verses, in its colors, photo and font. "Plain page" goes back to the old look.
+- Photos are shrunk in the browser before upload, kept per user, reusable across verses, and can be deleted (cards using one go back to plain). For now they're stored on the dev machine's disk (`data/card-images`); `lib/cards/storage.ts` is the one place to switch to cloud storage before deploying.
+
 ## 0.10.2 — New icons
 
 - Home icons redrawn from the new sheet (`brand/HomeIcons.png`): puzzle pieces for Games, a stack of quote cards for My Verses, a closed Bible with a cross, a compass for Discover, and sliders for Settings. My Verses fans its cards out on hover.

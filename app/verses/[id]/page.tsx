@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import { Archive, ArchiveRestore, Palette, Pencil } from "lucide-react";
 import { z } from "zod";
+import { MemoryCard } from "@/components/memory-card";
 import { Screen } from "@/components/screen";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
+import { readCardStyle } from "@/lib/cards/style";
 import { formatDate } from "@/lib/format";
 import { getVerse } from "@/lib/verses/queries";
 import { tagLabel } from "@/lib/verses/tag-label";
@@ -32,6 +34,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
   if (!verse) notFound();
 
   const archived = Boolean(verse.archivedAt);
+  const card = readCardStyle(verse.card);
   const tagalog = verse.translation === "MBBTAG" ? bookByName(verse.book)?.tl : undefined;
   const localRef = tagalog ? verse.reference.replace(verse.book, tagalog) : null;
 
@@ -51,15 +54,43 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       }
     >
       <article>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{verse.translation}</Badge>
-          {archived && <Badge variant="outline">Archived</Badge>}
-        </div>
-        <h1 className="mt-3 font-brand text-3xl font-semibold tracking-tight">{verse.reference}</h1>
-        {localRef && <p className="text-muted-foreground">{localRef}</p>}
+        {card ? (
+          <>
+            <h1 className="sr-only">{verse.reference}</h1>
+            {archived && <Badge variant="outline" className="mb-3">Archived</Badge>}
+            <MemoryCard
+              style={card}
+              reference={localRef ?? verse.reference}
+              translation={verse.translation}
+              text={verse.text}
+              className="animate-rise"
+            />
+          </>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">{verse.translation}</Badge>
+              {archived && <Badge variant="outline">Archived</Badge>}
+            </div>
+            <h1 className="mt-3 font-brand text-3xl font-semibold tracking-tight">{verse.reference}</h1>
+            {localRef && <p className="text-muted-foreground">{localRef}</p>}
 
-        <p className="mt-5 whitespace-pre-line font-serif text-[1.35rem] leading-relaxed">{verse.text}</p>
+            <p className="mt-5 whitespace-pre-line font-serif text-[1.35rem] leading-relaxed">{verse.text}</p>
+          </>
+        )}
 
+        {!archived && (
+          <Link
+            href={`/verses/${verse.id}/card`}
+            transitionTypes={["nav-forward"]}
+            className={cn(
+              "mt-4 inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
+              "transition-colors hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <Palette className="size-4" aria-hidden /> {card ? "Edit card" : "Make it a card"}
+          </Link>
+        )}
 
         {verse.tags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">

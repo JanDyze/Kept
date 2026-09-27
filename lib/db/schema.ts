@@ -14,6 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { authUsers } from "drizzle-orm/supabase";
+import type { CardStyle } from "@/lib/cards/style";
 
 export const reviewRating = pgEnum("review_rating", ["again", "hard", "good", "easy"]);
 export const practiceMode = pgEnum("practice_mode", ["read", "first_letter", "fill_blank", "recite", "unscramble"]);
@@ -31,6 +32,23 @@ export const gameStatus = pgEnum("game_status", ["in_progress", "won", "lost"]);
 
 // RLS is enabled with no policies: the app connects directly through Drizzle (as the table
 // owner), and Supabase's public Data API gets no access. Every query must filter by user_id.
+
+// Photos a user uploaded as card backgrounds. The bytes live in lib/cards/storage.ts under
+// storage_key; the row says who owns them.
+export const cardImages = pgTable(
+  "card_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    storageKey: text("storage_key").notNull(),
+    contentType: text("content_type").notNull(),
+    byteSize: integer("byte_size").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("card_images_user_idx").on(t.userId, t.createdAt)],
+).enableRLS();
 
 export const verses = pgTable(
   "verses",
@@ -55,6 +73,8 @@ export const verses = pgTable(
     dueAt: timestamp("due_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    // How the verse's card looks (lib/cards/style.ts); null shows the plain page.
+    card: jsonb("card").$type<CardStyle>(),
   },
   (t) => [
     index("verses_user_due_idx").on(t.userId, t.dueAt),

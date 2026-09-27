@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlignLeft, Eye, EyeOff, MapPin, Plus, Search, X } from "lucide-react";
+import { CardBackdrop, cardFontClass } from "@/components/memory-card";
 import { buttonVariants } from "@/components/ui/button";
+import { cardColors, type CardStyle } from "@/lib/cards/style";
 import { cn } from "@/lib/utils";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { VIEW_COOKIE, type LibraryView } from "@/lib/verses/view";
@@ -16,6 +18,7 @@ export type LibraryItem = {
   translation: string;
   text: string;
   tags: string[];
+  card: CardStyle | null; // shown in its colors, photo and font when set
 };
 
 
@@ -213,23 +216,43 @@ export function VerseLibrary({
 
 
 
+// A verse with a card shows its background, photo and font here too.
 function TextCard({ v }: { v: LibraryItem }) {
+  const card = v.card;
+  const colors = card ? cardColors(card.bg) : {};
+  const styled = Boolean(colors.bg);
+  const quiet = styled ? "opacity-70" : "text-muted-foreground";
   return (
     <Link
       href={`/verses/${v.id}`}
       transitionTypes={["nav-forward"]}
-      className="block rounded-2xl border bg-card p-4 transition-[transform,background-color] hover:bg-muted/40 active:scale-[0.99]"
+      style={{ backgroundColor: colors.bg, color: colors.fg }}
+      className={cn(
+        "@container relative isolate block overflow-hidden rounded-2xl p-4 transition-[transform,background-color] active:scale-[0.99]",
+        styled ? "hover:brightness-105" : "border bg-card hover:bg-muted/40",
+      )}
     >
+      {card && <CardBackdrop style={card} sizes="36rem" />}
       <p className="font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
-      <p className="text-xs text-muted-foreground">
+      <p className={cn("text-xs", quiet)}>
         {v.translation}
         {v.localReference && ` · ${v.reference}`}
       </p>
-      <p className="mt-2.5 line-clamp-3 font-serif text-[1.05rem] leading-relaxed text-foreground/85">{v.text}</p>
+      <p
+        className={cn(
+          "mt-2.5 line-clamp-3",
+          card ? cardFontClass(card.font) : "font-serif",
+          card?.font === "hand" ? "text-[1.3rem] leading-snug" : "text-[1.05rem] leading-relaxed",
+          !styled && "text-foreground/85",
+        )}
+        style={card?.bg.kind === "image" ? { textShadow: "0 1px 10px rgb(0 0 0 / 0.35)" } : undefined}
+      >
+        {v.text}
+      </p>
       {v.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {v.tags.map((t) => (
-            <span key={t} className="text-muted-foreground">
+            <span key={t} className={quiet}>
               {tagLabel(t)}
             </span>
           ))}

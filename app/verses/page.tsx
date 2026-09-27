@@ -5,6 +5,7 @@ import { Screen } from "@/components/screen";
 import { VerseLibrary, type LibraryItem } from "@/components/verse-library";
 import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
+import { readCardStyle } from "@/lib/cards/style";
 import { listVerses, verseCounts } from "@/lib/verses/queries";
 import { VIEW_COOKIE, type LibraryView } from "@/lib/verses/view";
 
@@ -29,6 +30,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       translation: v.translation,
       text: v.text,
       tags: v.tags,
+      card: readCardStyle(v.card),
     };
   });
 
