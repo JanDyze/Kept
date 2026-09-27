@@ -106,15 +106,17 @@ export function BibleIcon({ className }: { className?: string }) {
 export function SettingsIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      <g fill="none" strokeWidth="7" strokeLinecap="round" className="stroke-icon-ink">
-        <path d="M5 14Q16 10 28 14T51 12" />
-        <path d="M5 29Q16 25 28 29T51 27" />
-        <path d="M5 44Q16 40 28 44T51 42" />
+      {/* three straight slider tracks */}
+      <g strokeWidth="6" strokeLinecap="round" className="stroke-icon-ink">
+        <path d="M6 13h44" />
+        <path d="M6 28h44" />
+        <path d="M6 43h44" />
       </g>
+      {/* square-ish knobs, set well inside their tracks */}
       <g className="fill-icon-accent stroke-icon-paper" {...gap}>
-        <circle cx="38" cy="12.5" r="7" className={`${part} motion-safe:group-engaged:-translate-x-4`} />
-        <circle cx="17" cy="27.5" r="7" className={`${part} delay-75 motion-safe:group-engaged:translate-x-5`} />
-        <circle cx="37" cy="42.5" r="7" className={`${part} delay-150 motion-safe:group-engaged:-translate-x-4`} />
+        <rect x="29" y="5" width="11" height="16" rx="4" className={`${part} motion-safe:group-engaged:-translate-x-3`} />
+        <rect x="15" y="20" width="11" height="16" rx="4" className={`${part} delay-75 motion-safe:group-engaged:translate-x-4`} />
+        <rect x="33" y="35" width="11" height="16" rx="4" className={`${part} delay-150 motion-safe:group-engaged:-translate-x-4`} />
       </g>
     </svg>
   );

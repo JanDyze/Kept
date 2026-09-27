@@ -4,7 +4,7 @@ All notable changes to Kept, one version per feature.
 
 ## 0.10.2 — New home icons
 
-- Home icons redrawn from the new sheet (`brand/HomeIcons.png`): puzzle pieces for Games, a stack of quote cards for My Verses, a closed Bible with a cross, a compass for Discover, and wavy sliders for Settings. My Verses fans its cards out on hover.
+- Home icons redrawn from the new sheet (`brand/HomeIcons.png`): puzzle pieces for Games, a stack of quote cards for My Verses, a closed Bible with a cross, a compass for Discover, and sliders for Settings. My Verses fans its cards out on hover.
 
 ## 0.10.1 — goodthemes 0.2
 
