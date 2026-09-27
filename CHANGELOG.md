@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.10.2 — New home icons
+
+- Home icons redrawn from the new sheet (`brand/HomeIcons.png`): puzzle pieces for Games, a stack of quote cards for My Verses, a closed Bible with a cross, open arms around a card for Discover, and wavy sliders for Settings.
+
 ## 0.10.1 — goodthemes 0.2
 
 - goodthemes 0.2.0: nine themes renamed away from proper names (Eden is now First Garden, Zion is Pearl Gates, and so on), Shepherd's light mode is meadow green, and updated sigils.

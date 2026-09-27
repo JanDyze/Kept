@@ -1,21 +1,44 @@
-// Home card icons, drawn from brand/KeptIcons.png: two tones, deep teal ink and an amber
-// accent (--icon-* in globals.css), with small marks in the tile color; both flip for dark mode.
-// Parts move a little when the card is hovered, held or focused (the `group-engaged` variant);
-// `motion-safe:` keeps them still. SVGs are overflow-visible so moving parts aren't clipped.
+// Home card icons, drawn from brand/HomeIcons.png: two tones, the main shape in ink and the
+// shape behind it in the accent (--icon-* in globals.css), with small marks and gaps in the tile
+// color; both flip for dark mode. Parts move a little when the card is hovered, held or focused
+// (the `group-engaged` variant); `motion-safe:` keeps them still. SVGs are overflow-visible so
+// moving parts aren't clipped. Static tilts sit on an outer <g transform>, because a CSS
+// transform class would replace the attribute.
 
 const svg = "overflow-visible";
 const part = "[transform-box:fill-box] origin-center transition-transform duration-300 ease-out";
+// A tile-colored outline painted under the fill: leaves a thin gap where a shape overlaps another.
+const gap = { strokeWidth: 4, strokeLinejoin: "round", paintOrder: "stroke" } as const;
+
+// A closing quote mark (”) with its ball at the origin; rotate 180 for an opening one (“).
+const COMMA = "M2.4 0C2.4 3 .8 5-1.5 5.8L-2 4.8C-.8 4.1 0 3.2.1 2.4A2.4 2.4 0 1 1 2.4 0Z";
 
 export function GamesIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      <g className={`${part} motion-safe:group-engaged:-rotate-6`}>
-        <rect x="4" y="4" width="22" height="22" rx="5" className="fill-icon-ink" />
-        <path d="M9.5 15.5l4 4 7.5-8.5" fill="none" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" className="stroke-icon-paper" />
+      {/* back piece */}
+      <g transform="rotate(6 37 32)">
+        <g className={`${part} fill-icon-accent motion-safe:group-engaged:translate-x-1 motion-safe:group-engaged:rotate-3`}>
+          <rect x="23" y="16" width="26" height="33" rx="5" />
+          <circle cx="37" cy="15" r="6" />
+          <circle cx="49" cy="32" r="5.5" />
+        </g>
       </g>
-      <rect x="30" y="4" width="22" height="22" rx="5" className={`${part} fill-icon-accent motion-safe:group-engaged:rotate-6`} />
-      <rect x="4" y="30" width="22" height="22" rx="5" className={`${part} fill-icon-ink motion-safe:group-engaged:rotate-3`} />
-      <rect x="30" y="30" width="22" height="22" rx="5" className={`${part} fill-icon-ink motion-safe:group-engaged:-rotate-3`} />
+      {/* front piece, its knob holding the quote marks */}
+      <g transform="rotate(-8 14 34)">
+        <g className={`${part} motion-safe:group-engaged:-translate-x-0.5 motion-safe:group-engaged:-rotate-3`}>
+          <path
+            d="M7 18H9.5A5.5 5.5 0 1 1 18.5 18H19Q24 18 24 23V26.5A8.5 8.5 0 1 1 24 39.5V45Q24 50 19 50H7Q2 50 2 45V23Q2 18 7 18Z"
+            className="fill-icon-ink stroke-icon-paper"
+            {...gap}
+          />
+          <circle cx="29.5" cy="33" r="5.8" className="fill-icon-paper" />
+          <g className="fill-icon-ink">
+            <path d={COMMA} transform="translate(27.3 35) rotate(180) scale(.75)" />
+            <path d={COMMA} transform="translate(31.7 35) rotate(180) scale(.75)" />
+          </g>
+        </g>
+      </g>
     </svg>
   );
 }
@@ -23,11 +46,28 @@ export function GamesIcon({ className }: { className?: string }) {
 export function VersesIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      <rect x="7" y="4" width="42" height="48" rx="7" className="fill-icon-ink" />
-      <rect x="14" y="25" width="12" height="4.5" rx="2.25" className="fill-icon-paper" />
-      <rect x="14" y="34" width="25" height="4.5" rx="2.25" className="fill-icon-paper" />
-      {/* bookmark ribbon */}
-      <path className={`${part} fill-icon-accent motion-safe:group-engaged:translate-y-1`} d="M34 4h9v18l-4.5-4-4.5 4z" />
+      {/* cards stacked behind, fanning out a little more on hover */}
+      <g transform="rotate(8 34 24)">
+        <rect x="16" y="2" width="35" height="40" rx="7" className={`${part} fill-icon-accent motion-safe:group-engaged:rotate-3`} />
+      </g>
+      <g transform="rotate(4 28 28)">
+        <rect
+          x="10"
+          y="7"
+          width="35"
+          height="41"
+          rx="7"
+          className={`${part} fill-icon-accent stroke-icon-paper motion-safe:group-engaged:rotate-2`}
+          {...gap}
+        />
+      </g>
+      {/* front card with a curled corner */}
+      <rect x="3" y="12" width="36" height="42" rx="7" className="fill-icon-ink stroke-icon-paper" {...gap} />
+      <path d="M39 38C38 45 33 51 24 54" fill="none" strokeWidth="2.4" strokeLinecap="round" className="stroke-icon-paper" />
+      <g className="fill-icon-paper">
+        <path d={COMMA} transform="translate(14.5 25) scale(1.35)" />
+        <path d={COMMA} transform="translate(25 25) scale(1.35)" />
+      </g>
     </svg>
   );
 }
@@ -35,22 +75,20 @@ export function VersesIcon({ className }: { className?: string }) {
 export function BibleIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      {/* cross with light rays */}
-      <g className={`${part} motion-safe:group-engaged:-translate-y-0.5`}>
-        <path d="M28 2v14M22.5 7.5h11" strokeWidth="3.4" strokeLinecap="round" className="stroke-icon-accent" />
-        <g strokeWidth="3" strokeLinecap="round" className="stroke-icon-accent">
-          <path d="M15 8l3 3.5" />
-          <path d="M41 8l-3 3.5" />
-        </g>
-      </g>
-      {/* open book: two solid pages meeting at the spine */}
-      <path d="M26.5 23c-6-3.5-14-4.5-21-2.5v27c7-2 15-1 21 2.5z" className="fill-icon-ink" />
-      <path d="M29.5 23c6-3.5 14-4.5 21-2.5v27c-7-2-15-1-21 2.5z" className="fill-icon-ink" />
-      <g strokeWidth="2.8" strokeLinecap="round" className="stroke-icon-paper">
-        <path d="M11 29c3.5-.6 7-.2 10 1.2" />
-        <path d="M11 35.5c3.5-.6 7-.2 10 1.2" />
-        <path d="M35 30.2c3-1.4 6.5-1.8 10-1.2" />
-        <path d="M35 36.7c3-1.4 6.5-1.8 10-1.2" />
+      {/* spine and page block */}
+      <rect x="5" y="4" width="16" height="44" rx="7" className="fill-icon-accent" />
+      <rect x="8" y="38" width="42" height="13" rx="6" className="fill-icon-ink stroke-icon-paper" {...gap} />
+      {/* bookmark ribbon */}
+      <path
+        d="M18.5 40H25V54L21.75 51 18.5 54Z"
+        className={`${part} fill-icon-accent stroke-icon-paper motion-safe:group-engaged:translate-y-1`}
+        {...gap}
+      />
+      {/* cover with the cross */}
+      <rect x="15.5" y="2" width="36" height="41" rx="7" className="fill-icon-ink stroke-icon-paper" {...gap} />
+      <g className={`${part} fill-icon-paper motion-safe:group-engaged:-translate-y-0.5`}>
+        <rect x="31" y="10" width="5" height="23" rx="2.5" />
+        <rect x="25.5" y="15.5" width="16" height="5" rx="2.5" />
       </g>
     </svg>
   );
@@ -59,14 +97,16 @@ export function BibleIcon({ className }: { className?: string }) {
 export function SettingsIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      <g strokeWidth="6" strokeLinecap="round" className="stroke-icon-ink">
-        <path d="M5 13h46" />
-        <path d="M5 28h46" />
-        <path d="M5 43h46" />
+      <g fill="none" strokeWidth="7" strokeLinecap="round" className="stroke-icon-ink">
+        <path d="M5 14Q16 10 28 14T51 12" />
+        <path d="M5 29Q16 25 28 29T51 27" />
+        <path d="M5 44Q16 40 28 44T51 42" />
       </g>
-      <circle cx="33" cy="13" r="7.5" className={`${part} fill-icon-accent motion-safe:group-engaged:-translate-x-4`} />
-      <circle cx="43" cy="28" r="7.5" className={`${part} delay-75 fill-icon-accent motion-safe:group-engaged:-translate-x-5`} />
-      <circle cx="21" cy="43" r="7.5" className={`${part} delay-150 fill-icon-ink motion-safe:group-engaged:translate-x-4`} />
+      <g className="fill-icon-accent stroke-icon-paper" {...gap}>
+        <circle cx="38" cy="12.5" r="7" className={`${part} motion-safe:group-engaged:-translate-x-4`} />
+        <circle cx="17" cy="27.5" r="7" className={`${part} delay-75 motion-safe:group-engaged:translate-x-5`} />
+        <circle cx="37" cy="42.5" r="7" className={`${part} delay-150 motion-safe:group-engaged:-translate-x-4`} />
+      </g>
     </svg>
   );
 }
@@ -74,12 +114,26 @@ export function SettingsIcon({ className }: { className?: string }) {
 export function DiscoverIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
-      <circle cx="28" cy="28" r="26" className="fill-icon-ink" />
-      {/* needle: amber half toward the top right, tile-colored half toward the bottom left */}
-      <g className="origin-[28px_28px] transition-transform duration-700 ease-out motion-safe:group-engaged:rotate-[315deg]">
-        <path d="M42 14L33 33 23 23z" className="fill-icon-accent" />
-        <path d="M14 42L23 23 33 33z" className="fill-icon-paper" />
-        <circle cx="28" cy="28" r="3" className="fill-icon-ink" />
+      {/* two arms opening around the card */}
+      <g fill="none" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round" className="stroke-icon-ink">
+        <path
+          d="M13 50C7 48 4.5 44 4.5 38V31C4.5 26 6.5 23 10.5 19L19 11.5C21.5 9.5 24.5 10 25 13.5"
+          className={`${part} motion-safe:group-engaged:-translate-x-1 motion-safe:group-engaged:-rotate-3`}
+        />
+        <path
+          d="M43 50C49 48 51.5 44 51.5 38V31C51.5 26 49.5 23 45.5 19L37 11.5C34.5 9.5 31.5 10 31 13.5"
+          className={`${part} motion-safe:group-engaged:translate-x-1 motion-safe:group-engaged:rotate-3`}
+        />
+      </g>
+      {/* the card with a verse on it */}
+      <g transform="rotate(6 28 33)">
+        <g className={`${part} motion-safe:group-engaged:-translate-y-1`}>
+          <rect x="17.5" y="20" width="21" height="26" rx="4.5" className="fill-icon-accent" />
+          <g className="fill-icon-paper">
+            <rect x="22" y="27" width="12" height="3.6" rx="1.8" />
+            <rect x="22" y="34" width="8.5" height="3.6" rx="1.8" />
+          </g>
+        </g>
       </g>
     </svg>
   );
