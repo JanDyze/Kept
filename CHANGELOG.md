@@ -15,6 +15,7 @@ All notable changes to Kept, one version per feature.
 - Kept installs as an app (PWA): home-screen icon (maskable on Android), its own window, shortcuts (Games, My verses, Discover, Add a verse), and a calm offline page instead of the browser's error.
 - The browser's own install prompt is replaced by Kept's: a slim banner at the top with Install (or, on iPhone, where Safari keeps Add to Home Screen). Closing it quiets it for 30 days.
 - Home's faint Kept mark weaves in when Home opens, then drifts slowly.
+- Home's section cards size to their content (no more gap between icon and label on tall phones), and a Verse for today (your verse most due for review, in its card style) fills the space below.
 - Friends, the card gallery and shared-card photos work across accounts; photos are still stored on the dev machine, so they need cloud storage before deploying.
 
 ## 0.12.0 — My verses and Discover

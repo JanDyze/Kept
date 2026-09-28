@@ -8,7 +8,10 @@ import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
 import { getOrCreateProfile } from "@/lib/social/profiles";
-import { verseCounts } from "@/lib/verses/queries";
+import { verseCounts, verseForToday } from "@/lib/verses/queries";
+import { TextCard } from "@/components/verse-library";
+import { bookByName } from "@/lib/bible/books";
+import { readCardStyle } from "@/lib/cards/style";
 import { cn } from "@/lib/utils";
 
 function greeting(tz: string) {
@@ -22,16 +25,18 @@ export default async function HomePage() {
   const user = await requireUser();
   const tz = await getTimeZone();
   const day = localDate(tz);
-  const [games, days, counts, me] = await Promise.all([
+  const [games, days, counts, me, todays] = await Promise.all([
     getOrCreateDay(user.id, day),
     streak(user.id, day),
     verseCounts(user.id),
     getOrCreateProfile(user),
+    verseForToday(user.id),
   ]);
   const done = games.filter((g) => g.status !== "in_progress").length;
   const allDone = games.length > 0 && done === games.length;
 
   const left = games.length - done;
+  const tl = todays?.translation === "MBBTAG" ? bookByName(todays.book)?.tl : undefined;
   const firstName = (me.displayName ?? "").split(/\s+/)[0] || `@${me.username}`;
 
   // The top card is you: greeting, streak and today's games; it opens your profile (or Add verse
@@ -72,12 +77,11 @@ export default async function HomePage() {
     },
   ];
 
-  // Takes 80% of the visible height (dvh follows mobile browser bars): the top card keeps its
-  // size, the four cards share what's left. With a mouse (desktop) the
-  // window can be far taller than a phone, so the cards stop growing at a phone-like height.
+  // You, the four sections (sized to their content, icon and label together), then a verse of
+  // yours for today in its card's colors.
   return (
     <Screen header={false} className="pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="flex h-[80dvh] min-h-[30rem] flex-col gap-3 pointer-fine:max-h-[37rem]">
+      <div className="flex flex-col gap-3">
         <Link
           href={youHref}
           transitionTypes={["nav-forward"]}
@@ -126,7 +130,7 @@ export default async function HomePage() {
           )}
         </Link>
 
-        <nav className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-3" aria-label="Sections">
+        <nav className="grid grid-cols-2 gap-3" aria-label="Sections">
           {cards.map(({ href, title, detail, Icon }, i) => (
             <Link
               key={href}
@@ -134,12 +138,12 @@ export default async function HomePage() {
               transitionTypes={["nav-forward"]}
               style={{ animationDelay: `${60 + i * 50}ms` }}
               className={cn(
-                "animate-rise group flex min-h-[6.5rem] flex-col justify-between rounded-2xl border bg-card p-4",
+                "animate-rise group flex flex-col gap-3.5 rounded-2xl border bg-card p-4",
                 "transition-[transform,background-color,border-color] duration-200 ease-out hover:border-foreground/15 hover:bg-muted/40 active:scale-[0.98]",
                 "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               )}
             >
-              <span className="flex size-[clamp(3.25rem,8.5dvh,4.5rem)] items-center justify-center rounded-2xl bg-icon-tile">
+              <span className="flex size-14 items-center justify-center rounded-2xl bg-icon-tile">
               <Icon className="size-[66%]" />
             </span>
               <div>
@@ -150,6 +154,26 @@ export default async function HomePage() {
           ))}
         </nav>
 
+        {todays && (
+          <section aria-labelledby="today-verse" className="animate-rise mt-3" style={{ animationDelay: "260ms" }}>
+            <h2 id="today-verse" className="mb-2 px-0.5 text-sm font-medium text-muted-foreground">
+              Verse for today
+            </h2>
+            <TextCard
+              v={{
+                id: todays.id,
+                reference: todays.reference,
+                localReference: tl && tl !== todays.book ? todays.reference.replace(todays.book, tl) : null,
+                book: todays.book,
+                translation: todays.translation,
+                text: todays.text,
+                tags: todays.tags,
+                card: readCardStyle(todays.card),
+              }}
+              href={`/verses/${todays.id}`}
+            />
+          </section>
+        )}
       </div>
     </Screen>
   );

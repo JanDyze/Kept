@@ -33,6 +33,17 @@ export async function getVerse(userId: string, id: string) {
   return verse ?? null;
 }
 
+// The verse to show on Home today: the one most due for review (new verses are due at once).
+export async function verseForToday(userId: string) {
+  const [verse] = await db
+    .select()
+    .from(verses)
+    .where(and(eq(verses.userId, userId), isNull(verses.archivedAt)))
+    .orderBy(asc(verses.dueAt), desc(verses.createdAt))
+    .limit(1);
+  return verse ?? null;
+}
+
 export async function listTags(userId: string) {
   const rows = await db
     .selectDistinct({ tag: sql<string>`unnest(${verses.tags})` })
