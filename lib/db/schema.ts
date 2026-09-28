@@ -29,6 +29,9 @@ export const gameKind = pgEnum("game_kind", [
   "two_tongues",
 ]);
 export const gameStatus = pgEnum("game_status", ["in_progress", "won", "lost"]);
+// Who can see a verse's card besides its owner. A public link (share_token) is separate.
+export const cardVisibility = pgEnum("card_visibility", ["private", "friends", "everyone"]);
+export const friendStatus = pgEnum("friend_status", ["pending", "accepted"]);
 
 // RLS is enabled with no policies: the app connects directly through Drizzle (as the table
 // owner), and Supabase's public Data API gets no access. Every query must filter by user_id.
@@ -68,6 +71,46 @@ export const cardImages = pgTable(
   (t) => [index("card_images_user_idx").on(t.userId, t.createdAt)],
 ).enableRLS();
 
+// A person on Kept: the short @username others find them by, and the name shown with their cards.
+// Created on first need from their email or Google name (lib/social/profiles.ts).
+export const profiles = pgTable(
+  "profiles",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    username: text("username").notNull(), // lowercase a-z 0-9 _ .
+    displayName: text("display_name"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("profiles_username_idx").on(t.username),
+    check("profiles_username_format", sql`${t.username} ~ '^[a-z0-9][a-z0-9_.]{2,19}$'`),
+  ],
+).enableRLS();
+
+// A friendship, from request to accepted. One row per pair, whoever asked first.
+export const friendships = pgTable(
+  "friendships",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requesterId: uuid("requester_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    addresseeId: uuid("addressee_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    status: friendStatus("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("friendships_pair_idx").on(sql`least(${t.requesterId}, ${t.addresseeId})`, sql`greatest(${t.requesterId}, ${t.addresseeId})`),
+    index("friendships_addressee_idx").on(t.addresseeId, t.status),
+    check("friendships_not_self", sql`${t.requesterId} <> ${t.addresseeId}`),
+  ],
+).enableRLS();
+
 export const verses = pgTable(
   "verses",
   {
@@ -98,9 +141,13 @@ export const verses = pgTable(
     // Place in the user's own order of My verses (0 first); null until arranged, and new verses
     // (null) sit at the top of that order.
     position: integer("position"),
+    visibility: cardVisibility("visibility").notNull().default("private"),
+    // When the card was last shown to friends or everyone; orders the Discover gallery.
+    publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (t) => [
     index("verses_user_due_idx").on(t.userId, t.dueAt),
+    index("verses_published_idx").on(t.visibility, t.publishedAt),
     check("verses_book_number_range", sql`${t.bookNumber} between 1 and 66`),
     check("verses_verse_range", sql`${t.verseEnd} is null or ${t.verseEnd} >= ${t.verseStart}`),
   ],

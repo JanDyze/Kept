@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useSyncExternalStore, useTransition } from "react";
-import { Check, Copy, Download, Link2, Loader2, Share, Share2 } from "lucide-react";
+import { Check, Copy, Download, Globe, Link2, Loader2, Lock, Share, Share2, Users } from "lucide-react";
+import { setVisibility } from "@/app/cards/actions";
 import { shareCard, unshareCard } from "@/app/verses/[id]/share-actions";
 import { cn } from "@/lib/utils";
 
@@ -31,14 +32,17 @@ export function CardShare({
   reference,
   hasCard,
   initialPath,
+  initialVisibility,
 }: {
   verseId: string;
   reference: string;
   hasCard: boolean;
   initialPath: string | null;
+  initialVisibility: "private" | "friends" | "everyone";
 }) {
   const [open, setOpen] = useState(false);
   const [path, setPath] = useState(initialPath);
+  const [visibility, setVis] = useState(initialVisibility);
   const [busy, setBusy] = useState<"image" | "link" | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,11 +121,57 @@ export function CardShare({
         )}
       >
         <Share className="size-4" aria-hidden /> Share
+        {!open && visibility !== "private" && (
+          <span className="text-xs font-normal opacity-80">· {visibility === "friends" ? "Friends" : "Everyone"}</span>
+        )}
         {path && !open && <span className="size-1.5 rounded-full bg-primary" aria-label="Shared publicly" />}
       </button>
 
       {open && (
         <div id="card-share" className="animate-rise w-full rounded-2xl border bg-card p-1.5">
+          {hasCard && (
+            <div className="p-1.5">
+              <p id="card-audience" className="px-1.5 pb-1.5 text-xs text-muted-foreground">
+                Who sees this card
+              </p>
+              <div role="radiogroup" aria-labelledby="card-audience" className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+                {(
+                  [
+                    ["private", "Only me", Lock],
+                    ["friends", "Friends", Users],
+                    ["everyone", "Everyone", Globe],
+                  ] as const
+                ).map(([value, name, Icon]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={visibility === value}
+                    onClick={() => {
+                      const was = visibility;
+                      setVis(value);
+                      setError(null);
+                      startTransition(async () => {
+                        const result = await setVisibility(verseId, value);
+                        if (result.error) {
+                          setVis(was);
+                          setError(result.error);
+                        }
+                      });
+                    }}
+                    className={cn(
+                      "flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-[background-color,color,box-shadow]",
+                      visibility === value ? "bg-background text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="size-3.5" aria-hidden /> {name}
+                  </button>
+                ))}
+              </div>
+              {visibility === "everyone" && <p className="px-1.5 pt-1.5 text-xs text-muted-foreground">Shows in Discover.</p>}
+            </div>
+          )}
+          {hasCard && <div className="mx-3 my-1 border-t" />}
           {hasCard && (
             <>
               {shareFiles && (

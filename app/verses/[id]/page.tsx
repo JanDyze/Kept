@@ -107,6 +107,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               reference={localRef ?? verse.reference}
               hasCard={Boolean(card)}
               initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
+              initialVisibility={verse.visibility}
             />
           </div>
         )}

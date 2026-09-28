@@ -41,6 +41,12 @@ export async function getCardImage(userId: string, id: string) {
   return row ?? null;
 }
 
+// Any user's photo by id, for routes that then check who may see it.
+export async function findCardImage(id: string) {
+  const [row] = await db.select().from(cardImages).where(eq(cardImages.id, id)).limit(1);
+  return row ?? null;
+}
+
 export async function ownsCardImage(userId: string, id: string) {
   return Boolean(await getCardImage(userId, id));
 }

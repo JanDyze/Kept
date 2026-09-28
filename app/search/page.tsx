@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Check } from "lucide-react";
+import { BookOpen, Check, Users } from "lucide-react";
+import { CardGallery } from "@/components/card-gallery";
 import { KeepButton, KeptNotice } from "@/components/keep-button";
 import { Screen } from "@/components/screen";
 import { SearchBox } from "@/components/search-box";
@@ -9,6 +10,8 @@ import { requireUser } from "@/lib/auth";
 import { BOOKS, bookSlug } from "@/lib/bible/books";
 import { searchVerses, type SearchHit } from "@/lib/search";
 import { popularVerses } from "@/lib/search/popular";
+import { pendingRequestCount } from "@/lib/social/friends";
+import { galleryCards } from "@/lib/social/gallery";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Discover" };
@@ -33,9 +36,15 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.slice(0, 100) : "";
   const t = readTranslation(sp.t);
-  const [result, popular] = await Promise.all([
+  // Without a search: the card gallery (default) or popular verses.
+  const view = sp.view === "verses" ? "verses" : "cards";
+  const who = sp.who === "friends" ? "friends" : "all";
+  const browsing = !q.trim();
+  const [result, popular, cards, requests] = await Promise.all([
     q.trim() ? searchVerses(q, t, user.id) : null,
-    q.trim() ? [] : popularVerses(t, user.id),
+    browsing && view === "verses" ? popularVerses(t, user.id) : [],
+    browsing && view === "cards" ? galleryCards(user.id, { scope: who }) : [],
+    pendingRequestCount(user.id),
   ]);
   const total = result ? result.hits.length + result.textHits.length : 0;
 
@@ -44,16 +53,86 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
       back={{ href: "/", label: "Home" }}
       title="Discover"
       action={
-        <TranslationToggle
-          current={t}
-          path="/search"
-          params={q ? { q } : undefined}
-        />
+        <div className="flex items-center gap-1">
+          {(!browsing || view === "verses") && (
+            <TranslationToggle current={t} path="/search" params={q ? { q } : { view: "verses" }} />
+          )}
+          <Link
+            href="/friends"
+            transitionTypes={["nav-forward"]}
+            aria-label={requests ? `Friends, ${requests} waiting` : "Friends"}
+            className="relative flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <Users className="size-5" aria-hidden />
+            {requests > 0 && (
+              <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.65rem] leading-4 font-semibold text-primary-foreground">
+                {requests}
+              </span>
+            )}
+          </Link>
+        </div>
       }
     >
       <SearchBox defaultValue={q} translation={t} />
 
       {!result && (
+        <div role="tablist" aria-label="Browse" className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+          {(["cards", "verses"] as const).map((v) => (
+            <Link
+              key={v}
+              role="tab"
+              aria-selected={view === v}
+              href={v === "cards" ? "/search" : `/search?${new URLSearchParams({ view: "verses", t })}`}
+              replace
+              scroll={false}
+              className={cn(
+                "flex h-9 items-center justify-center rounded-lg text-sm font-medium transition-[background-color,color,box-shadow]",
+                view === v ? "bg-background text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {v === "cards" ? "Cards" : "Verses"}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {!result && view === "cards" && (
+        <section aria-label="Cards" className="mt-4">
+          <div className="mb-4 flex gap-2">
+            {(["all", "friends"] as const).map((w) => (
+              <Link
+                key={w}
+                href={w === "all" ? "/search" : "/search?who=friends"}
+                replace
+                scroll={false}
+                aria-current={who === w ? "true" : undefined}
+                className={cn(
+                  "h-8 rounded-full border px-3 text-sm leading-[1.875rem] transition-colors",
+                  who === w ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted",
+                )}
+              >
+                {w === "all" ? "Everyone" : "Friends"}
+              </Link>
+            ))}
+          </div>
+          {cards.length > 0 ? (
+            <CardGallery cards={cards} />
+          ) : (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-4 py-12 text-center">
+              <p className="text-muted-foreground">{who === "friends" ? "No cards from friends yet." : "No shared cards yet."}</p>
+              <Link
+                href={who === "friends" ? "/friends" : "/verses"}
+                transitionTypes={["nav-forward"]}
+                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {who === "friends" ? "Add friends" : "Share one of yours"}
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
+
+      {!result && view === "verses" && (
         <>
           <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
             {SUGGESTIONS.map((s) => (
