@@ -116,7 +116,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
             ))}
           </div>
           {cards.length > 0 ? (
-            <CardGallery cards={cards} />
+            <CardGallery cards={cards} viewerId={user.id} />
           ) : (
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-4 py-12 text-center">
               <p className="text-muted-foreground">{who === "friends" ? "No cards from friends yet." : "No shared cards yet."}</p>

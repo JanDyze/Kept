@@ -36,8 +36,8 @@ function localReference(v: { reference: string; book: string; translation: strin
   return tl ? v.reference.replace(v.book, tl) : v.reference;
 }
 
-// The gallery: newest shared first. `scope: "friends"` keeps to friends' cards; `authorId` to one
-// person's (their profile). The viewer's own cards are left out unless it's their profile.
+// The gallery: newest shared first, the viewer's own shared cards included (so a share shows up
+// at once). `scope: "friends"` keeps to friends' cards; `authorId` to one person's (their profile).
 export async function galleryCards(
   viewerId: string,
   opts: { scope?: "all" | "friends"; authorId?: string; limit?: number } = {},
@@ -61,7 +61,7 @@ export async function galleryCards(
         isNull(verses.archivedAt),
         ne(verses.visibility, "private"),
         visibleTo(viewerId, friends),
-        opts.authorId ? eq(verses.userId, opts.authorId) : ne(verses.userId, viewerId),
+        opts.authorId ? eq(verses.userId, opts.authorId) : undefined,
         opts.scope === "friends" ? inArray(verses.userId, friends) : undefined,
       ),
     )
