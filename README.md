@@ -71,6 +71,17 @@ npm run dev
 
 Open http://localhost:3000 and sign in.
 
+## Install as an app (PWA)
+
+Kept installs to a phone's home screen and opens in its own window (`app/manifest.ts`, icons in
+`public/icons/`). A service worker (`public/sw.js`, production builds only) keeps the app's files
+and shows `public/offline.html` when there's no connection; pages with your data are never stored.
+
+- **Android (Chrome):** open Kept over **HTTPS** (e.g. once it's deployed) → menu → *Install app*.
+  Over plain `http://192.168.x.x` it won't offer installing; for a local test use
+  `next dev --experimental-https`.
+- **iPhone (Safari):** Share → *Add to Home Screen*.
+
 ## Scripts
 
 | Script | What it does |

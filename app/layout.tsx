@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ThemeScript } from "goodthemes/script";
 import { AppFeel } from "@/components/app-feel";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
+import { ServiceWorker } from "@/components/service-worker";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TimezoneSync } from "@/components/timezone-sync";
 import { THEME_MIGRATION, THEME_OPTIONS } from "@/lib/theme";
@@ -35,6 +36,11 @@ const brand = Fraunces({
 export const metadata: Metadata = {
   title: { default: "Kept", template: "%s · Kept" },
   description: "Memorize Scripture with spaced repetition.",
+  applicationName: "Kept",
+  // Added to an iPhone's home screen, Kept opens in its own window like an app.
+  appleWebApp: { capable: true, title: "Kept", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -42,6 +48,8 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#283D4E" },
     { media: "(prefers-color-scheme: dark)", color: "#141b24" },
   ],
+  // Installed, the app draws under the notch and home bar; bars pad themselves with safe-area insets.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -55,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <TimezoneSync />
           <AppFeel />
+          <ServiceWorker />
           <Suspense fallback={null}>
             <NavigationOverlayWithVerses />
           </Suspense>
