@@ -1,8 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowDownUp, Plus, Search, X } from "lucide-react";
+import { ArrowDownUp, Check, ChevronDown, GripVertical, Plus, Search, X } from "lucide-react";
+import { saveVerseOrder } from "@/app/verses/actions";
+import { ArrangeList } from "@/components/arrange-list";
 import { CardBackdrop, CardBorder, cardFontClass } from "@/components/memory-card";
 import { Morph, morphName } from "@/components/verse-morph";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,7 +12,8 @@ import { cardColors, type CardStyle } from "@/lib/cards/style";
 import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/lib/scroll-memory";
 import { cn } from "@/lib/utils";
 import { tagLabel } from "@/lib/verses/tag-label";
-import { SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
+import { orderBy } from "@/lib/verses/order";
+import { LIBRARY_SORTS, SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
 
 export type LibraryItem = {
   id: string;
@@ -23,6 +26,7 @@ export type LibraryItem = {
   card: CardStyle | null; // shown in its colors, photo and font when set
   bibleOrder?: number; // position in Bible order
   addedAt?: number; // ms; for archived verses, when they were archived
+  position?: number | null; // place in the user's own order; null (not yet placed) sits first
 };
 
 // Saved for a year so the page renders in the same order next time, with no flash.
@@ -44,6 +48,11 @@ export function VerseLibrary({
   const [sort, setSort] = useState<LibrarySort>(initialSort);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | undefined>(initialTag);
+  // Arranging: the full list as compact rows to reorder; saved positions apply at once.
+  const [arranging, setArranging] = useState(false);
+  const [positions, setPositions] = useState<Map<string, number> | null>(null);
+  const [saving, startSaving] = useTransition();
+  const [arrangeError, setArrangeError] = useState<string | null>(null);
 
   // Coming back from a verse: put the filters back, then (once the list shows them) the scroll
   // spot. Layout effects, so it lands before paint and the verse morphs back into the right tile.
@@ -65,19 +74,28 @@ export function VerseLibrary({
   }, [query, tag]);
   const rememberSpot = () => rememberList(currentPath(), { y: window.scrollY, query, tag });
 
-  function toggleSort() {
-    const next = sort === "recent" ? "book" : "recent";
+  function chooseSort(next: LibrarySort) {
     setSort(next);
     rememberSort(next);
   }
 
+  function finishArranging(ids: string[]) {
+    setArrangeError(null);
+    startSaving(async () => {
+      const result = await saveVerseOrder(ids);
+      if (result.error) return setArrangeError(result.error);
+      setPositions(new Map(ids.map((id, i) => [id, i])));
+      chooseSort("mine");
+      setArranging(false);
+      window.scrollTo(0, 0);
+    });
+  }
+
   const tags = useMemo(() => [...new Set(items.flatMap((v) => v.tags))].sort(), [items]);
+  const ordered = useMemo(() => orderBy(items, sort, positions), [items, sort, positions]);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const ordered = [...items].sort((a, b) =>
-      sort === "recent" ? (b.addedAt ?? 0) - (a.addedAt ?? 0) : (a.bibleOrder ?? 0) - (b.bibleOrder ?? 0),
-    );
     return ordered.filter(
       (v) =>
         (!tag || v.tags.includes(tag)) &&
@@ -87,11 +105,11 @@ export function VerseLibrary({
           v.tags.some((t) => t.includes(q)) ||
           v.text.toLowerCase().includes(q)),
     );
-  }, [items, tag, query, sort]);
+  }, [ordered, tag, query]);
 
   // By book: consecutive verses grouped under their book. Recent: one list, newest first.
   const groups = useMemo(() => {
-    if (sort === "recent") return [{ book: "", verses: shown }];
+    if (sort !== "book") return [{ book: "", verses: shown }];
     const out: { book: string; verses: LibraryItem[] }[] = [];
     for (const v of shown) {
       const last = out[out.length - 1];
@@ -102,6 +120,20 @@ export function VerseLibrary({
   }, [shown, sort]);
 
   const filtering = Boolean(query || tag);
+
+  if (arranging)
+    return (
+      <ArrangeList
+        items={ordered}
+        saving={saving}
+        error={arrangeError}
+        onCancel={() => {
+          setArrangeError(null);
+          setArranging(false);
+        }}
+        onDone={finishArranging}
+      />
+    );
 
   return (
     <>
@@ -137,15 +169,18 @@ export function VerseLibrary({
                   </button>
                 ))}
             </div>
-            <button
-              type="button"
-              onClick={toggleSort}
-              aria-label={`Sorted ${sort === "recent" ? "by most recent" : "by book"}. Change`}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <ArrowDownUp className="size-3.5" aria-hidden />
-              {sort === "recent" ? "Recent" : "Book"}
-            </button>
+            <SortMenu
+              value={sort}
+              onChange={chooseSort}
+              onArrange={
+                !archived && items.length > 1
+                  ? () => {
+                      setArranging(true);
+                      window.scrollTo(0, 0);
+                    }
+                  : undefined
+              }
+            />
           </div>
         </div>
       )}
@@ -213,6 +248,89 @@ export function VerseLibrary({
 }
 
 
+
+// Recent / Book / My order, as a small menu under the current choice, with Arrange at its foot.
+function SortMenu({
+  value,
+  onChange,
+  onArrange,
+}: {
+  value: LibrarySort;
+  onChange: (sort: LibrarySort) => void;
+  onArrange?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: PointerEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
+  const current = LIBRARY_SORTS.find((s) => s.value === value)!;
+
+  return (
+    <div ref={root} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Order: ${current.label}`}
+        className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <ArrowDownUp className="size-3.5" aria-hidden />
+        {current.label}
+        <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} aria-hidden />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="animate-rise absolute top-full right-0 z-30 mt-1.5 w-52 rounded-xl border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)]"
+        >
+          {LIBRARY_SORTS.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={s.value === value}
+              onClick={() => {
+                onChange(s.value);
+                setOpen(false);
+              }}
+              className="flex h-10 w-full items-center justify-between rounded-lg px-3 text-left text-sm hover:bg-muted"
+            >
+              {s.label}
+              {s.value === value && <Check className="size-4 text-primary" aria-hidden />}
+            </button>
+          ))}
+          {onArrange && (
+            <>
+              <div className="mx-2 my-1 border-t" />
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  onArrange();
+                }}
+                className="flex h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-muted"
+              >
+                <GripVertical className="size-4 text-muted-foreground" aria-hidden /> Arrange my order
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // A verse with a card shows its background, photo and font here too.
 // Without an href it's a still preview (the card editor shows one).

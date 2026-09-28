@@ -95,6 +95,9 @@ export const verses = pgTable(
     card: jsonb("card").$type<CardStyle>(),
     // Set while the verse's card has a public link (/s/<token>); null means private.
     shareToken: text("share_token").unique(),
+    // Place in the user's own order of My verses (0 first); null until arranged, and new verses
+    // (null) sit at the top of that order.
+    position: integer("position"),
   },
   (t) => [
     index("verses_user_due_idx").on(t.userId, t.dueAt),

@@ -18,7 +18,8 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
   const tag = typeof sp.tag === "string" ? sp.tag : undefined;
 
   const [list, counts, jar] = await Promise.all([listVerses(user.id, { archived }), verseCounts(user.id), cookies()]);
-  const sort: LibrarySort = jar.get(SORT_COOKIE)?.value === "book" ? "book" : "recent";
+  const saved = jar.get(SORT_COOKIE)?.value;
+  const sort: LibrarySort = saved === "book" || saved === "mine" ? saved : "recent";
 
   // listVerses returns Bible order (archived: most recently archived first); `bibleOrder` keeps it.
   const items: LibraryItem[] = list.map((v, i) => {
@@ -34,6 +35,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       card: readCardStyle(v.card),
       bibleOrder: archived ? v.bookNumber * 1e6 + v.chapter * 1e3 + v.verseStart : i,
       addedAt: (archived && v.archivedAt ? v.archivedAt : v.createdAt).getTime(),
+      position: v.position,
     };
   });
 

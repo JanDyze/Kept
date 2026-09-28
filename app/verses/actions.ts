@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -124,4 +124,18 @@ export async function keepVerse(reference: string, translation: string): Promise
     .returning({ id: verses.id, reference: verses.reference });
   revalidatePath("/", "layout");
   return { ok: true, ...created };
+}
+
+// Saves the user's own order of My verses: the ids, first to last.
+export async function saveVerseOrder(ids: string[]): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = z.array(z.uuid()).max(2000).safeParse(ids);
+  if (!parsed.success || new Set(parsed.data).size !== parsed.data.length) return { error: "That order can't be saved." };
+
+  await db.execute(sql`
+    update ${verses} set position = o.pos - 1
+    from unnest(${parsed.data}::uuid[]) with ordinality as o(id, pos)
+    where ${verses.id} = o.id and ${verses.userId} = ${user.id}`);
+  revalidatePath("/verses");
+  return {};
 }

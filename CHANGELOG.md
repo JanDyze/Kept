@@ -11,6 +11,7 @@ All notable changes to Kept, one version per feature.
 - Frame: portrait, square or landscape cards, and borders on any sides (presets: all, top & bottom, sides) in solid, double, dashed or dotted lines, thin to thick, at the edge or inset, in any text color.
 - Photos: drag in the preview to move them and zoom in, so landscape photos can be framed on the portrait card too. The preview switches between the card and its tile in My verses.
 - The card shows on the verse page and in My verses, in its colors, photo and font. "Plain page" goes back to the old look.
+- My verses: put verses in your own order. The order menu has My order, Recent (the default) and Book, and "Arrange my order": compact rows you drag by their handle (the page scrolls at the edges; arrow keys work too), then Done. New verses join the top of your order.
 - My verses: newest first by default, with a Recent / Book switch (remembered); always shows the verses' text (the references-only view is gone).
 - Opening a verse from My verses morphs it into place: its tile grows into the card (colors and photo carried across) and the text flies to its spot; plain verses carry their reference and text. Going back plays it in reverse, and the card morphs into the card editor's preview.
 - First Letters fits the screen above the phone keyboard: the verse scrolls inside its card and keeps the word being typed in view. The box no longer grabs focus (and the keyboard) on open.

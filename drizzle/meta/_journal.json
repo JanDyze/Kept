@@ -64,6 +64,13 @@
       "when": 1790566363211,
       "tag": "0008_share_links",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790576123607,
+      "tag": "0009_verse_order",
+      "breakpoints": true
     }
   ]
 }
