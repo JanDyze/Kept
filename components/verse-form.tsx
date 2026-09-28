@@ -1,14 +1,16 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Loader2, Plus } from "lucide-react";
+import { Ban, Check, ChevronDown, Loader2, Plus } from "lucide-react";
 import { lookupPassage, saveVerse, type VerseFormState } from "@/app/verses/actions";
 import { TagChip } from "@/components/tag-chip";
 import { tagLabel } from "@/lib/verses/tag-label";
+import { MemoryCard } from "@/components/memory-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatReference, parseReference } from "@/lib/bible/books";
+import { CARD_COLORS, DEFAULT_CARD, type CardColor, type CardStyle } from "@/lib/cards/style";
 import { isLookupTranslation, LOOKUP_TRANSLATIONS } from "@/lib/bible/translations";
 import { normalizeTags } from "@/lib/verses/tags";
 import { cn } from "@/lib/utils";
@@ -57,6 +59,8 @@ export function VerseForm({
   const [draftTag, setDraftTag] = useState("");
   // Controlled so React's post-action form reset can't wipe it when validation fails.
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  // Adding a verse can make it a card at once: a color here, the rest later in the card editor.
+  const [cardColor, setCardColor] = useState<CardColor | null>(null);
   const [extrasOpen, setExtrasOpen] = useState(Boolean(initial?.tags.length));
   const [refTouched, setRefTouched] = useState(false);
   const [preview, setPreview] = useState<Preview>(
@@ -66,6 +70,7 @@ export function VerseForm({
   );
 
   const translation = choice === OTHER ? otherName.trim() : choice;
+  const cardStyle: CardStyle | null = cardColor ? { ...DEFAULT_CARD, bg: { kind: "color", color: cardColor } } : null;
   const locked = isLookupTranslation(translation);
   const parsed = useMemo(() => (reference.trim() ? parseReference(reference) : null), [reference]);
   const canonical = parsed?.ok
@@ -109,6 +114,7 @@ export function VerseForm({
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="translation" value={translation} />
       <input type="hidden" name="tags" value={normalizeTags([...tags, draftTag]).join(", ")} />
+      {cardStyle && <input type="hidden" name="card" value={JSON.stringify(cardStyle)} />}
 
       <div className="flex flex-col gap-2">
         <label htmlFor="reference" className={label}>
@@ -184,8 +190,59 @@ export function VerseForm({
         {errors.translation && <p className="text-sm text-destructive">{errors.translation}</p>}
       </div>
 
-      {/* The verse as it will be kept */}
+      {!editing && (
+        <div className="mt-6 flex flex-col gap-2">
+          <span id="card-label" className={label}>
+            Card
+          </span>
+          <div role="radiogroup" aria-labelledby="card-label" className="flex flex-wrap gap-2.5">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={cardColor === null}
+              aria-label="No card"
+              title="No card"
+              onClick={() => setCardColor(null)}
+              className={cn(
+                "flex size-9 items-center justify-center rounded-full border bg-card text-muted-foreground ring-offset-2 ring-offset-background",
+                cardColor === null && "ring-2 ring-primary",
+              )}
+            >
+              <Ban className="size-4" aria-hidden />
+            </button>
+            {(Object.keys(CARD_COLORS) as CardColor[]).map((c) => (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={cardColor === c}
+                aria-label={CARD_COLORS[c].name}
+                title={CARD_COLORS[c].name}
+                onClick={() => setCardColor(c)}
+                style={{ backgroundColor: CARD_COLORS[c].bg, color: CARD_COLORS[c].fg }}
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgb(128_128_128/0.3)] ring-offset-2 ring-offset-background",
+                  cardColor === c && "ring-2 ring-primary",
+                )}
+              >
+                {cardColor === c && <Check className="size-4" aria-hidden />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* The verse as it will be kept: as its card when a color is picked */}
       {locked ? (
+        cardStyle && shown?.state === "filled" ? (
+          <MemoryCard
+            style={cardStyle}
+            reference={canonical ?? reference}
+            translation={translation}
+            text={shown.text}
+            className="animate-rise mx-auto mt-6 max-w-[17rem]"
+          />
+        ) : (
         shown && (
           <figure aria-live="polite" className="animate-rise mt-6 rounded-2xl border bg-card p-5">
             <figcaption className="text-sm font-medium text-muted-foreground">
@@ -203,6 +260,7 @@ export function VerseForm({
             {shown.state === "filled" && shown.note && <p className="mt-3 text-sm text-muted-foreground">{shown.note}</p>}
           </figure>
         )
+        )
       ) : (
         <div className="mt-6 flex flex-col gap-2">
           <label htmlFor="text" className={label}>
@@ -219,6 +277,15 @@ export function VerseForm({
             className="min-h-36 rounded-2xl bg-card p-5 font-serif text-xl leading-relaxed md:text-xl"
           />
           {errors.text && <p className="text-sm text-destructive">{errors.text}</p>}
+          {cardStyle && text.trim() && (
+            <MemoryCard
+              style={cardStyle}
+              reference={canonical ?? reference}
+              translation={translation || "—"}
+              text={text.trim()}
+              className="animate-rise mx-auto mt-4 w-full max-w-[17rem]"
+            />
+          )}
         </div>
       )}
 

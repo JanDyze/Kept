@@ -11,6 +11,7 @@ import { isLookupTranslation } from "@/lib/bible/translations";
 import { db } from "@/lib/db";
 import { verses } from "@/lib/db/schema";
 import type { VerseField } from "@/lib/verses/input";
+import { readCardStyle, type CardStyle } from "@/lib/cards/style";
 import { insertNote } from "@/lib/verses/notes";
 import { resolveVerse } from "@/lib/verses/resolve";
 
@@ -32,8 +33,13 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
   });
   if (!result.ok) return { errors: result.errors };
 
-  // Notes are a thread on the verse page (verse_notes); a new verse's note starts it.
+  // Notes are a thread on the verse page (verse_notes); a new verse's note starts it. A new verse
+  // can also be made a card straight away (a color picked in the add form).
   const { notes: firstNote, ...verse } = result.verse;
+  let card: CardStyle | null = null;
+  try {
+    card = readCardStyle(JSON.parse(String(formData.get("card") || "null")));
+  } catch {}
   const rawId = formData.get("id");
   let id: string;
   if (rawId) {
@@ -49,7 +55,7 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
   } else {
     const [created] = await db
       .insert(verses)
-      .values({ ...verse, userId: user.id })
+      .values({ ...verse, card, userId: user.id })
       .returning({ id: verses.id });
     id = created.id;
     if (firstNote) await insertNote(user.id, id, firstNote);
