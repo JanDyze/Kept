@@ -101,7 +101,7 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
   };
 
   return (
-    <Screen back={{ href: "/games", label: "Games" }} title={info.name}>
+    <Screen back={{ href: "/games", label: "Games" }} title={info.name} className="pb-0">
       <Replayable game={game.game} puzzle={game.puzzle} fresh={render({}, "in_progress")}>
         {render(game.state, game.status)}
       </Replayable>

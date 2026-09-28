@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { hint, sameWord, type FirstLettersPuzzle, type FirstLettersState } from "@/lib/games/first-letters";
 import { cn } from "@/lib/utils";
-import { ActionBar, DoneBadge, GameError, GameResult, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
+import {
+  ActionBar,
+  DoneBadge,
+  GameError,
+  GameResult,
+  KeyboardFit,
+  mistakesText,
+  Segments,
+  useResultShown,
+  VerseCard,
+} from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
 export function FirstLettersGame({
@@ -30,6 +40,15 @@ export function FirstLettersGame({
   const total = puzzle.tokens.length;
   const current = puzzle.tokens[typed];
   const resultShown = useResultShown(game.playing, gaveUp);
+
+  // Keep the word being typed in view as the verse scrolls inside its card.
+  const currentWord = useRef<HTMLSpanElement>(null);
+  const showCurrentWord = () => {
+    currentWord.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
+  useEffect(() => {
+    currentWord.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [typed]);
 
   function advance(extraMistake: boolean) {
     const state = { ...game.state, typed: typed + 1, mistakes: mistakes + (extraMistake ? 1 : 0) };
@@ -73,34 +92,38 @@ export function FirstLettersGame({
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    <KeyboardFit onResize={showCurrentWord}>
       <Segments parts={[typed / total]} />
 
-      <VerseCard
-        reference={puzzle.reference}
-        translation={puzzle.translation}
-        className="mt-4"
-        aside={typed === total && <DoneBadge />}
-      >
-        {puzzle.tokens.map((t, i) => (
-          <span key={i}>
-            {t.pre}
-            {i < typed ? (
-              <span className="animate-pop inline-block">{t.word}</span>
-            ) : (
-              <span
-                className={cn(
-                  "rounded px-0.5 tracking-wider",
-                  i === typed ? "bg-primary/10 font-semibold text-primary ring-1 ring-primary/30" : "text-muted-foreground/70",
-                )}
-              >
-                {hint(t.word)}
-              </span>
-            )}
-            {t.post}
-          </span>
-        ))}
-      </VerseCard>
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl">
+        <VerseCard
+          reference={puzzle.reference}
+          translation={puzzle.translation}
+          aside={typed === total && <DoneBadge />}
+        >
+          {puzzle.tokens.map((t, i) => (
+            <span key={i}>
+              {t.pre}
+              {i < typed ? (
+                <span className="animate-pop inline-block">{t.word}</span>
+              ) : (
+                <span
+                  ref={i === typed ? currentWord : undefined}
+                  className={cn(
+                    "scroll-my-4 rounded px-0.5 tracking-wider",
+                    i === typed
+                      ? "bg-primary/10 font-semibold text-primary ring-1 ring-primary/30"
+                      : "text-muted-foreground/70",
+                  )}
+                >
+                  {hint(t.word)}
+                </span>
+              )}
+              {t.post}
+            </span>
+          ))}
+        </VerseCard>
+      </div>
 
       <ActionBar
         left={`${typed} of ${total}`}
@@ -120,7 +143,6 @@ export function FirstLettersGame({
               }
             }}
             disabled={!game.playing}
-            autoFocus
             autoCapitalize="none"
             autoCorrect="off"
             autoComplete="off"
@@ -144,6 +166,6 @@ export function FirstLettersGame({
         </div>
       </ActionBar>
       <GameError message={game.error} saving={game.saving} />
-    </div>
+    </KeyboardFit>
   );
 }

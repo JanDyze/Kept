@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BookOpenText, Check, ChevronRight, Loader2, PartyPopper, RotateCcw } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -112,6 +112,52 @@ export function GameResult({
         </div>
       </div>
     </section>
+  );
+}
+
+// A play screen that fills exactly the space you can see: from where it starts down to the bottom
+// of the visual viewport, which shrinks when the phone keyboard opens. With the verse scrolling
+// inside it and the controls at its foot, the keyboard can't push the verse out of sight.
+// `onResize` runs after each change, e.g. to bring the word being typed back into view.
+export function KeyboardFit({
+  children,
+  className,
+  onResize,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onResize?: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onResizeRef = useRef(onResize);
+  useEffect(() => {
+    onResizeRef.current = onResize;
+  });
+  useLayoutEffect(() => {
+    const el = ref.current!;
+    const vv = window.visualViewport;
+    const fit = () => {
+      const top = el.getBoundingClientRect().top - (vv?.offsetTop ?? 0);
+      const visible = (vv?.height ?? window.innerHeight) - Math.max(0, top);
+      const height = `${Math.max(280, Math.round(visible))}px`;
+      if (el.style.height === height) return;
+      el.style.height = height;
+      onResizeRef.current?.();
+    };
+    fit();
+    vv?.addEventListener("resize", fit);
+    vv?.addEventListener("scroll", fit);
+    window.addEventListener("resize", fit);
+    return () => {
+      vv?.removeEventListener("resize", fit);
+      vv?.removeEventListener("scroll", fit);
+      window.removeEventListener("resize", fit);
+    };
+  }, []);
+  return (
+    <div ref={ref} className={cn("flex min-h-0 flex-col", className)}>
+      {children}
+    </div>
   );
 }
 
