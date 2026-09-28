@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ThemeScript } from "goodthemes/script";
 import { AppFeel } from "@/components/app-feel";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
+import { InstallBanner } from "@/components/install-banner";
 import { ServiceWorker } from "@/components/service-worker";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TimezoneSync } from "@/components/timezone-sync";
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <TimezoneSync />
           <AppFeel />
           <ServiceWorker />
+          <InstallBanner />
           <Suspense fallback={null}>
             <NavigationOverlayWithVerses />
           </Suspense>

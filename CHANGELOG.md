@@ -13,6 +13,7 @@ All notable changes to Kept, one version per feature.
 - Home: the top card is you (greeting, streak, today's games) and opens your profile; the grid is Games, My verses, Bible and Discover. Settings moved to your profile and is simpler.
 - The loading logo weaves in once and rests; every 8 seconds it weaves again with the next verse, instead of replaying the drawing every few seconds.
 - Kept installs as an app (PWA): home-screen icon (maskable on Android), its own window, shortcuts (Games, My verses, Discover, Add a verse), and a calm offline page instead of the browser's error.
+- The browser's own install prompt is replaced by Kept's: a slim banner at the top with Install (or, on iPhone, where Safari keeps Add to Home Screen). Closing it quiets it for 30 days.
 - Home's faint Kept mark weaves in when Home opens, then drifts slowly.
 - Friends, the card gallery and shared-card photos work across accounts; photos are still stored on the dev machine, so they need cloud storage before deploying.
 
