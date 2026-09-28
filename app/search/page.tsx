@@ -50,7 +50,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         />
       }
     >
-      <SearchBox defaultValue={q} translation={t} autoFocus={!q} />
+      <SearchBox defaultValue={q} translation={t} />
 
       {!result && (
         <>

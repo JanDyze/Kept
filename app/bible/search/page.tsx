@@ -49,7 +49,6 @@ export default async function BibleSearchPage({ searchParams }: PageProps<"/bibl
           type="search"
           name="q"
           defaultValue={q}
-          autoFocus={!q}
           enterKeyHint="search"
           autoComplete="off"
           aria-label="Reference, book or words"
