@@ -134,7 +134,10 @@ export async function saveVerseOrder(ids: string[]): Promise<{ error?: string }>
 
   await db.execute(sql`
     update ${verses} set position = o.pos - 1
-    from unnest(${parsed.data}::uuid[]) with ordinality as o(id, pos)
+    from unnest(array[${sql.join(
+      parsed.data.map((id) => sql`${id}`),
+      sql`, `,
+    )}]::uuid[]) with ordinality as o(id, pos)
     where ${verses.id} = o.id and ${verses.userId} = ${user.id}`);
   revalidatePath("/verses");
   return {};
