@@ -1,7 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 export type SignInState = { error?: string; email?: string };
@@ -39,8 +39,7 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
   if (!email || !password) return { error: "Enter your email and a password.", email };
   if (password.length < MIN_PASSWORD) return { error: `Use a password of at least ${MIN_PASSWORD} characters.`, email };
 
-  const h = await headers();
-  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  const origin = await siteOrigin();
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -63,8 +62,7 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
 // place sign-up emails land) and on to `next`. A new Google user gets an account on the way.
 export async function signInWithGoogle(formData: FormData) {
   const next = safeNext(formData.get("next"));
-  const h = await headers();
-  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  const origin = await siteOrigin();
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

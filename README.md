@@ -44,6 +44,7 @@ Fill in `.env.local`:
 | `DIRECT_URL` | Connect → Session pooler (port 5432) |
 | `CRON_SECRET` | Any long random string |
 | `MCP_TOKEN` | Any long random string (used from Day 5) |
+| `SITE_URL` | Production only: the address Kept is reached at, e.g. `https://kept.example.com` (sign-up and Google sign-in return there) |
 
 Generate random strings with `node -e "console.log(crypto.randomBytes(32).toString('base64url'))"`.
 
