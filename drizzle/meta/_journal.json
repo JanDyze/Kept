@@ -57,6 +57,13 @@
       "when": 1790565504575,
       "tag": "0007_verse_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790566363211,
+      "tag": "0008_share_links",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Archive, ArchiveRestore, Palette, Pencil } from "lucide-react";
 import { z } from "zod";
+import { CardShare } from "@/components/card-share";
 import { MemoryCard } from "@/components/memory-card";
 import { TagChip } from "@/components/tag-chip";
 import { VerseNotes } from "@/components/verse-notes";
@@ -13,6 +14,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
+import { sharePath } from "@/lib/cards/share";
 import { readCardStyle } from "@/lib/cards/style";
 import { formatDate } from "@/lib/format";
 import { getTimeZone } from "@/lib/day";
@@ -89,16 +91,24 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
         )}
 
         {!archived && (
-          <Link
-            href={`/verses/${verse.id}/card`}
-            transitionTypes={["nav-forward"]}
-            className={cn(
-              "mt-4 inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
-              "transition-colors hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <Palette className="size-4" aria-hidden /> {card ? "Edit card" : "Make it a card"}
-          </Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/verses/${verse.id}/card`}
+              transitionTypes={["nav-forward"]}
+              className={cn(
+                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
+                "transition-colors hover:bg-muted hover:text-foreground",
+              )}
+            >
+              <Palette className="size-4" aria-hidden /> {card ? "Edit card" : "Make it a card"}
+            </Link>
+            <CardShare
+              verseId={verse.id}
+              reference={localRef ?? verse.reference}
+              hasCard={Boolean(card)}
+              initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
+            />
+          </div>
         )}
 
         {verse.tags.length > 0 && (

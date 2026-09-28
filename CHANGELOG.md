@@ -4,6 +4,7 @@ All notable changes to Kept, one version per feature.
 
 ## 0.11.0 — Verse cards
 
+- Share a card: save or share it as an image (a sharp PNG drawn from the card itself, fonts, photo and border included), or make a public link (`/s/…`) anyone can open without an account, with a preview image for chat apps. Stop sharing turns the link off.
 - Any verse can become a card: "Make it a card" on the verse page opens an editor with a live preview.
 - Background: the theme's card, ten colors (Ink, Night, Teal, Forest, Plum, Clay, Gold, Sand, Mist, Paper), or your own photo with dim and blur; paper grain on top of any of them.
 - Text: five fonts (Serif, Classic, Display, Sans, Hand), eight text colors or Auto, three sizes, left or centered, and the reference at the top or bottom. Long passages set smaller on their own.

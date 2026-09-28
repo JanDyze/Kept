@@ -100,9 +100,13 @@ const GRAIN =
 export function CardBackdrop({
   style,
   sizes = "(max-width: 640px) 100vw, 36rem",
+  imageSrc,
+  eager,
 }: {
   style: CardStyle;
   sizes?: string;
+  eager?: boolean; // the card is the page's main picture: load its photo at once
+  imageSrc?: string; // where the photo is served from, when not the owner's own route (a shared card)
 }) {
   const bg = style.bg;
   return (
@@ -110,7 +114,9 @@ export function CardBackdrop({
       {bg.kind === "image" && (
         <>
           <Image
-            src={cardImageUrl(bg.image)}
+            src={imageSrc ?? cardImageUrl(bg.image)}
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : undefined}
             alt=""
             fill
             unoptimized
@@ -151,6 +157,7 @@ export function MemoryCard({
   translation,
   text,
   morphId,
+  imageSrc,
   className,
 }: {
   style: CardStyle;
@@ -158,6 +165,7 @@ export function MemoryCard({
   translation: string;
   text: string;
   morphId?: string; // the verse id, so the card morphs from / into its tile (verse-morph.tsx)
+  imageSrc?: string; // see CardBackdrop
   className?: string;
 }) {
   const morph = (name: (id: string) => string, node: React.ReactElement) =>
@@ -183,7 +191,7 @@ export function MemoryCard({
 
   // The wrapper is the size container; the card inside measures itself against it.
   return (
-    <div className={cn("@container w-full", className)}>
+    <div className={cn("@container w-full", className)} data-card={morphId}>
       {morph(
         morphName.surface,
         <figure
@@ -196,7 +204,7 @@ export function MemoryCard({
           )}
           style={{ backgroundColor: colors.bg, color: colors.fg, aspectRatio: CARD_SHAPES[style.shape].ratio }}
         >
-          <CardBackdrop style={style} />
+          <CardBackdrop style={style} imageSrc={imageSrc} eager />
           <CardBorder style={style} />
           {style.reference === "top" && caption}
           {morph(

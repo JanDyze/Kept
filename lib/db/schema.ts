@@ -93,6 +93,8 @@ export const verses = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     // How the verse's card looks (lib/cards/style.ts); null shows the plain page.
     card: jsonb("card").$type<CardStyle>(),
+    // Set while the verse's card has a public link (/s/<token>); null means private.
+    shareToken: text("share_token").unique(),
   },
   (t) => [
     index("verses_user_due_idx").on(t.userId, t.dueAt),
