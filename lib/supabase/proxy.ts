@@ -2,8 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Paths reachable without a session. /api/mcp and /api/cron check their own bearer tokens; /s/<token>
-// is a card someone chose to share publicly.
-const PUBLIC_PATHS = ["/login", "/api/mcp", "/api/cron", "/s"];
+// is a card someone chose to share publicly; /auth/confirm is where sign-up emails land.
+const PUBLIC_PATHS = ["/login", "/api/mcp", "/api/cron", "/s", "/auth"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

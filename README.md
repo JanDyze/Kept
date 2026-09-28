@@ -24,8 +24,8 @@ Next.js (App Router) · Supabase (Postgres + Auth) · Drizzle · Tailwind + shad
 
 1. Create a project at [supabase.com](https://supabase.com) (free tier).
 2. **Authentication → Sign In / Providers → Email**: keep "Enable email provider" on, turn on "Require current password when updating", and set the minimum password length to 12 or more.
-3. **Authentication → Sign In / Providers → User Signups**: turn **off** "Allow new users to sign up".
-4. **Authentication → Users → Add user → Create new user**: add your email and password and tick **Auto Confirm User**. This is the only account.
+3. **Authentication → Sign In / Providers → User Signups**: turn **on** "Allow new users to sign up" (people create accounts at `/login?mode=signup`). Keep "Confirm email" on so new accounts prove their address.
+4. **Authentication → URL Configuration**: set the Site URL to where Kept runs, and add each address you open it from to **Redirect URLs** (e.g. `http://localhost:3000/**`, `http://192.168.1.10:3000/**`, your production domain). The sign-up email links back to `/auth/confirm`.
 
 ### 2. Environment
 

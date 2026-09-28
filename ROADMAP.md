@@ -19,7 +19,7 @@ community keeps:
 
 - Friends, challenges, head-to-head games and leaderboards. The daily puzzle builders already take
   a seed, so a shared "puzzle of the day" can reuse them.
-- Prerequisites: open sign-ups, profiles and usernames, and privacy controls for anything shared.
+- Prerequisites: profiles and usernames, and privacy controls for anything shared. (Sign-ups are open.)
 
 ## Before deploying
 
