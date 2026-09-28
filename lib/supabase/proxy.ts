@@ -18,6 +18,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // When Supabase doesn't accept the requested return address it falls back to the Site URL with
+  // the sign-in code on it (/?code=…): hand that to /auth/confirm so the sign-in still finishes.
+  if (pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/confirm";
+    url.search = `?code=${encodeURIComponent(request.nextUrl.searchParams.get("code")!)}&next=/`;
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
