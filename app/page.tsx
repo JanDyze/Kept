@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Flame } from "lucide-react";
 import { Avatar } from "@/components/avatar";
@@ -82,11 +83,19 @@ export default async function HomePage() {
           transitionTypes={["nav-forward"]}
           aria-label={games.length === 0 ? "Add your first verse" : `${status}. Your profile`}
           className={cn(
-            "animate-rise group block shrink-0 rounded-2xl bg-brand p-5 text-brand-foreground",
+            "animate-rise group relative isolate block shrink-0 overflow-hidden rounded-2xl bg-brand p-5 text-brand-foreground",
             "transition-transform duration-200 ease-out active:scale-[0.98]",
             "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
           )}
         >
+          {/* the Kept mark, large and faint in the corner; it turns a little when the card is pressed */}
+          <Image
+            src="/logo.svg"
+            alt=""
+            width={190}
+            height={190}
+            className="pointer-events-none absolute -right-10 -bottom-14 -z-10 rotate-12 opacity-[0.13] brightness-0 invert transition-transform duration-700 ease-out motion-safe:group-engaged:rotate-[24deg] motion-safe:group-engaged:scale-110"
+          />
           <div className="flex items-center gap-3">
             <Avatar name={me.displayName} username={me.username} className="size-11 text-lg ring-2 ring-brand-foreground/25" />
             <p className="min-w-0 flex-1 leading-tight">
