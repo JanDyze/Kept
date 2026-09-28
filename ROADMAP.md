@@ -10,16 +10,15 @@ community keeps:
 
 - **Most saved verses** across all users.
 - **Most used tags**, as a consensus of how people group their verses.
-- **A gallery of cards**: everyone's customized verse cards in a Pinterest-style masonry grid
-  (portrait, square and landscape cards side by side), to browse, save from, and use as a starting
-  style for your own. This needs cards to be shareable (public by choice) and photos stored in the
-  cloud, not on the dev machine.
+- **A gallery of cards**: built (Discover → Cards, Pinterest-style). Next: search and tags within
+  the gallery, and loading more than the newest 60. Photos still need cloud storage before deploying.
 
 ## Social
 
-- Friends, challenges, head-to-head games and leaderboards. The daily puzzle builders already take
+- Friends: built (usernames, requests, profiles at `/u/name`, friends-only cards).
+- Challenges, head-to-head games and leaderboards. The daily puzzle builders already take
   a seed, so a shared "puzzle of the day" can reuse them.
-- Prerequisites: profiles and usernames, and privacy controls for anything shared. (Sign-ups are open.)
+- In place: sign-ups (email and Google), usernames, friends, and per-card visibility (only me / friends / everyone).
 
 ## Before deploying
 

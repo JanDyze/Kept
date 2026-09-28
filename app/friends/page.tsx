@@ -20,7 +20,7 @@ export default async function FriendsPage() {
         <Avatar name={me.displayName} username={me.username} className="size-12 text-lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{me.displayName ?? `@${me.username}`}</p>
-          <p className="truncate text-sm text-muted-foreground">@{me.username}</p>
+          {me.displayName && <p className="truncate text-sm text-muted-foreground">@{me.username}</p>}
         </div>
         <ShareProfile username={me.username} />
       </section>
@@ -66,7 +66,7 @@ function People({
                 <Avatar name={p.displayName} username={p.username} />
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{p.displayName ?? `@${p.username}`}</span>
-                  <span className="block truncate text-sm text-muted-foreground">@{p.username}</span>
+                  {p.displayName && <span className="block truncate text-sm text-muted-foreground">@{p.username}</span>}
                 </span>
               </Link>
               <FriendButton userId={p.userId} username={p.username} relation={relation} compact />

@@ -4,6 +4,10 @@ All notable changes to Kept, one version per feature.
 
 ## 0.11.0 — Verse cards
 
+- Friends: everyone has an @username (made from their name, changeable in Settings). Add friends by username or from their profile (`/u/name`); requests can be accepted, declined or cancelled, and friends removed. The Friends page (from Discover or Settings) lists requests, friends and your profile link.
+- Who sees a card: only me (the default), friends, or everyone, chosen in the verse's Share panel. A photo is only shown to people allowed to see a card that uses it.
+- Discover → Cards: a Pinterest-style gallery of cards shared with everyone, plus friends' cards, with an Everyone / Friends filter. Open a card to see who made it and keep it: the verse joins yours in that card's style.
+
 - Anyone can create an account (`/login?mode=signup`), with email confirmation through `/auth/confirm`, or continue with Google. Sign-in links to it and back.
 - Share a card: save or share it as an image (a sharp PNG drawn from the card itself, fonts, photo and border included), or make a public link (`/s/…`) anyone can open without an account, with a preview image for chat apps. Stop sharing turns the link off.
 - Any verse can become a card: "Make it a card" on the verse page opens an editor with a live preview.

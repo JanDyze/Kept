@@ -32,7 +32,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
       <section className="flex flex-col items-center text-center">
         <Avatar name={person.displayName} username={person.username} className="size-20 text-3xl" />
         <h1 className="mt-3 font-brand text-2xl font-semibold tracking-tight">{person.displayName ?? `@${person.username}`}</h1>
-        <p className="text-muted-foreground">@{person.username}</p>
+        {person.displayName && <p className="text-muted-foreground">@{person.username}</p>}
         <div className="mt-4">
           {self ? <ShareProfile username={person.username} /> : <FriendButton userId={person.userId} username={person.username} relation={relation} />}
         </div>

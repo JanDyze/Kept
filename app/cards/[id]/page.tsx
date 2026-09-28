@@ -40,7 +40,7 @@ export default async function CardPage({ params }: PageProps<"/cards/[id]">) {
         <Avatar name={author.displayName} username={author.username} />
         <span className="min-w-0">
           <span className="block truncate font-medium">{author.displayName ?? `@${author.username}`}</span>
-          <span className="block truncate text-sm text-muted-foreground">@{author.username}</span>
+          {author.displayName && <span className="block truncate text-sm text-muted-foreground">@{author.username}</span>}
         </span>
       </Link>
 
