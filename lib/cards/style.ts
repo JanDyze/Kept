@@ -44,6 +44,39 @@ export const CARD_FONTS = {
 export type CardFont = keyof typeof CARD_FONTS;
 const fontIds = Object.keys(CARD_FONTS) as [CardFont, ...CardFont[]];
 
+// Portrait is the classic card; square and landscape suit short verses and sharing.
+export const CARD_SHAPES = {
+  portrait: { name: "Portrait", ratio: "4 / 5" },
+  square: { name: "Square", ratio: "1 / 1" },
+  landscape: { name: "Landscape", ratio: "3 / 2" },
+} as const;
+export type CardShape = keyof typeof CARD_SHAPES;
+
+// A border on any of the four sides: at the card's edge, or inset as a frame (partial sides inset
+// read as rules, e.g. lines above and below the verse).
+const border = z.object({
+  top: z.boolean(),
+  right: z.boolean(),
+  bottom: z.boolean(),
+  left: z.boolean(),
+  style: z.enum(["solid", "double", "dashed", "dotted"]),
+  weight: z.enum(["thin", "medium", "thick"]),
+  inset: z.boolean(),
+  color: z.enum(["auto", ...textColorIds]),
+});
+export type CardBorder = z.infer<typeof border>;
+export const NO_BORDER: CardBorder = {
+  top: false,
+  right: false,
+  bottom: false,
+  left: false,
+  style: "solid",
+  weight: "thin",
+  inset: true,
+  color: "auto",
+};
+export const hasBorder = (b: CardBorder) => b.top || b.right || b.bottom || b.left;
+
 const background = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("theme") }),
   z.object({ kind: z.literal("color"), color: z.enum(colorIds) }),
@@ -69,6 +102,9 @@ export const cardStyleSchema = z.object({
   size: z.enum(["s", "m", "l"]),
   align: z.enum(["left", "center"]),
   reference: z.enum(["top", "bottom"]),
+  // Added later; the defaults keep older saved cards readable.
+  shape: z.enum(["portrait", "square", "landscape"]).default("portrait"),
+  border: border.default(NO_BORDER),
 });
 
 export type CardStyle = z.infer<typeof cardStyleSchema>;
@@ -82,6 +118,8 @@ export const DEFAULT_CARD: CardStyle = {
   size: "m",
   align: "center",
   reference: "bottom",
+  shape: "portrait",
+  border: NO_BORDER,
 };
 
 export const IMAGE_DEFAULTS = { dim: 35, blur: 0, focusX: 50, focus: 50, zoom: 100 } as const;

@@ -2,9 +2,13 @@ import Image from "next/image";
 import { Morph, morphName } from "@/components/verse-morph";
 import { cardFontVariables } from "@/lib/cards/fonts";
 import {
+  CARD_SHAPES,
   cardColors,
   cardImageUrl,
+  hasBorder,
+  TEXT_COLORS,
   type CardFont,
+  type CardShape,
   type CardStyle,
 } from "@/lib/cards/style";
 import { cn } from "@/lib/utils";
@@ -34,6 +38,9 @@ export function cardFontClass(font: CardFont) {
   return cn(cardFontVariables, FONT_CLASS[font]);
 }
 
+// Shorter cards hold less, so their text sets smaller against the same width.
+const SHAPE_SCALE: Record<CardShape, number> = { portrait: 1, square: 0.88, landscape: 0.7 };
+
 // Size in cqw: shorter verses set larger; S / M / L scale that.
 function textSize(style: CardStyle, length: number) {
   const base =
@@ -49,7 +56,39 @@ function textSize(style: CardStyle, length: number) {
               ? 4.5
               : 3.9;
   const scale = style.size === "s" ? 0.84 : style.size === "l" ? 1.16 : 1;
-  return base * scale * FONT_SCALE[style.font];
+  return base * scale * FONT_SCALE[style.font] * SHAPE_SCALE[style.shape];
+}
+
+// Widths in cqw; a double line needs more room to show its two strokes.
+const BORDER_WIDTH = {
+  single: { thin: 0.45, medium: 0.9, thick: 1.6 },
+  double: { thin: 1.1, medium: 1.6, thick: 2.4 },
+};
+
+// The card's border, on whichever sides are on. At the edge it follows the card's corners; inset
+// all round it's a frame with its own corners; inset on some sides it's straight rules.
+export function CardBorder({ style }: { style: CardStyle }) {
+  const b = style.border;
+  if (!hasBorder(b)) return null;
+  const width = `${BORDER_WIDTH[b.style === "double" ? "double" : "single"][b.weight]}cqw`;
+  const all = b.top && b.right && b.bottom && b.left;
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute"
+      style={{
+        inset: b.inset ? "4cqw" : 0,
+        borderStyle: b.style,
+        borderColor: b.color === "auto" ? "currentColor" : TEXT_COLORS[b.color].color,
+        borderTopWidth: b.top ? width : 0,
+        borderRightWidth: b.right ? width : 0,
+        borderBottomWidth: b.bottom ? width : 0,
+        borderLeftWidth: b.left ? width : 0,
+        borderRadius: b.inset ? (all ? "3cqw" : 0) : "inherit",
+        opacity: b.color === "auto" ? 0.55 : 0.95,
+      }}
+    />
+  );
 }
 
 // Paper grain: SVG noise laid over the background.
@@ -149,14 +188,16 @@ export function MemoryCard({
         morphName.surface,
         <figure
           className={cn(
-            "relative isolate flex aspect-[4/5] w-full flex-col overflow-hidden rounded-[6.5cqw] p-[8.5cqw]",
+            "relative isolate flex w-full flex-col overflow-clip rounded-[6.5cqw]",
+            style.shape === "landscape" ? "px-[9cqw] py-[6cqw]" : "p-[8.5cqw]",
             style.bg.kind === "theme"
               ? "border bg-card text-card-foreground"
               : "shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)]",
           )}
-          style={{ backgroundColor: colors.bg, color: colors.fg }}
+          style={{ backgroundColor: colors.bg, color: colors.fg, aspectRatio: CARD_SHAPES[style.shape].ratio }}
         >
           <CardBackdrop style={style} />
+          <CardBorder style={style} />
           {style.reference === "top" && caption}
           {morph(
             morphName.text,

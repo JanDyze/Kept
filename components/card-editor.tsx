@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/button";
 import {
   CARD_COLORS,
   CARD_FONTS,
+  CARD_SHAPES,
+  hasBorder,
+  type CardBorder,
+  type CardShape,
   cardColors,
   cardImageUrl,
   DEFAULT_CARD,
@@ -22,7 +26,7 @@ import {
 } from "@/lib/cards/style";
 import { cn } from "@/lib/utils";
 
-type Tab = "background" | "text";
+type Tab = "background" | "text" | "frame";
 const MAX_SIDE = 1600;
 
 // Shrinks a photo in the browser (and bakes in its rotation) before upload: phone photos are
@@ -160,7 +164,7 @@ export function CardEditor({
           onPointerCancel={endDrag}
           className={cn(
             "relative mx-auto select-none",
-            preview === "card" ? "max-w-[15rem]" : "max-w-xl",
+            preview === "list" ? "max-w-xl" : style.shape === "landscape" ? "max-w-[21rem]" : style.shape === "square" ? "max-w-[16.5rem]" : "max-w-[15rem]",
             bg.kind === "image" && "cursor-grab touch-none active:cursor-grabbing",
           )}
         >
@@ -187,10 +191,11 @@ export function CardEditor({
         options={[
           { value: "background", label: "Background" },
           { value: "text", label: "Text" },
+          { value: "frame", label: "Frame" },
         ]}
       />
 
-      {tab === "background" ? (
+      {tab === "background" && (
         <div className="animate-rise mt-6 flex flex-col gap-7">
           <Field label="Color">
             <div className="flex flex-wrap gap-3">
@@ -316,7 +321,8 @@ export function CardEditor({
             </button>
           </div>
         </div>
-      ) : (
+      )}
+      {tab === "text" && (
         <div className="animate-rise mt-6 flex flex-col gap-7">
           <Field label="Font">
             <div className="grid grid-cols-5 gap-2">
@@ -397,6 +403,7 @@ export function CardEditor({
           </div>
         </div>
       )}
+      {tab === "frame" && <FrameControls style={style} set={set} />}
 
       <div className="sticky bottom-0 -mx-4 mt-auto bg-background/90 px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md">
         {error && (
@@ -428,6 +435,167 @@ export function CardEditor({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+const BORDER_PRESETS: [string, Pick<CardBorder, "top" | "right" | "bottom" | "left">][] = [
+  ["None", { top: false, right: false, bottom: false, left: false }],
+  ["All", { top: true, right: true, bottom: true, left: true }],
+  ["Top & bottom", { top: true, right: false, bottom: true, left: false }],
+  ["Sides", { top: false, right: true, bottom: false, left: true }],
+];
+
+const SIDE_NAME = { top: "Top", right: "Right", bottom: "Bottom", left: "Left" } as const;
+const SIDE_POSITION = {
+  top: "inset-x-3 top-1 h-3",
+  right: "inset-y-3 right-1 w-3",
+  bottom: "inset-x-3 bottom-1 h-3",
+  left: "inset-y-3 left-1 w-3",
+} as const;
+
+// Shape, and the border: which sides (tap them on a little card, or pick a preset), then its line.
+function FrameControls({ style, set }: { style: CardStyle; set: (patch: Partial<CardStyle>) => void }) {
+  const b = style.border;
+  const setBorder = (patch: Partial<CardBorder>) => set({ border: { ...b, ...patch } });
+  const sides = ["top", "right", "bottom", "left"] as const;
+
+  return (
+    <div className="animate-rise mt-6 flex flex-col gap-7">
+      <Field label="Shape">
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(CARD_SHAPES) as CardShape[]).map((shape) => (
+            <button
+              key={shape}
+              type="button"
+              aria-pressed={style.shape === shape}
+              onClick={() => set({ shape })}
+              className={cn(
+                "flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                style.shape === shape ? "border-primary bg-primary/8 text-foreground" : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              <span
+                className="rounded-[4px] border-2 border-current"
+                style={{ aspectRatio: CARD_SHAPES[shape].ratio, height: shape === "landscape" ? 20 : 28 }}
+                aria-hidden
+              />
+              <span className="text-xs">{CARD_SHAPES[shape].name}</span>
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Border">
+        <div className="flex items-center gap-5">
+          <div className="relative h-24 w-20 shrink-0 rounded-xl bg-muted" role="group" aria-label="Sides">
+            {sides.map((side) => (
+              <button
+                key={side}
+                type="button"
+                aria-pressed={b[side]}
+                aria-label={SIDE_NAME[side] + " border"}
+                onClick={() => setBorder({ [side]: !b[side] })}
+                className={cn(
+                  "absolute flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                  SIDE_POSITION[side],
+                )}
+              >
+                <span
+                  className={cn(
+                    "rounded-full transition-colors",
+                    side === "top" || side === "bottom" ? "h-1 w-full" : "h-full w-1",
+                    b[side] ? "bg-primary" : "bg-foreground/15",
+                  )}
+                />
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {BORDER_PRESETS.map(([label, preset]) => {
+              const on = sides.every((side) => b[side] === preset[side]);
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setBorder(preset)}
+                  className={cn(
+                    "h-8 rounded-full border px-3 text-sm transition-colors",
+                    on ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </Field>
+
+      {hasBorder(b) && (
+        <div className="animate-rise flex flex-col gap-7">
+          <Field label="Line">
+            <Segmented
+              label="Line"
+              value={b.style}
+              onChange={(value) => setBorder({ style: value })}
+              options={[
+                { value: "solid", label: "Solid" },
+                { value: "double", label: "Double" },
+                { value: "dashed", label: "Dashed" },
+                { value: "dotted", label: "Dotted" },
+              ]}
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Weight">
+              <Segmented
+                label="Weight"
+                value={b.weight}
+                onChange={(weight) => setBorder({ weight })}
+                options={[
+                  { value: "thin", label: "Thin" },
+                  { value: "medium", label: "Mid" },
+                  { value: "thick", label: "Thick" },
+                ]}
+              />
+            </Field>
+            <Field label="Place">
+              <Segmented
+                label="Place"
+                value={b.inset ? "inset" : "edge"}
+                onChange={(v) => setBorder({ inset: v === "inset" })}
+                options={[
+                  { value: "edge", label: "Edge" },
+                  { value: "inset", label: "Inset" },
+                ]}
+              />
+            </Field>
+          </div>
+          <Field label="Border color">
+            <div className="flex flex-wrap gap-3">
+              <Swatch
+                label="Auto"
+                selected={b.color === "auto"}
+                onClick={() => setBorder({ color: "auto" })}
+                className="border bg-card font-brand text-base font-semibold"
+              >
+                A
+              </Swatch>
+              {(Object.keys(TEXT_COLORS) as TextColor[]).map((c) => (
+                <Swatch
+                  key={c}
+                  label={TEXT_COLORS[c].name}
+                  selected={b.color === c}
+                  onClick={() => setBorder({ color: c })}
+                  style={{ backgroundColor: TEXT_COLORS[c].color, color: c === "ink" || c === "black" ? "#fff" : "#111" }}
+                />
+              ))}
+            </div>
+          </Field>
+        </div>
+      )}
     </div>
   );
 }

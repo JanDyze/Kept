@@ -7,6 +7,7 @@ All notable changes to Kept, one version per feature.
 - Any verse can become a card: "Make it a card" on the verse page opens an editor with a live preview.
 - Background: the theme's card, ten colors (Ink, Night, Teal, Forest, Plum, Clay, Gold, Sand, Mist, Paper), or your own photo with dim and blur; paper grain on top of any of them.
 - Text: five fonts (Serif, Classic, Display, Sans, Hand), eight text colors or Auto, three sizes, left or centered, and the reference at the top or bottom. Long passages set smaller on their own.
+- Frame: portrait, square or landscape cards, and borders on any sides (presets: all, top & bottom, sides) in solid, double, dashed or dotted lines, thin to thick, at the edge or inset, in any text color.
 - Photos: drag in the preview to move them and zoom in, so landscape photos can be framed on the portrait card too. The preview switches between the card and its tile in My verses.
 - The card shows on the verse page and in My verses, in its colors, photo and font. "Plain page" goes back to the old look.
 - My verses: newest first by default, with a Recent / Book switch (remembered); always shows the verses' text (the references-only view is gone).

@@ -3,7 +3,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDownUp, Plus, Search, X } from "lucide-react";
-import { CardBackdrop, cardFontClass } from "@/components/memory-card";
+import { CardBackdrop, CardBorder, cardFontClass } from "@/components/memory-card";
 import { Morph, morphName } from "@/components/verse-morph";
 import { buttonVariants } from "@/components/ui/button";
 import { cardColors, type CardStyle } from "@/lib/cards/style";
@@ -224,6 +224,7 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
   const body = (
     <>
       {card && <CardBackdrop style={card} sizes="36rem" />}
+      {card && <CardBorder style={card} />}
       {card ? (
         <p className="font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
       ) : (

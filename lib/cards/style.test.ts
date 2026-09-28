@@ -29,3 +29,20 @@ describe("card styles", () => {
     expect(readCardStyle({ ...DEFAULT_CARD, text: undefined })?.text).toBe("auto");
   });
 });
+
+describe("card shapes and borders", () => {
+  it("reads cards saved before shapes and borders as portrait with no border", () => {
+    const { shape, border, ...older } = DEFAULT_CARD;
+    void shape;
+    void border;
+    const read = readCardStyle(older);
+    expect(read?.shape).toBe("portrait");
+    expect(read?.border.top || read?.border.right || read?.border.bottom || read?.border.left).toBe(false);
+  });
+
+  it("keeps a border on chosen sides only", () => {
+    const border = { ...DEFAULT_CARD.border, top: true, bottom: true, style: "double" };
+    expect(readCardStyle({ ...DEFAULT_CARD, shape: "landscape", border })?.border).toMatchObject({ top: true, left: false, style: "double" });
+    expect(readCardStyle({ ...DEFAULT_CARD, border: { ...border, style: "wavy" } })).toBeNull();
+  });
+});
