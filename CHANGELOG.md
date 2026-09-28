@@ -2,36 +2,42 @@
 
 All notable changes to Kept, one version per feature.
 
-## 0.11.0 — Verse cards
+## 0.13.0 — Friends, profiles and the app
 
-- Kept installs as an app (PWA): home-screen icon (maskable on Android), its own window, shortcuts (Games, My verses, Discover, Add a verse), and a calm offline page instead of the browser's error.
-- The loading logo weaves in once and rests; every 8 seconds it weaves again with the next verse, instead of replaying the drawing every few seconds.
-- Profile pictures: Google accounts start with their Google photo. Edit profile can change it (a photo, cropped square), remove it (your initial shows), or go back to the Google one.
-- Profiles: every person has a page (`/u/name`, yours at `/me`) with their streak, verses kept, games won and friends, and the cards they've shared with you. Yours has Edit profile and Settings; tap your streak for Progress, your friends for the Friends page.
-- Home: the top card is you (greeting, streak, today's games) and opens your profile; the grid is Games, My verses, Bible and Discover. Settings moved to your profile and is simpler.
-
+- Anyone can create an account (`/login?mode=signup`), with email confirmation through `/auth/confirm`, or continue with Google. Sign-in links to it and back.
 - Friends: everyone has an @username (made from their name, changeable in Settings). Add friends by username or from their profile (`/u/name`); requests can be accepted, declined or cancelled, and friends removed. The Friends page (from Discover or Settings) lists requests, friends and your profile link.
 - Who sees a card: only me (the default), friends, or everyone, chosen in the verse's Share panel. A photo is only shown to people allowed to see a card that uses it.
 - Discover → Cards: a Pinterest-style gallery of cards shared with everyone, plus friends' cards, with an Everyone / Friends filter. Open a card to see who made it and keep it: the verse joins yours in that card's style.
+- Profiles: every person has a page (`/u/name`, yours at `/me`) with their streak, verses kept, games won and friends, and the cards they've shared with you. Yours has Edit profile and Settings; your own also shows your progress (last 12 weeks, each game, most missed and strongest verses) and opens the Friends page from your friends count.
+- Profile pictures: Google accounts start with their Google photo. Edit profile can change it (a photo, cropped square), remove it (your initial shows), or go back to the Google one.
+- Home: the top card is you (greeting, streak, today's games) and opens your profile; the grid is Games, My verses, Bible and Discover. Settings moved to your profile and is simpler.
+- The loading logo weaves in once and rests; every 8 seconds it weaves again with the next verse, instead of replaying the drawing every few seconds.
+- Kept installs as an app (PWA): home-screen icon (maskable on Android), its own window, shortcuts (Games, My verses, Discover, Add a verse), and a calm offline page instead of the browser's error.
+- Home's faint Kept mark weaves in when Home opens, then drifts slowly.
+- Friends, the card gallery and shared-card photos work across accounts; photos are still stored on the dev machine, so they need cloud storage before deploying.
 
-- Anyone can create an account (`/login?mode=signup`), with email confirmation through `/auth/confirm`, or continue with Google. Sign-in links to it and back.
-- Share a card: save or share it as an image (a sharp PNG drawn from the card itself, fonts, photo and border included), or make a public link (`/s/…`) anyone can open without an account, with a preview image for chat apps. Stop sharing turns the link off.
+## 0.12.0 — My verses and Discover
+
+- My verses: put verses in your own order. The order menu has My order, Recent (the default) and Book, and "Arrange my order": compact rows you drag by their handle (the page scrolls at the edges; arrow keys work too), then Done. New verses join the top of your order.
+- My verses: newest first by default, with a Recent / Book switch (remembered); always shows the verses' text (the references-only view is gone).
+- Opening a verse from My verses morphs it into place: its tile grows into the card (colors and photo carried across) and the text flies to its spot; plain verses carry their reference and text. Going back plays it in reverse, and the card morphs into the card editor's preview.
+- Going back to My verses from a verse returns to the same spot in the list, with the same search and tag filter, whether by the back arrow or the phone's back gesture.
+- The top bar hides while scrolling down and comes back when scrolling up; sticky bars below it move up with it.
+- Notes are a thread on the verse page: dated entries added over time, newest at the foot with a composer. A new verse's note starts the thread; editing a verse no longer has a notes box. (Existing notes moved into the thread.)
+- Tags look like tags: tinted #hashtag chips on the verse page and in the form, #tags on list tiles.
+- Discover: Keep saves the verse at once (no form), and a floating notice offers to customize its card.
+- Discover and Bible search no longer open the keyboard on arrival.
+- First Letters fits the screen above the phone keyboard: the verse scrolls inside its card and keeps the word being typed in view. The box no longer grabs focus (and the keyboard) on open.
+
+## 0.11.0 — Verse cards
+
 - Any verse can become a card: "Make it a card" on the verse page opens an editor with a live preview.
 - Background: the theme's card, ten colors (Ink, Night, Teal, Forest, Plum, Clay, Gold, Sand, Mist, Paper), or your own photo with dim and blur; paper grain on top of any of them.
 - Text: five fonts (Serif, Classic, Display, Sans, Hand), eight text colors or Auto, three sizes, left or centered, and the reference at the top or bottom. Long passages set smaller on their own.
 - Frame: portrait, square or landscape cards, and borders on any sides (presets: all, top & bottom, sides) in solid, double, dashed or dotted lines, thin to thick, at the edge or inset, in any text color.
 - Photos: drag in the preview to move them and zoom in, so landscape photos can be framed on the portrait card too. The preview switches between the card and its tile in My verses.
 - The card shows on the verse page and in My verses, in its colors, photo and font. "Plain page" goes back to the old look.
-- My verses: put verses in your own order. The order menu has My order, Recent (the default) and Book, and "Arrange my order": compact rows you drag by their handle (the page scrolls at the edges; arrow keys work too), then Done. New verses join the top of your order.
-- My verses: newest first by default, with a Recent / Book switch (remembered); always shows the verses' text (the references-only view is gone).
-- Opening a verse from My verses morphs it into place: its tile grows into the card (colors and photo carried across) and the text flies to its spot; plain verses carry their reference and text. Going back plays it in reverse, and the card morphs into the card editor's preview.
-- First Letters fits the screen above the phone keyboard: the verse scrolls inside its card and keeps the word being typed in view. The box no longer grabs focus (and the keyboard) on open.
-- Notes are a thread on the verse page: dated entries added over time, newest at the foot with a composer. A new verse's note starts the thread; editing a verse no longer has a notes box. (Existing notes moved into the thread.)
-- Tags look like tags: tinted #hashtag chips on the verse page and in the form, #tags on list tiles.
-- Discover: Keep saves the verse at once (no form), and a floating notice offers to customize its card.
-- Discover and Bible search no longer open the keyboard on arrival.
-- Going back to My verses from a verse returns to the same spot in the list, with the same search and tag filter, whether by the back arrow or the phone's back gesture.
-- The top bar hides while scrolling down and comes back when scrolling up; sticky bars below it move up with it.
+- Share a card: save or share it as an image (a sharp PNG drawn from the card itself, fonts, photo and border included), or make a public link (`/s/…`) anyone can open without an account, with a preview image for chat apps. Stop sharing turns the link off.
 - Photos are shrunk in the browser before upload, kept per user, reusable across verses, and can be deleted (cards using one go back to plain). For now they're stored on the dev machine's disk (`data/card-images`); `lib/cards/storage.ts` is the one place to switch to cloud storage before deploying.
 
 ## 0.10.2 — New icons
