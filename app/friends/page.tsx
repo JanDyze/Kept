@@ -15,7 +15,7 @@ export default async function FriendsPage() {
   const [me, lists] = await Promise.all([getOrCreateProfile(user), listFriends(user.id)]);
 
   return (
-    <Screen back={{ href: "/search", label: "Discover" }} title="Friends" subtitle={`@${me.username}`}>
+    <Screen back={{ href: `/u/${me.username}`, label: "You" }} title="Friends" subtitle={`@${me.username}`}>
       <section className="flex items-center gap-3 rounded-2xl border bg-card p-4">
         <Avatar name={me.displayName} username={me.username} className="size-12 text-lg" />
         <div className="min-w-0 flex-1">

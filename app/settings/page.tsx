@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { sql } from "drizzle-orm";
-import Link from "next/link";
-import { ChevronRight, LogOut, Users } from "lucide-react";
-import { ProfileForm } from "@/components/friends";
+import { LogOut } from "lucide-react";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
 import { ThemePicker } from "@/components/theme-picker";
@@ -11,46 +9,23 @@ import { requireUser } from "@/lib/auth";
 import { getTimeZone } from "@/lib/day";
 import { db } from "@/lib/db";
 import { bibleVerses } from "@/lib/db/schema";
-import { pendingRequestCount } from "@/lib/social/friends";
-import { getOrCreateProfile } from "@/lib/social/profiles";
 import { signOut } from "../login/actions";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const [tz, copies, profile, requests] = await Promise.all([
+  const [tz, copies] = await Promise.all([
     getTimeZone(),
     db
       .select({ translation: bibleVerses.translation, count: sql<number>`count(*)::int` })
       .from(bibleVerses)
       .groupBy(bibleVerses.translation),
-    getOrCreateProfile(user),
-    pendingRequestCount(user.id),
   ]);
 
   return (
-    <Screen back={{ href: "/", label: "Home" }} title="Settings">
-      <section aria-labelledby="profile">
-        <h2 id="profile" className="mb-2 text-sm font-medium text-muted-foreground">
-          Profile
-        </h2>
-        <ProfileForm username={profile.username} displayName={profile.displayName} />
-        <Link
-          href="/friends"
-          transitionTypes={["nav-forward"]}
-          className="mt-3 flex h-12 items-center gap-3 rounded-2xl border bg-card px-4 font-medium hover:bg-muted/40"
-        >
-          <Users className="size-4 text-muted-foreground" aria-hidden />
-          <span className="flex-1">Friends</span>
-          {requests > 0 && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground tabular-nums">{requests}</span>
-          )}
-          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-        </Link>
-      </section>
-
-      <section aria-labelledby="appearance" className="mt-6">
+    <Screen back={{ href: "/me", label: "You" }} title="Settings">
+      <section aria-labelledby="appearance">
         <h2 id="appearance" className="mb-2 text-sm font-medium text-muted-foreground">
           Appearance
         </h2>

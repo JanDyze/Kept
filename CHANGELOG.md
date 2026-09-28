@@ -4,6 +4,9 @@ All notable changes to Kept, one version per feature.
 
 ## 0.11.0 — Verse cards
 
+- Profiles: every person has a page (`/u/name`, yours at `/me`) with their streak, verses kept, games won and friends, and the cards they've shared with you. Yours has Edit profile and Settings; tap your streak for Progress, your friends for the Friends page.
+- Home: the top card is you (greeting, streak, today's games) and opens your profile; the grid is Games, My verses, Bible and Discover. Settings moved to your profile and is simpler.
+
 - Friends: everyone has an @username (made from their name, changeable in Settings). Add friends by username or from their profile (`/u/name`); requests can be accepted, declined or cancelled, and friends removed. The Friends page (from Discover or Settings) lists requests, friends and your profile link.
 - Who sees a card: only me (the default), friends, or everyone, chosen in the verse's Share panel. A photo is only shown to people allowed to see a card that uses it.
 - Discover → Cards: a Pinterest-style gallery of cards shared with everyone, plus friends' cards, with an Everyone / Friends filter. Open a card to see who made it and keep it: the verse joins yours in that card's style.

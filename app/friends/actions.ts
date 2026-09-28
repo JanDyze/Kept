@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { acceptFriend, removeFriend, requestFriend, type Relation } from "@/lib/social/friends";
@@ -45,5 +46,5 @@ export async function saveProfile(_prev: ProfileFormState, formData: FormData): 
   const result = await updateProfile(user.id, { username, displayName });
   if (result.error) return { error: result.error, username, displayName };
   revalidatePath("/", "layout");
-  return { saved: true };
+  redirect(`/u/${username.trim().replace(/^@+/, "").toLowerCase()}`);
 }

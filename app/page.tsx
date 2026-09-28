@@ -1,11 +1,12 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Flame } from "lucide-react";
-import { BibleIcon, DiscoverIcon, GamesIcon, SettingsIcon, VersesIcon } from "@/components/home-icons";
+import { Avatar } from "@/components/avatar";
+import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
+import { getOrCreateProfile } from "@/lib/social/profiles";
 import { verseCounts } from "@/lib/verses/queries";
 import { cn } from "@/lib/utils";
 
@@ -20,19 +21,31 @@ export default async function HomePage() {
   const user = await requireUser();
   const tz = await getTimeZone();
   const day = localDate(tz);
-  const [games, days, counts] = await Promise.all([getOrCreateDay(user.id, day), streak(user.id, day), verseCounts(user.id)]);
+  const [games, days, counts, me] = await Promise.all([
+    getOrCreateDay(user.id, day),
+    streak(user.id, day),
+    verseCounts(user.id),
+    getOrCreateProfile(user),
+  ]);
   const done = games.filter((g) => g.status !== "in_progress").length;
   const allDone = games.length > 0 && done === games.length;
 
-  // The today card opens Progress (or Add verse when there's nothing to track yet).
-  const todayHref = games.length === 0 ? "/verses/new" : "/stats";
+  const left = games.length - done;
+  const firstName = (me.displayName ?? "").split(/\s+/)[0] || `@${me.username}`;
+
+  // The top card is you: greeting, streak and today's games; it opens your profile (or Add verse
+  // when there's nothing to play yet).
+  const youHref = games.length === 0 ? "/verses/new" : `/u/${me.username}`;
+  const status =
+    games.length === 0 ? "Start with one verse" : allDone ? "All kept for today" : `${left} ${left === 1 ? "game" : "games"} left today`;
 
   // Plain surfaces; the hand-drawn icons carry the color.
   const cards = [
     {
       href: "/games",
       title: "Games",
-      detail: games.length === 0 ? "Unlocks with your first verse" : allDone ? "All done today" : `${games.length - done} left today`,
+      // today's count lives on the top card; this one just says what's here
+      detail: games.length === 0 ? "Unlocks with your first verse" : allDone ? "Play again for practice" : "Today's puzzles",
       Icon: GamesIcon,
     },
     {
@@ -51,88 +64,57 @@ export default async function HomePage() {
       Icon: BibleIcon,
     },
     {
-      href: "/settings",
-      title: "Settings",
-      detail: "Account and app",
-      Icon: SettingsIcon,
+      href: "/search",
+      title: "Discover",
+      detail: "Cards and verses",
+      Icon: DiscoverIcon,
     },
   ];
 
-  // Takes 80% of the visible height (dvh follows mobile browser bars): the today card and
-  // Discover keep their size, the four cards share what's left. With a mouse (desktop) the
+  // Takes 80% of the visible height (dvh follows mobile browser bars): the top card keeps its
+  // size, the four cards share what's left. With a mouse (desktop) the
   // window can be far taller than a phone, so the cards stop growing at a phone-like height.
   return (
     <Screen header={false} className="pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="flex h-[80dvh] min-h-[30rem] flex-col gap-3 pointer-fine:max-h-[37rem]">
         <Link
-          href={todayHref}
+          href={youHref}
           transitionTypes={["nav-forward"]}
-          aria-label={games.length === 0 ? "Add your first verse" : `${done} of ${games.length} games done today. View your progress`}
+          aria-label={games.length === 0 ? "Add your first verse" : `${status}. Your profile`}
           className={cn(
-            "animate-rise group relative block shrink-0 overflow-hidden rounded-2xl bg-brand p-5 text-brand-foreground",
+            "animate-rise group block shrink-0 rounded-2xl bg-brand p-5 text-brand-foreground",
             "transition-transform duration-200 ease-out active:scale-[0.98]",
             "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
           )}
         >
-          <Image
-            src="/logo.svg"
-            alt=""
-            width={200}
-            height={200}
-            className="pointer-events-none absolute -right-12 -top-10 rotate-12 opacity-[0.12] brightness-0 invert transition-transform duration-700 ease-out motion-safe:group-engaged:rotate-[24deg] motion-safe:group-engaged:scale-110"
-          />
-          <p className="flex items-center gap-2 text-sm text-brand-foreground/75">
-            <Image src="/logo-animated.svg" alt="" width={22} height={22} unoptimized className="brightness-0 invert" />
-            <span className="font-brand text-base font-semibold text-brand-foreground">Kept</span>
-            <span aria-hidden>·</span>
-            {greeting(tz)}
-          </p>
-          {games.length === 0 ? (
-            <>
-              <h1 className="mt-1 font-brand text-3xl font-semibold leading-tight">Start with one verse</h1>
-              <p className="mt-1 max-w-xs text-sm text-brand-foreground/80">
-                Save a verse you want to keep, and today&apos;s games will be ready.
-              </p>
-            </>
-          ) : (
-            <>
-              <h1 className="mt-1 font-brand text-3xl font-semibold leading-tight">
-                {allDone ? "All kept for today" : "Today's games"}
-              </h1>
-              <div className="mt-3 flex items-center gap-1.5" aria-hidden>
-                {games.map((g) => (
-                  <span
-                    key={g.id}
-                    className={cn(
-                      "h-1.5 flex-1 rounded-full",
-                      g.status === "in_progress" ? "bg-brand-foreground/25" : "bg-brand-foreground",
-                    )}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-          <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-            <span className="inline-flex items-center gap-3 text-brand-foreground/80">
-              {games.length > 0 && (
-                <span>
-                  {done} of {games.length} done
-                </span>
-              )}
-              {days > 0 && (
-                <span className="inline-flex items-center gap-1 font-medium text-brand-foreground">
-                  <Flame className="size-4 text-icon-accent" aria-hidden /> {days}-day streak
-                </span>
-              )}
-            </span>
-            <span className="inline-flex items-center gap-0.5 font-medium">
-              {games.length === 0 ? "Add a verse" : "Progress"}
-              <ChevronRight
-                className="size-4 transition-transform duration-300 motion-safe:group-engaged:translate-x-1"
-                aria-hidden
-              />
-            </span>
+          <div className="flex items-center gap-3">
+            <Avatar name={me.displayName} username={me.username} className="size-11 text-lg ring-2 ring-brand-foreground/25" />
+            <p className="min-w-0 flex-1 leading-tight">
+              <span className="block text-sm text-brand-foreground/70">{greeting(tz)},</span>
+              <span className="block truncate font-brand text-lg font-semibold">{firstName}</span>
+            </p>
+            {days > 0 && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-foreground/12 px-2.5 py-1 text-sm font-semibold tabular-nums">
+                <Flame className="size-4 text-icon-accent" aria-hidden /> {days}
+                <span className="sr-only">-day streak</span>
+              </span>
+            )}
+            <ChevronRight
+              className="size-4 shrink-0 text-brand-foreground/60 transition-transform duration-300 motion-safe:group-engaged:translate-x-1"
+              aria-hidden
+            />
           </div>
+          <h1 className="mt-4 font-brand text-2xl leading-tight font-semibold">{status}</h1>
+          {games.length > 0 && (
+            <div className="mt-3 flex items-center gap-1.5" aria-hidden>
+              {games.map((g) => (
+                <span
+                  key={g.id}
+                  className={cn("h-1.5 flex-1 rounded-full", g.status === "in_progress" ? "bg-brand-foreground/25" : "bg-brand-foreground")}
+                />
+              ))}
+            </div>
+          )}
         </Link>
 
         <nav className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-3" aria-label="Sections">
@@ -159,28 +141,6 @@ export default async function HomePage() {
           ))}
         </nav>
 
-        <Link
-          href="/search"
-          transitionTypes={["nav-forward"]}
-          style={{ animationDelay: "260ms" }}
-          className={cn(
-            "animate-rise group flex shrink-0 items-center gap-3.5 rounded-2xl border bg-card px-4 py-3",
-            "transition-[transform,background-color,border-color] duration-200 ease-out hover:border-foreground/15 hover:bg-muted/40 active:scale-[0.98]",
-            "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-          )}
-        >
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-icon-tile">
-          <DiscoverIcon className="size-[70%]" />
-        </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-brand text-lg font-semibold leading-tight tracking-tight">Discover</span>
-            <span className="block truncate text-sm text-muted-foreground">Verses for every season of life</span>
-          </span>
-          <ChevronRight
-            className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 motion-safe:group-engaged:translate-x-0.5"
-            aria-hidden
-          />
-        </Link>
       </div>
     </Screen>
   );
