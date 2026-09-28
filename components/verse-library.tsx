@@ -252,8 +252,8 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
       {v.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {v.tags.map((t) => (
-            <span key={t} className={quiet}>
-              {tagLabel(t)}
+            <span key={t} className={cn("font-medium", quiet)}>
+              #{tagLabel(t)}
             </span>
           ))}
         </div>

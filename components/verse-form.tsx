@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Loader2, Plus, X } from "lucide-react";
+import { Check, ChevronDown, Loader2, Plus } from "lucide-react";
 import { lookupPassage, saveVerse, type VerseFormState } from "@/app/verses/actions";
+import { TagChip } from "@/components/tag-chip";
+import { tagLabel } from "@/lib/verses/tag-label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatReference, parseReference } from "@/lib/bible/books";
 import { isLookupTranslation, LOOKUP_TRANSLATIONS } from "@/lib/bible/translations";
-import { tagLabel } from "@/lib/verses/tag-label";
 import { normalizeTags } from "@/lib/verses/tags";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +33,7 @@ const OTHER = "other";
 const label = "text-sm font-medium text-muted-foreground";
 
 // Add or edit a verse: the reference and translation up top, the verse itself as it will be kept,
-// tags and notes folded away until wanted, and Save in a sticky bar. Nothing is focused on open, so
+// tags (and, for a new verse, a first note) folded away until wanted, and Save in a sticky bar. Nothing is focused on open, so
 // the keyboard stays down until a field is tapped.
 export function VerseForm({
   initial,
@@ -56,7 +57,7 @@ export function VerseForm({
   const [draftTag, setDraftTag] = useState("");
   // Controlled so React's post-action form reset can't wipe it when validation fails.
   const [notes, setNotes] = useState(initial?.notes ?? "");
-  const [extrasOpen, setExtrasOpen] = useState(Boolean(initial?.tags.length || initial?.notes));
+  const [extrasOpen, setExtrasOpen] = useState(Boolean(initial?.tags.length));
   const [refTouched, setRefTouched] = useState(false);
   const [preview, setPreview] = useState<Preview>(
     initial?.text && isLookupTranslation(initial.translation)
@@ -221,7 +222,7 @@ export function VerseForm({
         </div>
       )}
 
-      {/* Tags and notes, folded away until wanted */}
+      {/* Tags (and a first note), folded away until wanted */}
       <div className="mt-6 rounded-2xl border bg-card">
         <button
           type="button"
@@ -230,7 +231,7 @@ export function VerseForm({
           onClick={() => setExtrasOpen((o) => !o)}
           className="flex h-13 w-full items-center gap-3 rounded-2xl px-4 text-left focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          <span className="flex-1 font-medium">Tags and notes</span>
+          <span className="flex-1 font-medium">{editing ? "Tags" : "Tags and a note"}</span>
           {!extrasOpen && extrasCount > 0 && (
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
               {extrasCount}
@@ -248,17 +249,7 @@ export function VerseForm({
           </label>
           <div className="mt-2 flex min-h-11 flex-wrap items-center gap-1.5 rounded-xl border border-input px-2 py-1.5 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
             {tags.map((t) => (
-              <span key={t} className="inline-flex h-8 items-center gap-1 rounded-full bg-muted pr-1 pl-3 text-sm">
-                {tagLabel(t)}
-                <button
-                  type="button"
-                  onClick={() => setTags(tags.filter((x) => x !== t))}
-                  aria-label={`Remove ${tagLabel(t)}`}
-                  className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
-                >
-                  <X className="size-3.5" aria-hidden />
-                </button>
-              </span>
+              <TagChip key={t} tag={t} onRemove={() => setTags(tags.filter((x) => x !== t))} />
             ))}
             <input
               id="tag-input"
@@ -287,7 +278,7 @@ export function VerseForm({
                   key={t}
                   type="button"
                   onClick={() => addTag(t)}
-                  className="inline-flex h-8 items-center gap-1 rounded-full border border-input pr-3 pl-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="inline-flex h-8 items-center gap-0.5 rounded-lg border border-dashed border-input pr-2.5 pl-2 text-sm text-muted-foreground hover:border-primary/40 hover:text-primary"
                 >
                   <Plus className="size-3.5" aria-hidden /> {tagLabel(t)}
                 </button>
@@ -296,20 +287,25 @@ export function VerseForm({
           )}
           {errors.tags && <p className="mt-2 text-sm text-destructive">{errors.tags}</p>}
 
-          <label htmlFor="notes" className={cn(label, "mt-5 block")}>
-            Notes
-          </label>
-          <Textarea
-            id="notes"
-            name="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            placeholder="Why this verse"
-            aria-invalid={Boolean(errors.notes)}
-            className="mt-2 rounded-xl px-3 py-2.5 text-base md:text-base"
-          />
-          {errors.notes && <p className="mt-2 text-sm text-destructive">{errors.notes}</p>}
+          {/* A new verse can start its notes thread here; after that, notes live on the verse page. */}
+          {!editing && (
+            <>
+              <label htmlFor="notes" className={cn(label, "mt-5 block")}>
+                Note
+              </label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="Why this verse"
+                aria-invalid={Boolean(errors.notes)}
+                className="mt-2 rounded-xl px-3 py-2.5 text-base md:text-base"
+              />
+              {errors.notes && <p className="mt-2 text-sm text-destructive">{errors.notes}</p>}
+            </>
+          )}
         </div>
       </div>
 

@@ -13,6 +13,8 @@ All notable changes to Kept, one version per feature.
 - My verses: newest first by default, with a Recent / Book switch (remembered); always shows the verses' text (the references-only view is gone).
 - Opening a verse from My verses morphs it into place: its tile grows into the card (colors and photo carried across) and the text flies to its spot; plain verses carry their reference and text. Going back plays it in reverse, and the card morphs into the card editor's preview.
 - First Letters fits the screen above the phone keyboard: the verse scrolls inside its card and keeps the word being typed in view. The box no longer grabs focus (and the keyboard) on open.
+- Notes are a thread on the verse page: dated entries added over time, newest at the foot with a composer. A new verse's note starts the thread; editing a verse no longer has a notes box. (Existing notes moved into the thread.)
+- Tags look like tags: tinted #hashtag chips on the verse page and in the form, #tags on list tiles.
 - Discover: Keep saves the verse at once (no form), and a floating notice offers to customize its card.
 - Discover and Bible search no longer open the keyboard on arrival.
 - Going back to My verses from a verse returns to the same spot in the list, with the same search and tag filter, whether by the back arrow or the phone's back gesture.

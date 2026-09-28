@@ -33,6 +33,24 @@ export const gameStatus = pgEnum("game_status", ["in_progress", "won", "lost"]);
 // RLS is enabled with no policies: the app connects directly through Drizzle (as the table
 // owner), and Supabase's public Data API gets no access. Every query must filter by user_id.
 
+// Notes on a verse, as a thread: dated entries added over time. (verses.notes held a single note
+// before; its contents moved here in migration 0007.)
+export const verseNotes = pgTable(
+  "verse_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    verseId: uuid("verse_id")
+      .notNull()
+      .references(() => verses.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("verse_notes_verse_idx").on(t.verseId, t.createdAt)],
+).enableRLS();
+
 // Photos a user uploaded as card backgrounds. The bytes live in lib/cards/storage.ts under
 // storage_key; the row says who owns them.
 export const cardImages = pgTable(
@@ -65,7 +83,7 @@ export const verses = pgTable(
     verseEnd: integer("verse_end"),
     translation: text("translation").notNull(),
     text: text("text").notNull(),
-    notes: text("notes"),
+    notes: text("notes"), // legacy single note; moved into verse_notes, no longer written
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
     // ts-fsrs card state; null until the verse is first practiced in a recall game.
     srs: jsonb("srs").$type<Record<string, unknown>>(),

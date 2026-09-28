@@ -11,6 +11,7 @@ import { isLookupTranslation } from "@/lib/bible/translations";
 import { db } from "@/lib/db";
 import { verses } from "@/lib/db/schema";
 import type { VerseField } from "@/lib/verses/input";
+import { insertNote } from "@/lib/verses/notes";
 import { resolveVerse } from "@/lib/verses/resolve";
 
 export type VerseFormState = {
@@ -31,6 +32,8 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
   });
   if (!result.ok) return { errors: result.errors };
 
+  // Notes are a thread on the verse page (verse_notes); a new verse's note starts it.
+  const { notes: firstNote, ...verse } = result.verse;
   const rawId = formData.get("id");
   let id: string;
   if (rawId) {
@@ -38,7 +41,7 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
     if (!parsedId.success) return { errors: { form: "This verse can't be found." } };
     const updated = await db
       .update(verses)
-      .set(result.verse)
+      .set(verse)
       .where(and(eq(verses.id, parsedId.data), eq(verses.userId, user.id)))
       .returning({ id: verses.id });
     if (updated.length === 0) return { errors: { form: "This verse can't be found." } };
@@ -46,9 +49,10 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
   } else {
     const [created] = await db
       .insert(verses)
-      .values({ ...result.verse, userId: user.id })
+      .values({ ...verse, userId: user.id })
       .returning({ id: verses.id });
     id = created.id;
+    if (firstNote) await insertNote(user.id, id, firstNote);
   }
 
   revalidatePath("/", "layout");
@@ -116,7 +120,7 @@ export async function keepVerse(reference: string, translation: string): Promise
 
   const [created] = await db
     .insert(verses)
-    .values({ ...result.verse, userId: user.id })
+    .values({ ...result.verse, notes: null, userId: user.id })
     .returning({ id: verses.id, reference: verses.reference });
   revalidatePath("/", "layout");
   return { ok: true, ...created };

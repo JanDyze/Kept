@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Archive, ArchiveRestore, Palette, Pencil } from "lucide-react";
 import { z } from "zod";
 import { MemoryCard } from "@/components/memory-card";
+import { TagChip } from "@/components/tag-chip";
+import { VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +15,9 @@ import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
 import { readCardStyle } from "@/lib/cards/style";
 import { formatDate } from "@/lib/format";
+import { getTimeZone } from "@/lib/day";
+import { listNotes } from "@/lib/verses/notes";
 import { getVerse } from "@/lib/verses/queries";
-import { tagLabel } from "@/lib/verses/tag-label";
 import { cn } from "@/lib/utils";
 import { setArchived } from "../actions";
 
@@ -34,6 +37,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
   const verse = await getVerse(user.id, id);
   if (!verse) notFound();
 
+  const notes = await listNotes(user.id, verse.id, await getTimeZone());
   const archived = Boolean(verse.archivedAt);
   const card = readCardStyle(verse.card);
   const tagalog = verse.translation === "MBBTAG" ? bookByName(verse.book)?.tl : undefined;
@@ -98,25 +102,16 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
         )}
 
         {verse.tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Tags">
             {verse.tags.map((t) => (
-              <Link
-                key={t}
-                href={`/verses?tag=${encodeURIComponent(t)}`}
-                className="rounded-full border border-input px-3 py-1 text-sm text-muted-foreground hover:bg-muted"
-              >
-                {tagLabel(t)}
-              </Link>
+              <li key={t}>
+                <TagChip tag={t} href={`/verses?tag=${encodeURIComponent(t)}`} />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
 
-        {verse.notes && (
-          <section className="mt-6 rounded-xl bg-muted/60 p-4">
-            <h2 className="text-sm font-medium text-muted-foreground">Notes</h2>
-            <p className="mt-1 whitespace-pre-line">{verse.notes}</p>
-          </section>
-        )}
+        <VerseNotes verseId={verse.id} initial={notes} readOnly={archived} />
       </article>
 
       <footer className="mt-auto flex items-center justify-between gap-3 pt-10 text-sm text-muted-foreground">
