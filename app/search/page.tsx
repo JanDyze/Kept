@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookmarkPlus, BookOpen, Check } from "lucide-react";
+import { BookOpen, Check } from "lucide-react";
+import { KeepButton, KeptNotice } from "@/components/keep-button";
 import { Screen } from "@/components/screen";
 import { SearchBox } from "@/components/search-box";
 import { readTranslation, TranslationToggle } from "@/components/translation-toggle";
@@ -106,6 +107,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         </a>{" "}
         (CC BY). Always read a verse in its context.
       </p>
+      <KeptNotice />
     </Screen>
   );
 }
@@ -151,13 +153,7 @@ function Results({
                   <Check className="size-4" aria-hidden /> Kept
                 </span>
               ) : (
-                <Link
-                  href={`/verses/new?${new URLSearchParams({ ref: h.reference, t: translation })}`}
-                  transitionTypes={["nav-forward"]}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/85"
-                >
-                  <BookmarkPlus className="size-4" aria-hidden /> Keep
-                </Link>
+                <KeepButton reference={h.reference} translation={translation} />
               )}
               <Link
                 href={`/bible/${bookSlug(book)}/${h.chapter}?t=${translation}#v${h.verseStart}`}

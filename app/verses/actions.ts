@@ -103,3 +103,21 @@ export async function lookupPassage(reference: string, translation: string): Pro
 
   return { ok: true, text: passage.text, reference: covered, note: notes.join(" ") || null };
 }
+
+export type KeepResult = { ok: true; id: string; reference: string } | { ok: false; error: string };
+
+// Keeps a verse in one tap (Discover): the imported ESV / MBBTAG text, no tags or notes yet.
+export async function keepVerse(reference: string, translation: string): Promise<KeepResult> {
+  const user = await requireUser();
+  if (!isLookupTranslation(translation)) return { ok: false, error: "That translation can't be kept in one tap." };
+
+  const result = await resolveVerse({ reference, translation, text: "", notes: "", tags: "" });
+  if (!result.ok) return { ok: false, error: Object.values(result.errors)[0] ?? "That verse can't be kept." };
+
+  const [created] = await db
+    .insert(verses)
+    .values({ ...result.verse, userId: user.id })
+    .returning({ id: verses.id, reference: verses.reference });
+  revalidatePath("/", "layout");
+  return { ok: true, ...created };
+}
