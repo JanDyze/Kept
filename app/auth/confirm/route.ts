@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const nextParam = url.searchParams.get("next") ?? "/";
   const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+  // Google (or another provider) came back without signing in, e.g. the user tapped Cancel.
+  if (url.searchParams.has("error")) return NextResponse.redirect(new URL("/login?link=cancelled", url.origin));
+
   const supabase = await createClient();
 
   const code = url.searchParams.get("code");

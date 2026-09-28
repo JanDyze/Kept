@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { LoginForm } from "./login-form";
 
+// Why a sign-in link or Google sign-in brought someone back here.
+const LINK_MESSAGES = {
+  expired: "That sign-in link has expired or was already used. Try again.",
+  google: "Google sign-in isn't available right now. Use your email instead.",
+  cancelled: "Google sign-in was cancelled.",
+};
+
 export async function generateMetadata({ searchParams }: PageProps<"/login">): Promise<Metadata> {
   const { mode } = await searchParams;
   return { title: mode === "signup" ? "Create an account" : "Sign in" };
@@ -20,9 +27,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="mt-1 text-muted-foreground">{signingUp ? "Make an account to keep your verses." : "Sign in to keep your verses."}</p>
         </div>
       </div>
-      {link === "expired" && (
+      {typeof link === "string" && link in LINK_MESSAGES && (
         <p role="alert" className="mb-5 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          That link has expired or was already used. Sign in, or create your account again.
+          {LINK_MESSAGES[link as keyof typeof LINK_MESSAGES]}
         </p>
       )}
       <LoginForm key={signingUp ? "signup" : "signin"} mode={signingUp ? "signup" : "signin"} next={typeof next === "string" ? next : undefined} />

@@ -59,6 +59,21 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
   return { sent: true, email };
 }
 
+// Continue with Google: off to Google's sign-in, which returns through /auth/confirm (the same
+// place sign-up emails land) and on to `next`. A new Google user gets an account on the way.
+export async function signInWithGoogle(formData: FormData) {
+  const next = safeNext(formData.get("next"));
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}` },
+  });
+  if (error || !data.url) redirect("/login?link=google");
+  redirect(data.url);
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
