@@ -17,7 +17,7 @@ export default async function FriendsPage() {
   return (
     <Screen back={{ href: `/u/${me.username}`, label: "You" }} title="Friends" subtitle={`@${me.username}`}>
       <section className="flex items-center gap-3 rounded-2xl border bg-card p-4">
-        <Avatar name={me.displayName} username={me.username} className="size-12 text-lg" />
+        <Avatar name={me.displayName} username={me.username} src={me.avatarUrl} className="size-12 text-lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{me.displayName ?? `@${me.username}`}</p>
           {me.displayName && <p className="truncate text-sm text-muted-foreground">@{me.username}</p>}
@@ -63,7 +63,7 @@ function People({
           {people.map((p) => (
             <li key={p.userId} className="flex items-center gap-3 py-2.5 pr-3 pl-4">
               <Link href={`/u/${p.username}`} transitionTypes={["nav-forward"]} className="flex min-w-0 flex-1 items-center gap-3">
-                <Avatar name={p.displayName} username={p.username} />
+                <Avatar name={p.displayName} username={p.username} src={p.avatarUrl} />
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{p.displayName ?? `@${p.username}`}</span>
                   {p.displayName && <span className="block truncate text-sm text-muted-foreground">@{p.username}</span>}

@@ -37,7 +37,7 @@ export default async function CardPage({ params }: PageProps<"/cards/[id]">) {
         transitionTypes={["nav-forward"]}
         className="mt-5 flex items-center gap-3 rounded-2xl px-1 py-1.5 hover:bg-muted/50"
       >
-        <Avatar name={author.displayName} username={author.username} />
+        <Avatar name={author.displayName} username={author.username} src={author.avatarUrl} />
         <span className="min-w-0">
           <span className="block truncate font-medium">{author.displayName ?? `@${author.username}`}</span>
           {author.displayName && <span className="block truncate text-sm text-muted-foreground">@{author.username}</span>}

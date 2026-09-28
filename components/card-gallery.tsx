@@ -29,7 +29,7 @@ export function CardGallery({
             />
             {showAuthor && (
               <span className="mt-1.5 flex items-center gap-1.5 px-0.5 text-xs text-muted-foreground">
-                <Avatar name={c.author.displayName} username={c.author.username} className="size-5 text-[0.6rem]" />
+                <Avatar name={c.author.displayName} username={c.author.username} src={c.author.avatarUrl} className="size-5 text-[0.6rem]" />
                 <span className="truncate">{c.author.userId === viewerId ? "You" : `@${c.author.username}`}</span>
               </span>
             )}

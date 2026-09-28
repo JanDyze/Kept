@@ -5,15 +5,32 @@ import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 import { normalizeUsername, suggestUsername, usernameProblem } from "./username";
 
-export type Profile = { userId: string; username: string; displayName: string | null };
+export type Profile = { userId: string; username: string; displayName: string | null; avatarUrl: string | null };
 
-const columns = { userId: profiles.userId, username: profiles.username, displayName: profiles.displayName };
+const columns = {
+  userId: profiles.userId,
+  username: profiles.username,
+  displayName: profiles.displayName,
+  avatarUrl: profiles.avatarUrl,
+};
 
 // Everyone has a profile; the first time one is needed it's made from their name or email, taking
 // the first free "name", "name2", "name3"… so no one has to pick a username before using the app.
 export async function getOrCreateProfile(user: SessionUser): Promise<Profile> {
-  const [existing] = await db.select(columns).from(profiles).where(eq(profiles.userId, user.id)).limit(1);
-  if (existing) return existing;
+  const [existing] = await db
+    .select({ ...columns, avatarRemoved: profiles.avatarRemoved })
+    .from(profiles)
+    .where(eq(profiles.userId, user.id))
+    .limit(1);
+  if (existing) {
+    const { avatarRemoved, ...profile } = existing;
+    // A Google picture fills an empty avatar, unless they took theirs off on purpose.
+    if (!profile.avatarUrl && !avatarRemoved && user.avatarUrl) {
+      await db.update(profiles).set({ avatarUrl: user.avatarUrl }).where(eq(profiles.userId, user.id));
+      return { ...profile, avatarUrl: user.avatarUrl };
+    }
+    return profile;
+  }
 
   const base = suggestUsername(user.name, user.email);
   const displayName = user.name;
@@ -21,7 +38,7 @@ export async function getOrCreateProfile(user: SessionUser): Promise<Profile> {
     const username = n === 1 ? base : `${base.slice(0, 20 - String(n).length)}${n}`;
     const [made] = await db
       .insert(profiles)
-      .values({ userId: user.id, username, displayName })
+      .values({ userId: user.id, username, displayName, avatarUrl: user.avatarUrl })
       .onConflictDoNothing()
       .returning(columns);
     if (made) return made;
@@ -41,6 +58,11 @@ export async function getProfiles(userIds: string[]) {
   if (userIds.length === 0) return new Map<string, Profile>();
   const rows = await db.select(columns).from(profiles).where(inArray(profiles.userId, userIds));
   return new Map(rows.map((r) => [r.userId, r]));
+}
+
+// Sets or clears the picture. Clearing remembers the choice, so Google's won't come back on its own.
+export async function setAvatar(userId: string, avatarUrl: string | null) {
+  await db.update(profiles).set({ avatarUrl, avatarRemoved: avatarUrl === null }).where(eq(profiles.userId, userId));
 }
 
 export type ProfileUpdate = { username: string; displayName: string };

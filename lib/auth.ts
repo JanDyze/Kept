@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export type SessionUser = { id: string; email: string | null; name: string | null };
+export type SessionUser = { id: string; email: string | null; name: string | null; avatarUrl: string | null };
 
 // Verifies the session JWT. Cached per request so several callers share one check. `name` is the
-// name a provider like Google gave (used to suggest a first username).
+// name a provider like Google gave (used to suggest a first username), `avatarUrl` its picture.
 export const getUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -14,7 +14,13 @@ export const getUser = cache(async (): Promise<SessionUser | null> => {
   if (!claims?.sub) return null;
   const meta = (claims.user_metadata ?? {}) as Record<string, unknown>;
   const name = [meta.full_name, meta.name].find((n): n is string => typeof n === "string" && n.trim() !== "");
-  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : null, name: name?.trim() ?? null };
+  const picture = [meta.avatar_url, meta.picture].find((p): p is string => typeof p === "string" && p.startsWith("https://"));
+  return {
+    id: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : null,
+    name: name?.trim() ?? null,
+    avatarUrl: picture ?? null,
+  };
 });
 
 // Use in every page and server action that touches user data; filter queries by user.id.

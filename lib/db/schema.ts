@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   date,
   index,
@@ -81,6 +82,10 @@ export const profiles = pgTable(
       .references(() => authUsers.id, { onDelete: "cascade" }),
     username: text("username").notNull(), // lowercase a-z 0-9 _ .
     displayName: text("display_name"),
+    // A picture: the Google account's, or one they uploaded (/api/avatars/…); null shows the initial.
+    avatarUrl: text("avatar_url"),
+    // They took their picture off: don't fill it back in from Google.
+    avatarRemoved: boolean("avatar_removed").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

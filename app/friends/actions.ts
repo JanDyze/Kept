@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { acceptFriend, removeFriend, requestFriend, type Relation } from "@/lib/social/friends";
-import { updateProfile } from "@/lib/social/profiles";
+import { removeUploadedAvatar } from "@/lib/social/avatars";
+import { setAvatar, updateProfile } from "@/lib/social/profiles";
 
 const id = z.uuid();
 
@@ -47,4 +48,14 @@ export async function saveProfile(_prev: ProfileFormState, formData: FormData): 
   if (result.error) return { error: result.error, username, displayName };
   revalidatePath("/", "layout");
   redirect(`/u/${username.trim().replace(/^@+/, "").toLowerCase()}`);
+}
+
+// Puts the Google account's picture back as the profile picture.
+export async function restoreGooglePhoto(): Promise<{ url?: string; error?: string }> {
+  const user = await requireUser();
+  if (!user.avatarUrl) return { error: "There's no Google photo to use." };
+  await removeUploadedAvatar(user.id);
+  await setAvatar(user.id, user.avatarUrl);
+  revalidatePath("/", "layout");
+  return { url: user.avatarUrl };
 }

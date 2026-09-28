@@ -97,7 +97,7 @@ export default async function HomePage() {
             className="pointer-events-none absolute -right-10 -bottom-14 -z-10 rotate-12 opacity-[0.13] brightness-0 invert transition-transform duration-700 ease-out motion-safe:group-engaged:rotate-[24deg] motion-safe:group-engaged:scale-110"
           />
           <div className="flex items-center gap-3">
-            <Avatar name={me.displayName} username={me.username} className="size-11 text-lg ring-2 ring-brand-foreground/25" />
+            <Avatar name={me.displayName} username={me.username} src={me.avatarUrl} eager className="size-11 text-lg ring-2 ring-brand-foreground/25" />
             <p className="min-w-0 flex-1 leading-tight">
               <span className="block text-sm text-brand-foreground/70">{greeting(tz)},</span>
               <span className="block truncate font-brand text-lg font-semibold">{firstName}</span>
