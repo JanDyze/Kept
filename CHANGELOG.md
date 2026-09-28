@@ -4,6 +4,7 @@ All notable changes to Kept, one version per feature.
 
 ## 0.11.0 — Verse cards
 
+- The loading logo weaves in once, then turns slowly for a while before weaving again, instead of replaying the whole drawing every few seconds.
 - Profile pictures: Google accounts start with their Google photo. Edit profile can change it (a photo, cropped square), remove it (your initial shows), or go back to the Google one.
 - Profiles: every person has a page (`/u/name`, yours at `/me`) with their streak, verses kept, games won and friends, and the cards they've shared with you. Yours has Edit profile and Settings; tap your streak for Progress, your friends for the Friends page.
 - Home: the top card is you (greeting, streak, today's games) and opens your profile; the grid is Games, My verses, Bible and Discover. Settings moved to your profile and is simpler.

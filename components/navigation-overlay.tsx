@@ -3,9 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
+import { cn } from "@/lib/utils";
 
 const DELAY_MS = 1000; // only show when a page is genuinely slow
-const REPLAY_MS = 3200; // the logo's weave runs ~2.6s; replay it while still waiting
+// While waiting, the logo weaves in once (~2.6s), then the finished mark turns slowly for a
+// while, and only then weaves again: calm, not a loop of the whole drawing.
+const WEAVE_MS = 2800;
+const SPIN_MS = 7200; // three turns of .animate-logo-spin
 const GIVE_UP_MS = 20000; // never leave the overlay stuck if a navigation silently fails
 
 export type OverlayVerse = { reference: string; translation: string; text: string };
@@ -33,6 +37,7 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
   const [pending, setPending] = useState<number | null>(null);
   const [shownFor, setShownFor] = useState<number | null>(null);
   const [cycle, setCycle] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   const [verse, setVerse] = useState(0);
   const url = `${pathname}?${searchParams}`;
   const visible = pending !== null && shownFor === pending;
@@ -50,6 +55,7 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
       if (target.origin !== window.location.origin) return;
       if (`${target.pathname}?${target.searchParams}` === current()) return; // same page or #hash only
       setPending(++nextId.current);
+      setSpinning(false); // each wait starts with the logo weaving in
       setVerse(Math.floor(Math.random() * verses.length));
     };
     // Capture phase: Next's <Link> calls preventDefault in its own handler, so listen before it.
@@ -89,9 +95,16 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
 
   useEffect(() => {
     if (!visible) return;
-    const replay = setInterval(() => setCycle((c) => c + 1), REPLAY_MS);
-    return () => clearInterval(replay);
-  }, [visible]);
+    // weave → spin → weave again (a new cycle remounts the logo, replaying its drawing)
+    const next = setTimeout(
+      () => {
+        if (spinning) setCycle((c) => c + 1);
+        setSpinning((s) => !s);
+      },
+      spinning ? SPIN_MS : WEAVE_MS,
+    );
+    return () => clearTimeout(next);
+  }, [visible, spinning]);
 
   if (!visible) return null;
   const shown = verses[verse] ?? PSALM_119_11;
@@ -103,7 +116,11 @@ export function NavigationOverlay({ verses = [PSALM_119_11] }: { verses?: Overla
     >
       <div className="flex max-w-xs flex-col items-center px-6 text-center">
         {/* Inline, so it needs no download on a slow connection; remounting (key) replays the weave. */}
-        <div key={cycle} className="size-[88px] dark:brightness-0 dark:invert" dangerouslySetInnerHTML={{ __html: ANIMATED_LOGO_SVG }} />
+        <div
+          key={cycle}
+          className={cn("size-[88px] dark:brightness-0 dark:invert", spinning && "animate-logo-spin")}
+          dangerouslySetInnerHTML={{ __html: ANIMATED_LOGO_SVG }}
+        />
         <figure className="animate-rise mt-6" style={{ animationDelay: "400ms" }}>
           <blockquote className="line-clamp-6 font-serif text-lg leading-relaxed text-foreground/85">
             &ldquo;{shown.text}&rdquo;
