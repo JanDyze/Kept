@@ -332,6 +332,9 @@
 .animate-pop { animation: pop 180ms ease-out; }
 .animate-flip { animation: flip-in 480ms ease-in-out both; }
 .animate-rise { animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/* Home's faint Kept mark, once woven in: a slow sway of a few pixels and degrees, like paper settling. */
+.animate-drift { animation: drift 14s ease-in-out 2.6s infinite alternate both; }
+@keyframes drift { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(-8px, 5px) rotate(7deg); } }
 .animate-fade-in { animation: fade 250ms ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -340,7 +343,7 @@
   ::view-transition-new(*) {
     animation: none !important;
   }
-  .animate-shake, .animate-pop, .animate-flip, .animate-rise, .animate-fade-in { animation: none; }
+  .animate-shake, .animate-pop, .animate-flip, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
 }
 
 /* ---------- Feel like an app, not a web page ---------- */

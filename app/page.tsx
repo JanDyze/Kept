@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Flame } from "lucide-react";
+import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
 import { Avatar } from "@/components/avatar";
 import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
@@ -88,14 +88,14 @@ export default async function HomePage() {
             "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
           )}
         >
-          {/* the Kept mark, large and faint in the corner; it turns a little when the card is pressed */}
-          <Image
-            src="/logo.svg"
-            alt=""
-            width={190}
-            height={190}
-            className="pointer-events-none absolute -right-10 -bottom-14 -z-10 rotate-12 opacity-[0.13] brightness-0 invert transition-transform duration-700 ease-out motion-safe:group-engaged:rotate-[24deg] motion-safe:group-engaged:scale-110"
-          />
+          {/* The Kept mark, large and faint in the corner: it weaves in when Home opens, then drifts
+              slowly; pressing the card turns it a little. Inline, so it draws with no download. */}
+          <div aria-hidden className="pointer-events-none absolute -right-10 -bottom-14 -z-10 size-[190px] animate-drift">
+            <div
+              className="size-full rotate-12 opacity-[0.13] brightness-0 invert transition-[rotate,scale] duration-700 ease-out motion-safe:group-engaged:rotate-[24deg] motion-safe:group-engaged:scale-110"
+              dangerouslySetInnerHTML={{ __html: ANIMATED_LOGO_SVG }}
+            />
+          </div>
           <div className="flex items-center gap-3">
             <Avatar name={me.displayName} username={me.username} src={me.avatarUrl} eager className="size-11 text-lg ring-2 ring-brand-foreground/25" />
             <p className="min-w-0 flex-1 leading-tight">
