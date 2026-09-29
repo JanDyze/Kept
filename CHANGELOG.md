@@ -12,10 +12,6 @@ All notable changes to Kept, one version per feature.
 - Check as you go: the words you got right show, the rest stay blank for your next try. You have three tries.
 - Both count as a review, like Fill the Blanks and First Letters.
 
-## 0.19.1 — Plainer words on Support Kept
-
-- Support Kept now simply says what tips pay for: the servers and new features.
-
 ## 0.19.0 — Results you can see
 
 - Finished games show how they went at a glance: a gold Perfect, your mistakes as marks, guesses as tiles, rounds as dots, lives as hearts.
@@ -25,10 +21,6 @@ All notable changes to Kept, one version per feature.
 ## 0.18.4 — Back goes back
 
 - Your phone's Back button now retraces your steps after All games, Next game, a tag, or moving between Bible chapters, instead of reopening pages you already left.
-
-## 0.18.3 — Support Kept
-
-- Settings has a Support Kept page: help keep Kept free and ad-free, or share it with a friend.
 
 ## 0.18.2 — Steadier word choices
 

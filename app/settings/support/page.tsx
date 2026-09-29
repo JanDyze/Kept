@@ -7,55 +7,57 @@ import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Support Kept" };
 
-// Giving is optional and configured by env: SUPPORT_URL (Ko-fi, PayPal.me, ...) for the Give
-// button, SUPPORT_QR (a /public path or full URL) for a GCash or Maya code. Sharing always shows.
+// Not listed anywhere: it opens from the Kept logo at the foot of Settings, for whoever goes looking.
+// Giving is configured by env: SUPPORT_QR (a /public path or full URL) shows a GCash code with Save
+// QR (a phone can't scan its own screen, so it's saved and uploaded in GCash instead), SUPPORT_URL
+// adds a Give link (Ko-fi, ...). Sharing always shows.
 export default async function SupportPage() {
   await requireUser();
   const url = process.env.SUPPORT_URL?.trim() || null;
   const qr = process.env.SUPPORT_QR?.trim() || null;
-  const qrLabel = process.env.SUPPORT_QR_LABEL?.trim() || "GCash or Maya";
+  const qrLabel = process.env.SUPPORT_QR_LABEL?.trim() || "GCash";
 
   return (
     <Screen back={{ href: "/settings", label: "Settings" }} title="Support Kept">
-      <section className="flex flex-col items-center rounded-2xl border bg-card px-5 py-7 text-center">
-        <span className="flex size-14 items-center justify-center rounded-2xl bg-icon-tile">
-          <HandHeart className="size-7 text-icon-ink" aria-hidden />
+      <section className="flex flex-col items-center rounded-2xl border bg-card px-5 pt-7 pb-5 text-center">
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-icon-tile">
+          <HandHeart className="size-6 text-icon-ink" aria-hidden />
         </span>
-        <p className="mt-4 max-w-sm leading-relaxed text-muted-foreground">
+        <p className="mt-3 max-w-xs leading-relaxed text-muted-foreground">
           Kept is free, with no ads. Tips help pay for the servers and new features.
         </p>
-        {url && (
-          <GiveLink href={url} className="mt-5">
-            <HandHeart className="size-4" aria-hidden /> Give
-          </GiveLink>
+
+        {qr && (
+          <figure className="mt-6 w-full max-w-64">
+            <Image
+              src={qr}
+              alt={`${qrLabel} QR code`}
+              width={256}
+              height={256}
+              unoptimized
+              className="aspect-square w-full rounded-2xl border bg-white object-contain"
+            />
+            <figcaption className="mt-2.5 text-sm font-medium text-muted-foreground">{qrLabel}</figcaption>
+          </figure>
+        )}
+
+        {(qr || url) && (
+          <div className="mt-5 flex w-full flex-col gap-2">
+            {qr && (
+              <GiveLink href={qr} download="kept-gcash-qr.png">
+                <Download className="size-4" aria-hidden /> Save QR
+              </GiveLink>
+            )}
+            {url && (
+              <GiveLink href={url} variant={qr ? "outline" : "primary"}>
+                <HandHeart className="size-4" aria-hidden /> Give
+              </GiveLink>
+            )}
+          </div>
         )}
       </section>
 
-      {qr && (
-        <section aria-labelledby="qr" className="mt-4 flex flex-col items-center rounded-2xl border bg-card px-5 py-6">
-          <h2 id="qr" className="text-sm font-medium text-muted-foreground">
-            {qrLabel}
-          </h2>
-          <Image
-            src={qr}
-            alt={`${qrLabel} QR code`}
-            width={224}
-            height={224}
-            unoptimized
-            className="mt-3 size-56 rounded-xl bg-white object-contain p-2"
-          />
-          {/* On a phone the code can't scan itself: save it, then upload it in GCash's Scan QR. */}
-          <a
-            href={qr}
-            download="kept-support-qr.png"
-            className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-base font-medium hover:bg-muted"
-          >
-            <Download className="size-4" aria-hidden /> Save QR
-          </a>
-        </section>
-      )}
-
-      <div className="mt-4">
+      <div className="mt-3">
         <ShareKept />
       </div>
     </Screen>

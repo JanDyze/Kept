@@ -11,15 +11,28 @@ function track(kind: "support_give" | "support_share") {
     void fetch("/api/events", { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true }).catch(() => {});
 }
 
-export function GiveLink({ href, className, children }: { href: string; className?: string; children: React.ReactNode }) {
+// A way to give: an outside link (Give), or the GCash code saved to the phone (`download`).
+export function GiveLink({
+  href,
+  download,
+  variant = "primary",
+  className,
+  children,
+}: {
+  href: string;
+  download?: string;
+  variant?: "primary" | "outline";
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
     <a
       href={href}
-      target="_blank"
-      rel="noreferrer"
+      {...(download ? { download } : { target: "_blank", rel: "noreferrer" })}
       onClick={() => track("support_give")}
       className={cn(
-        "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-medium text-primary-foreground hover:bg-primary/85",
+        "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-base font-medium",
+        variant === "primary" ? "bg-primary text-primary-foreground hover:bg-primary/85" : "border hover:bg-muted",
         className,
       )}
     >

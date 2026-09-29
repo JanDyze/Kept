@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { sql } from "drizzle-orm";
 import Image from "next/image";
-import { ChartColumn, ChevronRight, HandHeart, LogOut, Palette, Sparkles } from "lucide-react";
+import { ChartColumn, ChevronRight, LogOut, Palette, Sparkles } from "lucide-react";
 import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
@@ -30,7 +30,6 @@ export default async function SettingsPage() {
   const links = [
     { href: "/settings/theme", label: "Theme", Icon: Palette },
     { href: "/whats-new", label: "What's new", detail: APP_VERSION, Icon: Sparkles },
-    { href: "/settings/support", label: "Support Kept", Icon: HandHeart },
     ...(isAdmin(user) ? [{ href: "/admin", label: "Dashboard", Icon: ChartColumn }] : []),
   ];
 
@@ -78,9 +77,24 @@ export default async function SettingsPage() {
         )}
       </form>
 
-      <footer className="mt-10 flex flex-col items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
-        <Image src="/logo.svg" alt="" width={22} height={22} unoptimized className="size-[22px] opacity-50 dark:brightness-0 dark:invert" />
-        Kept {APP_VERSION}
+      {/* Support Kept isn't listed: the logo opens it, for whoever goes looking. */}
+      <footer className="mt-10 flex justify-center">
+        <Link
+          href="/settings/support"
+          transitionTypes={["nav-forward"]}
+          aria-label={`Kept ${APP_VERSION}`}
+          className="group flex flex-col items-center gap-1.5 rounded-xl px-4 py-2 text-xs text-muted-foreground tabular-nums"
+        >
+          <Image
+            src="/logo.svg"
+            alt=""
+            width={22}
+            height={22}
+            unoptimized
+            className="size-[22px] opacity-50 transition-transform duration-300 group-hover:rotate-45 group-active:rotate-45 dark:brightness-0 dark:invert"
+          />
+          Kept {APP_VERSION}
+        </Link>
       </footer>
     </Screen>
   );

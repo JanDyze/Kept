@@ -110,7 +110,7 @@ export default async function AdminPage() {
           rows={(
             [
               ["Opened", s.support.opens],
-              ["Tapped Give", s.support.gives],
+              ["Saved QR or gave", s.support.gives],
               ["Shared Kept", s.support.shares],
             ] as const
           ).map(([label, x]) => [label, x.week.toLocaleString(), x.month.toLocaleString(), x.people.toLocaleString()])}
