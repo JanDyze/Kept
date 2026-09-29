@@ -35,7 +35,7 @@ export default async function AdminPage() {
     { label: "Active this month", value: s.active.month },
     { label: "Verses kept", value: t.verses ?? 0 },
     { label: "Games finished", value: t.games ?? 0, note: t.games ? `${Math.round(((t.won ?? 0) / t.games) * 100)}% won` : undefined },
-    { label: "Page views, 7 days", value: t.views ?? 0 },
+    { label: "Visits, 7 days", value: t.visits ?? 0, note: t.views ? `${compact(t.views)} screens opened` : undefined },
   ];
   const more = [
     ["Cards made", t.cards],
@@ -88,7 +88,7 @@ export default async function AdminPage() {
 
       <Section title="Screens opened, last 7 days">
         {s.pages.length ? (
-          <Table head={["Screen", "Views", "People"]} rows={s.pages.map((p) => [p.path, p.views.toLocaleString(), p.people.toLocaleString()])} mono />
+          <Table head={["Screen", "People", "Opened"]} rows={s.pages.map((p) => [p.path, p.people.toLocaleString(), p.views.toLocaleString()])} mono />
         ) : (
           <Empty>No views recorded yet.</Empty>
         )}

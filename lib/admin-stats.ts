@@ -62,7 +62,12 @@ export async function adminStats(tz: string, today: string) {
         (select count(*) from card_likes)::int + (select count(*) from verse_likes)::int as likes,
         (select count(*) from verse_notes)::int as notes,
         (select count(*) from card_images)::int as photos,
-        (select count(*) from app_events where kind = 'view' and created_at >= now() - interval '7 days')::int as views`),
+        (select count(*) from app_events where kind = 'view' and created_at >= now() - interval '7 days')::int as views,
+        -- A visit is opening Kept: a person's first screen after 30 minutes without one. Views alone
+        -- count every screen change, so going back and forth looked like a crowd.
+        (select count(*) filter (where gap is null or gap > interval '30 minutes') from (
+          select created_at - lag(created_at) over (partition by user_id order by created_at) as gap
+          from app_events where kind = 'view' and created_at >= now() - interval '7 days') v)::int as visits`),
     db.execute<{ game: GameId; played: number; won: number; people: number }>(sql`
       select game, count(*) filter (where status <> 'in_progress')::int as played,
         count(*) filter (where status = 'won')::int as won,
@@ -72,7 +77,7 @@ export async function adminStats(tz: string, today: string) {
     db.execute<{ path: string; views: number; people: number }>(sql`
       select path, count(*)::int as views, count(distinct user_id)::int as people
       from app_events where kind = 'view' and created_at >= now() - interval '7 days'
-      group by path order by views desc limit 12`),
+      group by path order by people desc, views desc limit 12`),
     db.execute<{ reference: string; people: number }>(sql`
       select mode() within group (order by reference) as reference, count(distinct user_id)::int as people
       from verses where archived_at is null
