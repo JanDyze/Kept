@@ -132,31 +132,33 @@ export function AddFriendForm() {
   );
 }
 
-// Copy or share your profile link, so a friend can add you in one tap.
+// Copy your username (to type into a friend's Add box), or share your profile link: the phone's
+// share sheet where there is one, otherwise the link is copied.
 export function ShareProfile({ username }: { username: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"username" | "link" | null>(null);
+  const copy = async (what: "username" | "link", text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(what);
+    setTimeout(() => setCopied(null), 1600);
+  };
   const url = () => `${location.origin}/u/${username}`;
   return (
     <span className="flex gap-1.5">
-      <button
-        type="button"
-        onClick={async () => {
-          await navigator.clipboard.writeText(url());
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1600);
-        }}
-        className={cn(pill, "border text-muted-foreground hover:bg-muted")}
-      >
-        {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-        {copied ? "Copied" : "Copy link"}
+      <button type="button" onClick={() => void copy("username", username)} className={cn(pill, "border text-muted-foreground hover:bg-muted")}>
+        {copied === "username" ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+        {copied === "username" ? "Copied" : "Copy username"}
       </button>
       <button
         type="button"
-        onClick={() => void navigator.share?.({ url: url(), title: `@${username} on Kept` }).catch(() => {})}
-        aria-label="Share profile link"
+        onClick={() => {
+          if (typeof navigator.share === "function")
+            void navigator.share({ url: url(), title: `@${username} on Kept` }).catch(() => {});
+          else void copy("link", url());
+        }}
+        aria-label={copied === "link" ? "Link copied" : "Share profile link"}
         className={cn(pill, "border px-2.5 text-muted-foreground hover:bg-muted")}
       >
-        <Share2 className="size-4" aria-hidden />
+        {copied === "link" ? <Check className="size-4" aria-hidden /> : <Share2 className="size-4" aria-hidden />}
       </button>
     </span>
   );

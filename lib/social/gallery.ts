@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-
 import { bookByName } from "@/lib/bible/books";
 import { readCardStyle, type CardStyle } from "@/lib/cards/style";
 import { db } from "@/lib/db";
-import { verses } from "@/lib/db/schema";
+import { cardLikes, verses } from "@/lib/db/schema";
 import { resolveVerse } from "@/lib/verses/resolve";
 import { friendIds } from "./friends";
 import { getProfiles, type Profile } from "./profiles";
@@ -20,7 +20,16 @@ export type GalleryCard = {
   text: string;
   style: CardStyle;
   author: Profile;
+  likes: number;
+  liked: boolean; // by the viewer
 };
+
+const likeCount = sql<number>`(select count(*)::int from ${cardLikes} l where l.verse_id = ${verses.id})`;
+const likedBy = (viewerId: string) =>
+  sql<boolean>`exists (select 1 from ${cardLikes} l where l.verse_id = ${verses.id} and l.user_id = ${viewerId})`;
+// Discover's order: likes lift a card, age lets it sink slowly (a like counts for about a day's
+// head start), so new cards still get seen.
+const hot = sql`(${likeCount} + 1) / power(extract(epoch from (now() - coalesce(${verses.publishedAt}, now()))) / 3600 + 2, 0.8)`;
 
 // Whose cards the viewer may see, as a SQL condition on `verses`.
 function visibleTo(viewerId: string, friends: string[]) {
@@ -36,8 +45,9 @@ function localReference(v: { reference: string; book: string; translation: strin
   return tl ? v.reference.replace(v.book, tl) : v.reference;
 }
 
-// The gallery: newest shared first, the viewer's own shared cards included (so a share shows up
-// at once). `scope: "friends"` keeps to friends' cards; `authorId` to one person's (their profile).
+// The gallery, the viewer's own shared cards included (so a share shows up at once): most liked
+// and newest first. `scope: "friends"` keeps to friends' cards; `authorId` to one person's (their
+// profile, newest first).
 export async function galleryCards(
   viewerId: string,
   opts: { scope?: "all" | "friends"; authorId?: string; limit?: number } = {},
@@ -53,6 +63,8 @@ export async function galleryCards(
       translation: verses.translation,
       text: verses.text,
       card: verses.card,
+      likes: likeCount,
+      liked: likedBy(viewerId),
     })
     .from(verses)
     .where(
@@ -65,7 +77,7 @@ export async function galleryCards(
         opts.scope === "friends" ? inArray(verses.userId, friends) : undefined,
       ),
     )
-    .orderBy(desc(verses.publishedAt))
+    .orderBy(...(opts.authorId ? [desc(verses.publishedAt)] : [desc(hot), desc(verses.publishedAt)]))
     .limit(opts.limit ?? 60);
 
   const authors = await getProfiles([...new Set(rows.map((r) => r.userId))]);
@@ -73,7 +85,18 @@ export async function galleryCards(
     const style = readCardStyle(r.card);
     const author = authors.get(r.userId);
     if (!style || !author) return [];
-    return [{ id: r.id, reference: localReference(r), translation: r.translation, text: r.text, style, author }];
+    return [
+      {
+        id: r.id,
+        reference: localReference(r),
+        translation: r.translation,
+        text: r.text,
+        style,
+        author,
+        likes: Number(r.likes),
+        liked: Boolean(r.liked),
+      },
+    ];
   });
 }
 

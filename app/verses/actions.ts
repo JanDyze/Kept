@@ -78,6 +78,23 @@ export async function setArchived(id: string, archived: boolean) {
   revalidatePath("/", "layout");
 }
 
+// Stars a verse (kept at the top of My verses) or takes the star off.
+export async function setStarred(id: string, starred: boolean): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsedId = idSchema.safeParse(id);
+  if (!parsedId.success) return { error: "This verse can't be found." };
+
+  const updated = await db
+    .update(verses)
+    .set({ starredAt: starred ? new Date() : null })
+    .where(and(eq(verses.id, parsedId.data), eq(verses.userId, user.id)))
+    .returning({ id: verses.id });
+  if (updated.length === 0) return { error: "This verse can't be found." };
+  revalidatePath("/verses");
+  revalidatePath(`/verses/${parsedId.data}`);
+  return {};
+}
+
 export type LookupResult =
   | { ok: true; text: string; reference: string; note: string | null }
   | { ok: false; error: string };

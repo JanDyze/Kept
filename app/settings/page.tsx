@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { sql } from "drizzle-orm";
-import { LogOut } from "lucide-react";
+import { ChartColumn, ChevronRight, LogOut, Palette, Sparkles } from "lucide-react";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
-import { ThemePicker } from "@/components/theme-picker";
+import { SupportKept } from "@/components/support-kept";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { isAdmin } from "@/lib/admin";
 import { requireUser } from "@/lib/auth";
+import { APP_VERSION } from "@/lib/changelog";
 import { getTimeZone } from "@/lib/day";
 import { db } from "@/lib/db";
 import { bibleVerses } from "@/lib/db/schema";
@@ -23,6 +26,12 @@ export default async function SettingsPage() {
       .groupBy(bibleVerses.translation),
   ]);
 
+  const links = [
+    { href: "/settings/theme", label: "Theme", Icon: Palette },
+    { href: "/whats-new", label: "What's new", detail: APP_VERSION, Icon: Sparkles },
+    ...(isAdmin(user) ? [{ href: "/admin", label: "Dashboard", Icon: ChartColumn }] : []),
+  ];
+
   return (
     <Screen back={{ href: "/me", label: "You" }} title="Settings">
       <section aria-labelledby="appearance">
@@ -32,12 +41,21 @@ export default async function SettingsPage() {
         <ThemeToggle />
       </section>
 
-      <section aria-labelledby="theme" className="mt-6">
-        <h2 id="theme" className="mb-2 text-sm font-medium text-muted-foreground">
-          Theme
-        </h2>
-        <ThemePicker />
-      </section>
+      <nav aria-label="More settings" className="mt-6 divide-y rounded-2xl border bg-card">
+        {links.map(({ href, label, detail, Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            transitionTypes={["nav-forward"]}
+            className="flex items-center gap-3 px-4 py-3.5 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50"
+          >
+            <Icon className="size-5 text-muted-foreground" aria-hidden />
+            <span className="flex-1 font-medium">{label}</span>
+            {detail && <span className="text-sm text-muted-foreground tabular-nums">{detail}</span>}
+            <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+          </Link>
+        ))}
+      </nav>
 
       <section className="mt-6 divide-y rounded-2xl border bg-card">
         <Row label="Signed in as" value={user.email ?? "—"} />
@@ -53,6 +71,8 @@ export default async function SettingsPage() {
           <LogOut className="size-4" aria-hidden /> Sign out
         </SubmitButton>
       </form>
+
+      <SupportKept version={APP_VERSION} supportUrl={process.env.SUPPORT_URL?.trim() || null} />
     </Screen>
   );
 }

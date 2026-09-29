@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { keepCard, setCardVisibility, type Visibility } from "@/lib/social/gallery";
+import { galleryCard, keepCard, setCardVisibility, type Visibility } from "@/lib/social/gallery";
+import { setCardLike, setVerseLike } from "@/lib/social/likes";
 
 const id = z.uuid();
 
@@ -14,6 +15,31 @@ export async function keepSharedCard(verseId: string): Promise<{ id: string } | 
   const result = await keepCard(user.id, verseId);
   if ("id" in result) revalidatePath("/", "layout");
   return result;
+}
+
+// Likes someone's card (or takes the like back). Only cards the viewer may see, and not their own.
+export async function likeCard(verseId: string, liked: boolean): Promise<{ error?: string }> {
+  const user = await requireUser();
+  if (!id.safeParse(verseId).success) return { error: "That card can't be liked." };
+  const found = await galleryCard(user.id, verseId);
+  if (!found || found.isOwner) return { error: "That card can't be liked." };
+  await setCardLike(user.id, verseId, Boolean(liked));
+  return {};
+}
+
+const place = z.object({
+  bookNumber: z.number().int().min(1).max(66),
+  chapter: z.number().int().min(1).max(150),
+  verseStart: z.number().int().min(1).max(200),
+});
+
+// Likes a passage in Discover → Verses (or takes the like back).
+export async function likeVerse(where: { bookNumber: number; chapter: number; verseStart: number }, liked: boolean): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = place.safeParse(where);
+  if (!parsed.success) return { error: "That verse can't be liked." };
+  await setVerseLike(user.id, parsed.data, Boolean(liked));
+  return {};
 }
 
 // Who can see a card of yours besides you: only you, your friends, or everyone (Discover).

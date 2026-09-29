@@ -6,6 +6,7 @@ import { VerseLibrary, type LibraryItem } from "@/components/verse-library";
 import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
 import { readCardStyle } from "@/lib/cards/style";
+import { mastery } from "@/lib/verses/mastery";
 import { listVerses, verseCounts } from "@/lib/verses/queries";
 import { SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
 
@@ -21,6 +22,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
   const saved = jar.get(SORT_COOKIE)?.value;
   const sort: LibrarySort = saved === "book" || saved === "mine" ? saved : "recent";
 
+  const now = new Date();
   // listVerses returns Bible order (archived: most recently archived first); `bibleOrder` keeps it.
   const items: LibraryItem[] = list.map((v, i) => {
     const tl = v.translation === "MBBTAG" ? bookByName(v.book)?.tl : undefined;
@@ -36,6 +38,8 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       bibleOrder: archived ? v.bookNumber * 1e6 + v.chapter * 1e3 + v.verseStart : i,
       addedAt: (archived && v.archivedAt ? v.archivedAt : v.createdAt).getTime(),
       position: v.position,
+      starred: v.starredAt !== null,
+      mastery: archived ? undefined : mastery(v.srs, now),
     };
   });
 

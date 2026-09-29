@@ -1,6 +1,7 @@
 import "server-only";
 import { eq, inArray } from "drizzle-orm";
 import type { SessionUser } from "@/lib/auth";
+import { APP_VERSION } from "@/lib/changelog";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 import { normalizeUsername, suggestUsername, usernameProblem } from "./username";
@@ -38,7 +39,8 @@ export async function getOrCreateProfile(user: SessionUser): Promise<Profile> {
     const username = n === 1 ? base : `${base.slice(0, 20 - String(n).length)}${n}`;
     const [made] = await db
       .insert(profiles)
-      .values({ userId: user.id, username, displayName, avatarUrl: user.avatarUrl })
+      // A new account has nothing to catch up on: What's new starts from the next release.
+      .values({ userId: user.id, username, displayName, avatarUrl: user.avatarUrl, seenVersion: APP_VERSION })
       .onConflictDoNothing()
       .returning(columns);
     if (made) return made;
@@ -65,7 +67,17 @@ export async function setAvatar(userId: string, avatarUrl: string | null) {
   await db.update(profiles).set({ avatarUrl, avatarRemoved: avatarUrl === null }).where(eq(profiles.userId, userId));
 }
 
-export type ProfileUpdate = { username: string; displayName: string };
+// Which release's What's new they last saw (null for accounts made before there was one).
+export async function seenVersion(userId: string) {
+  const [row] = await db.select({ v: profiles.seenVersion }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  return row?.v ?? null;
+}
+
+export async function markVersionSeen(userId: string, version: string) {
+  await db.update(profiles).set({ seenVersion: version }).where(eq(profiles.userId, userId));
+}
+
+export type ProfileUpdate ={ username: string; displayName: string };
 
 export async function updateProfile(userId: string, input: ProfileUpdate): Promise<{ error?: string }> {
   const username = normalizeUsername(input.username);

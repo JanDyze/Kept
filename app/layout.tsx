@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeScript } from "goodthemes/script";
+import { ActivityPing } from "@/components/activity-ping";
 import { AppFeel } from "@/components/app-feel";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
 import { InstallBanner } from "@/components/install-banner";
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <TimezoneSync />
+          <ActivityPing />
           <AppFeel />
           <ServiceWorker />
           <InstallBanner />

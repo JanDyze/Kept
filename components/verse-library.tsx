@@ -2,13 +2,14 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowDownUp, Check, ChevronDown, GripVertical, Plus, Search, X } from "lucide-react";
+import { ArrowDownUp, BadgeCheck, Check, ChevronDown, GripVertical, Plus, Search, Star, X } from "lucide-react";
 import { saveVerseOrder } from "@/app/verses/actions";
 import { ArrangeList } from "@/components/arrange-list";
 import { CardBackdrop, CardBorder, cardFontClass } from "@/components/memory-card";
 import { Morph, morphName } from "@/components/verse-morph";
 import { buttonVariants } from "@/components/ui/button";
-import { cardColors, type CardStyle } from "@/lib/cards/style";
+import { cardColors, hasBorder, type CardStyle } from "@/lib/cards/style";
+import type { Mastery } from "@/lib/verses/mastery";
 import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/lib/scroll-memory";
 import { cn } from "@/lib/utils";
 import { tagLabel } from "@/lib/verses/tag-label";
@@ -27,6 +28,8 @@ export type LibraryItem = {
   bibleOrder?: number; // position in Bible order
   addedAt?: number; // ms; for archived verses, when they were archived
   position?: number | null; // place in the user's own order; null (not yet placed) sits first
+  starred?: boolean; // kept at the top whatever the order
+  mastery?: Mastery; // shown at the tile's foot in My verses
 };
 
 // Saved for a year so the page renders in the same order next time, with no flash.
@@ -107,14 +110,16 @@ export function VerseLibrary({
     );
   }, [ordered, tag, query]);
 
-  // By book: consecutive verses grouped under their book. Recent: one list, newest first.
+  // By book: consecutive verses grouped under their book, starred ones in their own group first.
+  // Recent: one list, newest first (starred at the top).
   const groups = useMemo(() => {
     if (sort !== "book") return [{ book: "", verses: shown }];
     const out: { book: string; verses: LibraryItem[] }[] = [];
     for (const v of shown) {
+      const book = v.starred ? "Starred" : v.book;
       const last = out[out.length - 1];
-      if (last?.book === v.book) last.verses.push(v);
-      else out.push({ book: v.book, verses: [v] });
+      if (last?.book === book) last.verses.push(v);
+      else out.push({ book, verses: [v] });
     }
     return out;
   }, [shown, sort]);
@@ -332,6 +337,35 @@ function SortMenu({
   );
 }
 
+// Room between a card's border and the tile's text, per side: an inset frame sits 4cqw in, so the
+// text clears it by as much again; a border at the edge needs less. Sides without one keep 1rem.
+function borderPadding(card: CardStyle | null): React.CSSProperties | undefined {
+  if (!card || !hasBorder(card.border)) return undefined;
+  const b = card.border;
+  const pad = (on: boolean) => (on ? (b.inset ? "calc(8cqw + 0.25rem)" : "calc(3.5cqw + 0.5rem)") : undefined);
+  return { paddingTop: pad(b.top), paddingRight: pad(b.right), paddingBottom: pad(b.bottom), paddingLeft: pad(b.left) };
+}
+
+const MASTERY_LABEL = { new: "New", learning: "Learning", mastered: "Mastered" } as const;
+
+// New / Learning / Mastered (lib/verses/mastery.ts), as a small mark at the tile's foot.
+function MasteryMark({ level, quiet }: { level: Mastery; quiet: string }) {
+  return (
+    <span className={cn("ml-auto inline-flex shrink-0 items-center gap-1 font-medium", level === "mastered" ? "opacity-95" : quiet)}>
+      {level === "mastered" ? (
+        <BadgeCheck className="size-3.5" aria-hidden />
+      ) : level === "learning" ? (
+        <span className="relative size-3 rounded-full border-[1.5px] border-current" aria-hidden>
+          <span className="absolute inset-y-0 left-0 w-1/2 rounded-l-full bg-current" />
+        </span>
+      ) : (
+        <span className="size-3 rounded-full border-[1.5px] border-current" aria-hidden />
+      )}
+      {MASTERY_LABEL[level]}
+    </span>
+  );
+}
+
 // A verse with a card shows its background, photo and font here too.
 // Without an href it's a still preview (the card editor shows one).
 export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; onOpen?: () => void }) {
@@ -339,27 +373,41 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
   const colors = card ? cardColors(card.bg, card.text) : {};
   const styled = Boolean(colors.bg || colors.fg);
   const quiet = styled ? "opacity-70" : "text-muted-foreground";
+  const framed = Boolean(card && hasBorder(card.border));
   const body = (
     <>
       {card && <CardBackdrop style={card} sizes="36rem" />}
       {card && <CardBorder style={card} />}
-      {card ? (
-        <p className="font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
-      ) : (
-        <Morph name={morphName.reference(v.id)}>
-          <p className="w-fit font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
-        </Morph>
-      )}
-      <p className={cn("text-xs", quiet)}>
-        {v.translation}
-        {v.localReference && ` · ${v.reference}`}
-      </p>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          {card ? (
+            <p className={cn("font-brand font-semibold leading-tight tracking-tight", framed ? "text-base" : "text-lg")}>
+              {v.localReference ?? v.reference}
+            </p>
+          ) : (
+            <Morph name={morphName.reference(v.id)}>
+              <p className="w-fit font-brand text-lg font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
+            </Morph>
+          )}
+          <p className={cn("text-xs", quiet)}>
+            {v.translation}
+            {v.localReference && ` · ${v.reference}`}
+          </p>
+        </div>
+        {v.starred && <Star className="mt-0.5 size-4 shrink-0 fill-current text-icon-accent" aria-label="Starred" />}
+      </div>
       <Morph name={morphName.text(v.id)}>
       <p
         className={cn(
           "mt-2.5 line-clamp-3",
           card ? cardFontClass(card.font) : "font-serif",
-          card?.font === "hand" ? "text-[1.3rem] leading-snug" : "text-[1.05rem] leading-relaxed",
+          card?.font === "hand"
+            ? framed
+              ? "text-[1.15rem] leading-snug"
+              : "text-[1.3rem] leading-snug"
+            : framed
+              ? "text-[0.95rem] leading-relaxed"
+              : "text-[1.05rem] leading-relaxed",
           !styled && "text-foreground/85",
         )}
         style={card?.bg.kind === "image" ? { textShadow: "0 1px 10px rgb(0 0 0 / 0.35)" } : undefined}
@@ -367,22 +415,24 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
         {v.text}
       </p>
       </Morph>
-      {v.tags.length > 0 && (
+      {(v.tags.length > 0 || v.mastery) && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {v.tags.map((t) => (
             <span key={t} className={cn("font-medium", quiet)}>
               #{tagLabel(t)}
             </span>
           ))}
+          {v.mastery && <MasteryMark level={v.mastery} quiet={quiet} />}
         </div>
       )}
     </>
   );
   const surface = "@container relative isolate block overflow-hidden rounded-2xl p-4";
+  const padding = borderPadding(card);
   if (!href)
     return (
       <Morph name={morphName.surface(v.id)} fill>
-        <div style={{ backgroundColor: colors.bg, color: colors.fg }} className={cn(surface, !styled && "border bg-card")}>
+        <div style={{ backgroundColor: colors.bg, color: colors.fg, ...padding }} className={cn(surface, !styled && "border bg-card")}>
           {body}
         </div>
       </Morph>
@@ -393,7 +443,7 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
       href={href}
       onClick={onOpen}
       transitionTypes={["nav-forward"]}
-      style={{ backgroundColor: colors.bg, color: colors.fg }}
+      style={{ backgroundColor: colors.bg, color: colors.fg, ...padding }}
       className={cn(
         surface,
         "transition-[transform,background-color] active:scale-[0.99]",

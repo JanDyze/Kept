@@ -32,8 +32,8 @@ export function ProfileView({
   const self = relation === "self";
   const numbers = [
     { label: "day streak", value: stats.streak, icon: stats.streak > 0 },
-    { label: stats.verses === 1 ? "verse" : "verses", value: stats.verses },
-    { label: "games won", value: stats.gamesWon },
+    { label: stats.verses === 1 ? "verse" : "verses", value: stats.verses, href: self ? "/verses" : undefined },
+    { label: "games won", value: stats.gamesWon, href: self ? "/games" : undefined },
     { label: stats.friends === 1 ? "friend" : "friends", value: stats.friends, href: self ? "/friends" : undefined },
   ];
 
@@ -155,7 +155,7 @@ export function ProfileView({
             </h2>
           )}
           {cards.length > 0 ? (
-            <CardGallery cards={cards} showAuthor={false} />
+            <CardGallery cards={cards} showAuthor={false} viewerId={self ? person.userId : undefined} from={`u:${person.username}`} />
           ) : (
             <p className={cn("rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground")}>
               {self ? (

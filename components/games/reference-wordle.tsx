@@ -16,6 +16,7 @@ import {
   type ReferenceWordleState,
 } from "@/lib/games/reference-wordle";
 import { cn } from "@/lib/utils";
+import { BookPicker } from "./book-picker";
 import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -119,32 +120,7 @@ export function ReferenceWordleGame({
         onGiveUp={() => void game.finish({ guesses, gaveUp: true })}
       >
         <form key={shake} onSubmit={submit} className={cn("flex flex-col gap-2", shake > 0 && message && "animate-shake")}>
-          <select
-            id="book"
-            aria-label="Book"
-            value={book}
-            disabled={!game.playing}
-            onChange={(e) => setBook(e.target.value)}
-            className={cn("h-11 rounded-xl border border-input bg-card px-3 text-base", !book && "text-muted-foreground")}
-          >
-            <option value="">Book</option>
-            <optgroup label="Old Testament">
-              {BOOKS.slice(0, 39).map((b) => (
-                <option key={b.number} value={b.number}>
-                  {b.name}
-                  {b.tl !== b.name ? ` · ${b.tl}` : ""}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="New Testament">
-              {BOOKS.slice(39).map((b) => (
-                <option key={b.number} value={b.number}>
-                  {b.name}
-                  {b.tl !== b.name ? ` · ${b.tl}` : ""}
-                </option>
-              ))}
-            </optgroup>
-          </select>
+          <BookPicker value={book ? Number(book) : null} disabled={!game.playing} onChange={(n) => setBook(String(n))} />
           <div className="flex gap-2">
             <Input
               id="chapter"

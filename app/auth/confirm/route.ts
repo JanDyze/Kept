@@ -1,14 +1,18 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { NEXT_COOKIE, safeNextPath } from "@/lib/next-path";
 import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 // Where the link in a sign-up email lands: it signs the new user in, then carries on to `next`.
-// Handles both link styles Supabase sends (a PKCE `code`, or a `token_hash` with its type).
+// Handles both link styles Supabase sends (a PKCE `code`, or a `token_hash` with its type). When
+// `next` got lost on the way (Supabase's Site URL fallback sends "/"), the page they first asked
+// for comes from the cookie the proxy left, e.g. a friend's profile link.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
-  const nextParam = url.searchParams.get("next") ?? "/";
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+  const asked = safeNextPath(url.searchParams.get("next"));
+  const remembered = safeNextPath(request.cookies.get(NEXT_COOKIE)?.value);
+  const next = asked && asked !== "/" ? asked : (remembered ?? "/");
   // Google (or another provider) came back without signing in, e.g. the user tapped Cancel.
   const origin = await siteOrigin();
   if (url.searchParams.has("error")) return NextResponse.redirect(new URL("/login?link=cancelled", origin));
@@ -25,5 +29,7 @@ export async function GET(request: NextRequest) {
       ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
       : { error: new Error("missing token") };
 
-  return NextResponse.redirect(new URL(error ? "/login?link=expired" : next, origin));
+  const response = NextResponse.redirect(new URL(error ? "/login?link=expired" : next, origin));
+  if (!error) response.cookies.delete(NEXT_COOKIE);
+  return response;
 }

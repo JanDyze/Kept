@@ -11,7 +11,8 @@ import { buildFillBlanks } from "./fill-blanks";
 import { buildFirstLetters } from "./first-letters";
 import { buildMatchUp } from "./match-up";
 import { buildMissingWord } from "./missing-word";
-import { seededRandom, shuffle } from "./random";
+import { weakness, weightedOrder } from "@/lib/verses/mastery";
+import { seededRandom } from "./random";
 import type { ReferenceWordlePuzzle } from "./reference-wordle";
 import { GAMES, type GameId } from "./registry";
 import { buildSpotChange } from "./spot-change";
@@ -69,7 +70,7 @@ async function lastUsedByVerse(userId: string, day: string) {
 
 async function buildDay(userId: string, day: string, pool: Verse[]) {
   const now = new Date();
-  const rng = (game: GameId) => seededRandom(`${userId}|${day}|${game}`);
+  const rng = (game: GameId | "recall") => seededRandom(`${userId}|${day}|${game}`);
   const used = new Set<string>();
   const rows: (typeof dailyGames.$inferInsert)[] = [];
   const add = (game: GameId, picked: Verse[], puzzle: unknown) => {
@@ -77,14 +78,22 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
     rows.push({ userId, day, game, verseIds: picked.map((v) => v.id), puzzle });
   };
 
-  // Recall games: verses never practiced first (oldest saved first), then the most overdue.
+  // Recall games: verses never practiced first (oldest saved first), then the due ones weakest
+  // first, then the rest in a weighted draw that favours weak verses but still brings mastered
+  // ones round now and then.
   const unpracticed = (v: Verse) => v.srs === null;
-  const byNeed = [...pool].sort(
-    (a, b) =>
-      Number(unpracticed(b)) - Number(unpracticed(a)) ||
-      (unpracticed(a) ? a.createdAt.getTime() - b.createdAt.getTime() : a.dueAt.getTime() - b.dueAt.getTime()),
-  );
-  const needing = byNeed.filter((v) => unpracticed(v) || v.dueAt <= now).length;
+  const weak = new Map(pool.map((v) => [v.id, weakness(v.srs, now)]));
+  const isDue = (v: Verse) => !unpracticed(v) && v.dueAt <= now;
+  const byNeed = [
+    ...pool.filter(unpracticed).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    ...pool.filter(isDue).sort((a, b) => weak.get(b.id)! - weak.get(a.id)! || a.dueAt.getTime() - b.dueAt.getTime()),
+    ...weightedOrder(
+      pool.filter((v) => !unpracticed(v) && !isDue(v)),
+      (v) => weak.get(v.id)!,
+      rng("recall"),
+    ),
+  ];
+  const needing = byNeed.filter((v) => unpracticed(v) || isDue(v)).length;
   // Prefer verses no other game has taken today; fall back to sharing when the pool is small.
   const fresh = (list: Verse[]) => [...list.filter((v) => !used.has(v.id)), ...list.filter((v) => used.has(v.id))];
 
@@ -108,11 +117,16 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
     }
   }
 
-  // Fun games: whichever verses they've used least recently.
+  // Fun games: a weighted draw where weak verses and ones not played for a while come up more
+  // often. Mastered verses keep a small weight, so they're never left out entirely.
   const lastUsed = await lastUsedByVerse(userId, day);
-  const byStaleness = shuffle(pool, rng("missing_word")).sort((a, b) =>
-    (lastUsed.get(a.id) ?? "").localeCompare(lastUsed.get(b.id) ?? ""),
-  );
+  const staleness = (v: Verse) => {
+    const last = lastUsed.get(v.id);
+    if (!last) return 3;
+    const days = (Date.parse(day) - Date.parse(last)) / 86_400_000;
+    return 0.25 + Math.min(Math.max(days, 0), 14) / 7;
+  };
+  const byStaleness = weightedOrder(pool, (v) => weak.get(v.id)! * staleness(v), rng("missing_word"));
 
   for (const v of fresh(byStaleness)) {
     const puzzle = buildMissingWord(

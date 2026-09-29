@@ -19,9 +19,13 @@ import { readCardStyle } from "@/lib/cards/style";
 import { formatDate } from "@/lib/format";
 import { getTimeZone } from "@/lib/day";
 import { listNotes } from "@/lib/verses/notes";
+import { mastery } from "@/lib/verses/mastery";
 import { getVerse } from "@/lib/verses/queries";
 import { cn } from "@/lib/utils";
+import { StarButton } from "@/components/star-button";
 import { setArchived } from "../actions";
+
+const MASTERY_NAME = { new: "Not practiced yet", learning: "Learning", mastered: "Mastered" } as const;
 
 export async function generateMetadata({ params }: PageProps<"/verses/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -50,13 +54,16 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       back={archived ? { href: "/verses?view=archived", label: "Archived" } : { href: "/verses", label: "My verses" }}
       action={
         !archived && (
-          <Link
-            href={`/verses/${verse.id}/edit`}
-            transitionTypes={["nav-forward"]}
-            className={cn(buttonVariants({ variant: "ghost" }), "h-10 gap-1.5")}
-          >
-            <Pencil className="size-4" aria-hidden /> Edit
-          </Link>
+          <div className="flex items-center gap-1">
+            <StarButton verseId={verse.id} starred={verse.starredAt !== null} />
+            <Link
+              href={`/verses/${verse.id}/edit`}
+              transitionTypes={["nav-forward"]}
+              className={cn(buttonVariants({ variant: "ghost" }), "h-10 gap-1.5")}
+            >
+              <Pencil className="size-4" aria-hidden /> Edit
+            </Link>
+          </div>
         )
       }
     >
@@ -126,7 +133,10 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       </article>
 
       <footer className="mt-auto flex items-center justify-between gap-3 pt-10 text-sm text-muted-foreground">
-        <span>Added {formatDate(verse.createdAt)}</span>
+        <span>
+          Added {formatDate(verse.createdAt)}
+          {!archived && ` · ${MASTERY_NAME[mastery(verse.srs)]}`}
+        </span>
         <form action={setArchived.bind(null, verse.id, !archived)}>
           <SubmitButton variant="ghost" className="h-10 gap-1.5 text-muted-foreground">
             {archived ? (

@@ -13,6 +13,13 @@ describe("My verses order", () => {
     expect(ids(orderBy(list, "mine", null))).toBe("dcba");
   });
 
+  it("keeps starred verses on top in every order", () => {
+    const starred = list.map((x) => (x.id === "a" || x.id === "c" ? { ...x, starred: true } : x));
+    expect(ids(orderBy(starred, "recent", null))).toBe("cadb");
+    expect(ids(orderBy(starred, "book", null))).toBe("cabd");
+    expect(ids(orderBy(starred, "mine", null))).toBe("cadb");
+  });
+
   it("uses a just-saved order before the page reloads", () => {
     expect(ids(orderBy(list, "mine", new Map([["d", 0], ["c", 1], ["a", 2], ["b", 3]])))).toBe("dcab");
   });

@@ -86,6 +86,8 @@ export const profiles = pgTable(
     avatarUrl: text("avatar_url"),
     // They took their picture off: don't fill it back in from Google.
     avatarRemoved: boolean("avatar_removed").notNull().default(false),
+    // The app version whose What's new they last saw; null (older accounts) shows the latest once.
+    seenVersion: text("seen_version"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -149,6 +151,8 @@ export const verses = pgTable(
     visibility: cardVisibility("visibility").notNull().default("private"),
     // When the card was last shown to friends or everyone; orders the Discover gallery.
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    // Starred by its owner: kept at the top of My verses whatever the order. Null when not starred.
+    starredAt: timestamp("starred_at", { withTimezone: true }),
   },
   (t) => [
     index("verses_user_due_idx").on(t.userId, t.dueAt),
@@ -230,6 +234,56 @@ export const topicVerses = pgTable(
     votes: integer("votes").notNull(),
   },
   (t) => [index("topic_verses_topic_idx").on(t.topic, t.votes)],
+).enableRLS();
+
+// Likes on shared cards (Discover → Cards). One per person and card; they raise it in the gallery.
+export const cardLikes = pgTable(
+  "card_likes",
+  {
+    verseId: uuid("verse_id")
+      .notNull()
+      .references(() => verses.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.verseId, t.userId] }), index("card_likes_user_idx").on(t.userId)],
+).enableRLS();
+
+// Likes on a passage (Discover → Verses), by where it starts, whatever the translation. They
+// raise it in Popular alongside how many people keep it.
+export const verseLikes = pgTable(
+  "verse_likes",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    bookNumber: integer("book_number").notNull(),
+    chapter: integer("chapter").notNull(),
+    verseStart: integer("verse_start").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.bookNumber, t.chapter, t.verseStart] }),
+    index("verse_likes_place_idx").on(t.bookNumber, t.chapter, t.verseStart),
+  ],
+).enableRLS();
+
+// Usage, for the admin dashboard: one row per page opened by a signed-in person (paths with ids
+// folded to :id). Everything else it shows is counted from the other tables.
+export const appEvents = pgTable(
+  "app_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // "view"
+    path: text("path").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("app_events_created_idx").on(t.createdAt), index("app_events_user_idx").on(t.userId, t.createdAt)],
 ).enableRLS();
 
 export type Verse = typeof verses.$inferSelect;

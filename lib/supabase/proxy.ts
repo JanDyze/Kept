@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { NEXT_COOKIE, safeNextPath } from "@/lib/next-path";
 
 // Paths reachable without a session. /api/mcp and /api/cron check their own bearer tokens; /s/<token>
 // is a card someone chose to share publicly; /auth/confirm is where sign-up emails land;
@@ -53,15 +54,22 @@ export async function updateSession(request: NextRequest) {
 
   if (!signedIn && !isPublic(pathname)) {
     const url = request.nextUrl.clone();
+    const next = pathname + search;
     url.pathname = "/login";
-    url.search = pathname === "/" && !search ? "" : `?next=${encodeURIComponent(pathname + search)}`;
-    return NextResponse.redirect(url);
+    url.search = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
+    const redirect = NextResponse.redirect(url);
+    // Also remembered in a cookie: a sign-up email or Google can come back without `next` (when
+    // Supabase falls back to the Site URL), and /auth/confirm picks it up from here.
+    if (next !== "/") redirect.cookies.set(NEXT_COOKIE, next, { path: "/", maxAge: 60 * 60, sameSite: "lax", httpOnly: true });
+    return redirect;
   }
 
+  // Signed in already (e.g. a shared profile link opened twice): go where the link pointed.
   if (signedIn && pathname === "/login") {
+    const target = new URL(safeNextPath(request.nextUrl.searchParams.get("next")) ?? "/", "http://kept");
     const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.search = "";
+    url.pathname = target.pathname;
+    url.search = target.search;
     return NextResponse.redirect(url);
   }
 

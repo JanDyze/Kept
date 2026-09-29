@@ -7,7 +7,10 @@ import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
-import { getOrCreateProfile } from "@/lib/social/profiles";
+import { getOrCreateProfile, seenVersion } from "@/lib/social/profiles";
+import { APP_VERSION, unseenReleases } from "@/lib/changelog";
+import { ReleaseNotes } from "@/components/release-notes";
+import { WhatsNewSheet } from "@/components/whats-new-sheet";
 import { verseCounts, verseForToday } from "@/lib/verses/queries";
 import { TextCard } from "@/components/verse-library";
 import { bookByName } from "@/lib/bible/books";
@@ -32,6 +35,9 @@ export default async function HomePage() {
     getOrCreateProfile(user),
     verseForToday(user.id),
   ]);
+  // After an update: what changed since the version they last saw (once).
+  const seen = await seenVersion(user.id);
+  const unseen = seen === APP_VERSION ? [] : await unseenReleases(seen);
   const done = games.filter((g) => g.status !== "in_progress").length;
   const allDone = games.length > 0 && done === games.length;
 
@@ -175,6 +181,21 @@ export default async function HomePage() {
           </section>
         )}
       </div>
+
+      {unseen.length > 0 && (
+        <WhatsNewSheet version={unseen[0].version} title={unseen[0].title || `Version ${unseen[0].version}`}>
+          {unseen.map((r, i) => (
+            <section key={r.version} className={cn(i > 0 && "mt-5")}>
+              {i > 0 && (
+                <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+                  {r.version} · {r.title}
+                </h3>
+              )}
+              <ReleaseNotes notes={r.notes} />
+            </section>
+          ))}
+        </WhatsNewSheet>
+      )}
     </Screen>
   );
 }

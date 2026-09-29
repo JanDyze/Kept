@@ -23,10 +23,10 @@ Next.js (App Router) · Supabase (Postgres + Auth) · Drizzle · Tailwind + shad
 ### 1. Supabase project
 
 1. Create a project at [supabase.com](https://supabase.com) (free tier).
-2. **Authentication → Sign In / Providers → Email**: keep "Enable email provider" on, turn on "Require current password when updating", and set the minimum password length to 12 or more.
-3. **Authentication → Sign In / Providers → User Signups**: turn **on** "Allow new users to sign up" (people create accounts at `/login?mode=signup`). Keep "Confirm email" on so new accounts prove their address.
-4. **Authentication → URL Configuration**: set the Site URL to where Kept runs, and add each address you open it from to **Redirect URLs** (e.g. `http://localhost:3000/**`, `http://192.168.1.10:3000/**`, your production domain). The sign-up email links back to `/auth/confirm`.
-5. **Google sign-in** (optional): in Google Cloud Console, create an OAuth client (Web application) with the redirect URI shown under **Authentication → Sign In / Providers → Google** in Supabase (`https://<project>.supabase.co/auth/v1/callback`), publish the consent screen, then paste its Client ID and secret into that Supabase panel and enable it.
+2. **Google sign-in** (the only way in): in Google Cloud Console, create an OAuth client (Web application) with the redirect URI shown under **Authentication → Sign In / Providers → Google** in Supabase (`https://<project>.supabase.co/auth/v1/callback`), publish the consent screen, then paste its Client ID and secret into that Supabase panel and enable it.
+3. **Authentication → Sign In / Providers → Email**: turn "Enable email provider" **off** (Kept has no email/password form; leaving it on would still let someone sign up through Supabase's API directly).
+4. **Authentication → Sign In / Providers → User Signups**: turn **on** "Allow new users to sign up" (a first Google sign-in makes the account).
+5. **Authentication → URL Configuration**: set the Site URL to where Kept runs, and add each address you open it from to **Redirect URLs** (e.g. `http://localhost:3000/**`, `http://192.168.1.10:3000/**`, your production domain). Google sign-in returns through `/auth/confirm`.
 
 ### 2. Environment
 

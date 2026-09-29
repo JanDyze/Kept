@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Check, Users } from "lucide-react";
+import { BookOpen, Check, Users, X } from "lucide-react";
 import { CardGallery } from "@/components/card-gallery";
 import { KeepButton, KeptNotice } from "@/components/keep-button";
+import { LikeButton } from "@/components/like-button";
+import { TagChip } from "@/components/tag-chip";
 import { Screen } from "@/components/screen";
 import { SearchBox } from "@/components/search-box";
 import { readTranslation, TranslationToggle } from "@/components/translation-toggle";
 import { requireUser } from "@/lib/auth";
 import { BOOKS, bookSlug } from "@/lib/bible/books";
 import { searchVerses, type SearchHit } from "@/lib/search";
-import { popularVerses } from "@/lib/search/popular";
+import { popularTags, popularVerses, type PopularVerse } from "@/lib/search/popular";
+import { tagLabel } from "@/lib/verses/tag-label";
 import { pendingRequestCount } from "@/lib/social/friends";
 import { galleryCards } from "@/lib/social/gallery";
 import { cn } from "@/lib/utils";
@@ -37,12 +40,14 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const q = typeof sp.q === "string" ? sp.q.slice(0, 100) : "";
   const t = readTranslation(sp.t);
   // Without a search: the card gallery (default) or popular verses.
-  const view = sp.view === "verses" ? "verses" : "cards";
+  const tag = typeof sp.tag === "string" && sp.tag.trim() ? sp.tag.trim().toLowerCase().slice(0, 40) : undefined;
+  const view = sp.view === "verses" || tag ? "verses" : "cards";
   const who = sp.who === "friends" ? "friends" : "all";
   const browsing = !q.trim();
-  const [result, popular, cards, requests] = await Promise.all([
+  const [result, popular, tags, cards, requests] = await Promise.all([
     q.trim() ? searchVerses(q, t, user.id) : null,
-    browsing && view === "verses" ? popularVerses(t, user.id) : [],
+    browsing && view === "verses" ? popularVerses(t, user.id, { tag, limit: tag ? 30 : 15 }) : [],
+    browsing && view === "verses" ? popularTags() : [],
     browsing && view === "cards" ? galleryCards(user.id, { scope: who }) : [],
     pendingRequestCount(user.id),
   ]);
@@ -55,7 +60,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
       action={
         <div className="flex items-center gap-1">
           {(!browsing || view === "verses") && (
-            <TranslationToggle current={t} path="/search" params={q ? { q } : { view: "verses" }} />
+            <TranslationToggle current={t} path="/search" params={q ? { q } : tag ? { view: "verses", tag } : { view: "verses" }} />
           )}
           <Link
             href="/friends"
@@ -116,7 +121,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
             ))}
           </div>
           {cards.length > 0 ? (
-            <CardGallery cards={cards} viewerId={user.id} />
+            <CardGallery cards={cards} viewerId={user.id} from={who} />
           ) : (
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-4 py-12 text-center">
               <p className="text-muted-foreground">{who === "friends" ? "No cards from friends yet." : "No shared cards yet."}</p>
@@ -146,14 +151,40 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
             ))}
           </div>
 
-          {popular.length > 0 && (
-            <section className="mt-7" aria-labelledby="popular">
-              <h2 id="popular" className="font-brand text-xl font-semibold tracking-tight">
-                Popular
-              </h2>
-              <Results hits={popular} translation={t} ranked />
-            </section>
+          {tags.length > 0 && (
+            <div className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" aria-label="Tags people use">
+              {tags.map((x) => (
+                <TagChip
+                  key={x}
+                  tag={x}
+                  href={x === tag ? `/search?${new URLSearchParams({ view: "verses", t })}` : `/search?${new URLSearchParams({ view: "verses", tag: x, t })}`}
+                  className={cn("shrink-0", x === tag && "ring-2 ring-primary/50")}
+                />
+              ))}
+            </div>
           )}
+
+          <section className="mt-7" aria-labelledby="popular">
+            <h2 id="popular" className="flex items-center gap-2 font-brand text-xl font-semibold tracking-tight">
+              {tag ? `#${tagLabel(tag)}` : "Popular"}
+              {tag && (
+                <Link
+                  href={`/search?${new URLSearchParams({ view: "verses", t })}`}
+                  replace
+                  scroll={false}
+                  aria-label="Show all popular verses"
+                  className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-4" aria-hidden />
+                </Link>
+              )}
+            </h2>
+            {popular.length > 0 ? (
+              <Results hits={popular} translation={t} ranked={!tag} />
+            ) : (
+              <p className="mt-3 text-muted-foreground">Nothing here yet.</p>
+            )}
+          </section>
         </>
       )}
 
@@ -196,7 +227,7 @@ function Results({
   translation,
   ranked,
 }: {
-  hits: (SearchHit & { keptBy?: number })[];
+  hits: (SearchHit & Partial<Pick<PopularVerse, "keptBy" | "likes" | "liked" | "tags">>)[];
   translation: "ESV" | "MBBTAG";
   ranked?: boolean; // numbered, for the Popular list
 }) {
@@ -226,6 +257,15 @@ function Results({
               )}
             </div>
             <p className="mt-1.5 font-serif text-[1.05rem] leading-relaxed">{h.text}</p>
+            {h.tags && h.tags.length > 0 && (
+              <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-muted-foreground">
+                {h.tags.map((x) => (
+                  <Link key={x} href={`/search?${new URLSearchParams({ view: "verses", tag: x, t: translation })}`} className="hover:text-foreground">
+                    #{tagLabel(x)}
+                  </Link>
+                ))}
+              </p>
+            )}
             <div className="mt-3 flex items-center gap-2">
               {h.saved ? (
                 <span className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-muted-foreground">
@@ -241,6 +281,14 @@ function Results({
               >
                 <BookOpen className="size-4" aria-hidden /> Read in context
               </Link>
+              {h.likes !== undefined && (
+                <LikeButton
+                  target={{ verse: { bookNumber: h.bookNumber, chapter: h.chapter, verseStart: h.verseStart } }}
+                  likes={h.likes}
+                  liked={Boolean(h.liked)}
+                  className="ml-auto"
+                />
+              )}
             </div>
           </li>
         );

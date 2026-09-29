@@ -2,6 +2,22 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.14.0 — Stars, likes and mastery
+
+- Star a verse (top right of its page) to keep it at the top of My verses in every order.
+- My verses shows how well you know each verse: New, Learning or Mastered. Mastered means steady reviews and a memory that lasts three weeks or more; a slip puts it back to Learning.
+- Games pick your weakest verses more often (fading, hard or often-missed ones), while mastered verses still come round now and then.
+- Like cards in Discover and verses in Popular. Likes lift them up the list.
+- Discover → Verses: Popular counts every verse people keep, shared or not (only a number shows), and shows the tags people use. Tap a tag to see the verses behind it.
+- Swipe a card sideways in Discover or on a profile to see the next or previous one.
+- The Reference game has its own book list with a search, instead of the phone's picker.
+- The Bible reader sets the text on a quiet page, so a theme's texture doesn't run through it.
+- A card's border keeps its distance from the text in the list preview too.
+- Your profile: Copy username, and a share button for your profile link. Your verses and games won open their pages.
+- Sign in with Google only: the email and password form is gone. A first Google sign-in makes the account.
+- A profile link opened by someone signed out now lands on that profile after they sign in.
+- Themes moved to their own page in Settings. What's new (this) shows once after each update, and all past updates are in Settings.
+
 ## 0.13.0 — Friends, profiles and the app
 
 - Anyone can create an account (`/login?mode=signup`), with email confirmation through `/auth/confirm`, or continue with Google. Sign-in links to it and back.
