@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.21.0 — Share to Stories
+
+- Put a verse on your Instagram or Facebook Story: open Share on a verse, tap Share to Stories, then pick Instagram or Facebook and choose Story. A card goes as the card itself; a verse without one goes as its words.
+- Save image and Share image work again for cards.
+- Kept shows its icon in browser tabs.
+
 ## 0.20.1 — Done at a glance
 
 - A finished game's icon now shows how it went: a gold star for Perfect, a check when solved, a cross when not. Hover or hold the card to see the icon again.

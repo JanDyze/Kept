@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useSyncExternalStore, useTransition } from "react";
-import { Check, Copy, Download, Globe, Link2, Loader2, Lock, Share, Share2, Users } from "lucide-react";
+import { useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { Check, CircleFadingPlus, Copy, Download, Globe, Link2, Loader2, Lock, Share, Share2, Users } from "lucide-react";
 import { askGuestToSave } from "@/components/guest-prompt";
+import { MemoryCard } from "@/components/memory-card";
 import { setVisibility } from "@/app/cards/actions";
 import { shareCard, unshareCard } from "@/app/verses/[id]/share-actions";
+import type { CardStyle } from "@/lib/cards/style";
+import { cardStory, shareImage, verseStory } from "@/lib/share/story";
 import { cn } from "@/lib/utils";
 
 const noSubscription = () => () => {};
@@ -12,12 +15,13 @@ const canShareFiles = () =>
   typeof navigator.canShare === "function" &&
   navigator.canShare({ files: [new File([""], "card.png", { type: "image/png" })] });
 
-// The card as a sharp PNG (3× its on-screen size), drawn from the page itself, so it matches
-// exactly: fonts, photo, grain, border.
-async function renderCard(verseId: string) {
-  // The wrapper, not the card inside it: the card sizes itself in container units against it.
-  const el = document.querySelector<HTMLElement>(`[data-card="${verseId}"]`);
+// The card as a sharp PNG (3× a 24rem card), drawn from the full card the panel keeps off screen
+// (the verse page itself shows the smaller list tile), so it matches the card exactly: fonts, photo,
+// grain, border. The wrapper, not the card inside it, is captured: the card sizes itself against it.
+async function renderCard(el: HTMLElement | null) {
   if (!el) throw new Error("no card");
+  // A photo card must finish loading its photo first, or it captures with a blank background.
+  await Promise.all([...el.querySelectorAll("img")].map((img) => img.decode().catch(() => {})));
   const { domToBlob } = await import("modern-screenshot");
   const blob = await domToBlob(el, { scale: 3, type: "image/png", fetch: { requestInit: { credentials: "same-origin" } } });
   if (!blob) throw new Error("no image");
@@ -31,20 +35,26 @@ const fileName = (reference: string) => `${reference.replace(/[^\p{L}\p{N} -]+/g
 export function CardShare({
   verseId,
   reference,
-  hasCard,
+  translation,
+  text,
+  card,
   initialPath,
   initialVisibility,
 }: {
   verseId: string;
   reference: string;
-  hasCard: boolean;
+  translation: string;
+  text: string;
+  card: CardStyle | null;
   initialPath: string | null;
   initialVisibility: "private" | "friends" | "everyone";
 }) {
+  const hasCard = card !== null;
+  const cardRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [path, setPath] = useState(initialPath);
   const [visibility, setVis] = useState(initialVisibility);
-  const [busy, setBusy] = useState<"image" | "link" | null>(null);
+  const [busy, setBusy] = useState<"image" | "story" | "link" | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -55,7 +65,7 @@ export function CardShare({
     setBusy("image");
     setError(null);
     try {
-      const blob = await renderCard(verseId);
+      const blob = await renderCard(cardRef.current);
       const file = new File([blob], fileName(reference), { type: "image/png" });
       if (mode === "share") {
         await navigator.share({ files: [file], title: reference }).catch((e: unknown) => {
@@ -69,6 +79,20 @@ export function CardShare({
       }
     } catch {
       setError("The image couldn't be made. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // A 9:16 image for Instagram or Facebook Stories: the card on navy, or the verse's words.
+  async function story() {
+    setBusy("story");
+    setError(null);
+    try {
+      const blob = hasCard ? await cardStory(await renderCard(cardRef.current)) : await verseStory({ reference, text });
+      await shareImage(blob, fileName(`${reference} story`));
+    } catch {
+      setError("The story couldn't be made. Try again.");
     } finally {
       setBusy(null);
     }
@@ -129,6 +153,11 @@ export function CardShare({
         {path && !open && <span className="size-1.5 rounded-full bg-primary" aria-label="Shared publicly" />}
       </button>
 
+      {open && card && (
+        <div ref={cardRef} aria-hidden inert className="pointer-events-none fixed top-0 -left-[200vw] w-[24rem]">
+          <MemoryCard style={card} reference={reference} translation={translation} text={text} />
+        </div>
+      )}
       {open && (
         <div id="card-share" className="animate-rise w-full rounded-2xl border bg-card p-1.5">
           {hasCard && (
@@ -174,6 +203,11 @@ export function CardShare({
             </div>
           )}
           {hasCard && <div className="mx-3 my-1 border-t" />}
+          <button type="button" disabled={busy !== null} onClick={() => void story()} className={row}>
+            {busy === "story" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <CircleFadingPlus className="size-4" aria-hidden />}
+            {shareFiles ? "Share to Stories" : "Save story image"}
+          </button>
+          {!hasCard && <div className="mx-3 my-1 border-t" />}
           {hasCard && (
             <>
               {shareFiles && (

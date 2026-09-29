@@ -119,7 +119,9 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             <CardShare
               verseId={verse.id}
               reference={localRef ?? verse.reference}
-              hasCard={Boolean(card)}
+              translation={verse.translation}
+              text={verse.text}
+              card={card}
               initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
               initialVisibility={verse.visibility}
             />

@@ -43,7 +43,15 @@ export const metadata: Metadata = {
   applicationName: "Kept",
   // Added to an iPhone's home screen, Kept opens in its own window like an app.
   appleWebApp: { capable: true, title: "Kept", statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  // The tab icon is listed here too: with `icons` set, app/icon.svg wasn't linked on its own. The
+  // PNG is for browsers that don't show SVG tab icons.
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
   formatDetection: { telephone: false },
 };
 
