@@ -4,10 +4,12 @@ import path from "node:path";
 import { del, get, put } from "@vercel/blob";
 
 // Where card photos' and uploaded avatars' bytes live, keyed like "<userId>/<imageId>.jpg" or
-// "avatars/<userId>/<file>". A private Vercel Blob store (every read goes through our routes,
-// which check who may see it) when CARD_STORAGE=blob and BLOB_READ_WRITE_TOKEN are set; otherwise
-// local disk under data/ (git-ignored), for a dev machine without a store.
-const useBlob = process.env.CARD_STORAGE === "blob" && Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+// "avatars/<userId>/<file>". Vercel Blob when BLOB_READ_WRITE_TOKEN is set; otherwise local disk
+// under data/ (git-ignored), for a dev machine without a store. The store is public (the owner's
+// choice, 2026-09-29), but Blob addresses never reach the browser: every read goes through our
+// routes, which check who may see it. A private store would only need BLOB_ACCESS=private.
+const useBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const access = process.env.BLOB_ACCESS === "private" ? "private" : "public";
 
 const ROOT = process.env.CARD_IMAGE_DIR ?? path.join(process.cwd(), "data", "card-images");
 
@@ -28,7 +30,7 @@ const contentType = (key: string) =>
 export async function putImage(key: string, bytes: Uint8Array) {
   if (useBlob) {
     await put(checkKey(key), Buffer.from(bytes), {
-      access: "private",
+      access,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: contentType(key),
@@ -43,7 +45,7 @@ export async function putImage(key: string, bytes: Uint8Array) {
 export async function getImage(key: string): Promise<Uint8Array | null> {
   try {
     if (useBlob) {
-      const found = await get(checkKey(key), { access: "private" });
+      const found = await get(checkKey(key), { access });
       if (!found || found.statusCode !== 200) return null;
       return new Uint8Array(await new Response(found.stream).arrayBuffer());
     }
