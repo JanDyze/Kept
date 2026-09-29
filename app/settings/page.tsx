@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { sql } from "drizzle-orm";
 import { ChartColumn, ChevronRight, LogOut, Palette, Sparkles } from "lucide-react";
+import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
 import { SupportKept } from "@/components/support-kept";
@@ -34,6 +35,7 @@ export default async function SettingsPage() {
 
   return (
     <Screen back={{ href: "/me", label: "You" }} title="Settings">
+      {user.guest && <GuestSave next="/settings" className="mb-6" />}
       <section aria-labelledby="appearance">
         <h2 id="appearance" className="mb-2 text-sm font-medium text-muted-foreground">
           Appearance
@@ -58,7 +60,7 @@ export default async function SettingsPage() {
       </nav>
 
       <section className="mt-6 divide-y rounded-2xl border bg-card">
-        <Row label="Signed in as" value={user.email ?? "—"} />
+        <Row label="Signed in as" value={user.guest ? "Guest" : (user.email ?? "—")} />
         <Row label="Time zone" value={tz} />
         <Row
           label="Bible text"
@@ -68,8 +70,11 @@ export default async function SettingsPage() {
 
       <form action={signOut} className="mt-6">
         <SubmitButton variant="outline" className="h-11 w-full gap-2 text-base">
-          <LogOut className="size-4" aria-hidden /> Sign out
+          <LogOut className="size-4" aria-hidden /> {user.guest ? "Leave guest mode" : "Sign out"}
         </SubmitButton>
+        {user.guest && (
+          <p className="mt-2 text-center text-xs text-muted-foreground">Leaving without saving loses your verses and games.</p>
+        )}
       </form>
 
       <SupportKept version={APP_VERSION} supportUrl={process.env.SUPPORT_URL?.trim() || null} />

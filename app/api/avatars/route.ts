@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { getUser } from "@/lib/auth";
+import { getUser, GUEST_NOT_ALLOWED } from "@/lib/auth";
 import { sniffImage } from "@/lib/cards/images";
 import { putImage } from "@/lib/cards/storage";
 import { removeUploadedAvatar } from "@/lib/social/avatars";
@@ -12,6 +12,7 @@ const MAX_BYTES = 2 * 1024 * 1024;
 export async function POST(request: Request) {
   const user = await getUser();
   if (!user) return Response.json({ error: "Sign in again." }, { status: 401 });
+  if (user.guest) return Response.json({ error: GUEST_NOT_ALLOWED }, { status: 403 });
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof Blob)) return Response.json({ error: "Choose a photo." }, { status: 400 });

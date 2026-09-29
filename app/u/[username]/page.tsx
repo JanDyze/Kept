@@ -44,6 +44,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps<"/
       tab={self ? tab : "shared"}
       progress={progress}
       requests={requests}
+      guest={self && user.guest}
     />
   );
 }

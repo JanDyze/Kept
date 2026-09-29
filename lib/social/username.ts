@@ -11,6 +11,18 @@ const RESERVED = new Set([
   "me", "new", "root", "s", "search", "settings", "signup", "support", "system", "u", "verses",
 ]);
 
+// Guests are "guest." plus six random characters until they save their account with Google.
+const GUEST = /^guest\.[a-z0-9]{6}$/;
+
+export function isGuestUsername(username: string) {
+  return GUEST.test(username);
+}
+
+export function guestUsername() {
+  const chars = "abcdefghijkmnpqrstuvwxyz23456789";
+  return `guest.${Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")}`;
+}
+
 export function normalizeUsername(input: string) {
   return input.trim().replace(/^@+/, "").toLowerCase();
 }
@@ -20,7 +32,7 @@ export function usernameProblem(username: string): string | null {
   if (username.length < USERNAME_MIN) return `Use at least ${USERNAME_MIN} characters.`;
   if (username.length > USERNAME_MAX) return `Use at most ${USERNAME_MAX} characters.`;
   if (!FORMAT.test(username)) return "Use letters, numbers, _ and . only, starting with a letter or number.";
-  if (RESERVED.has(username)) return "That name is taken.";
+  if (RESERVED.has(username) || isGuestUsername(username)) return "That name is taken.";
   return null;
 }
 

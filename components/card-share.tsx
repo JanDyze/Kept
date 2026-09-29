@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { Check, Copy, Download, Globe, Link2, Loader2, Lock, Share, Share2, Users } from "lucide-react";
+import { askGuestToSave } from "@/components/guest-prompt";
 import { setVisibility } from "@/app/cards/actions";
 import { shareCard, unshareCard } from "@/app/verses/[id]/share-actions";
 import { cn } from "@/lib/utils";
@@ -79,8 +80,9 @@ export function CardShare({
     startTransition(async () => {
       const result = await shareCard(verseId);
       setBusy(null);
-      if ("error" in result) setError(result.error);
-      else setPath(result.path);
+      if ("error" in result) {
+        if (!askGuestToSave(result.error)) setError(result.error);
+      } else setPath(result.path);
     });
   }
 
@@ -155,7 +157,7 @@ export function CardShare({
                         const result = await setVisibility(verseId, value);
                         if (result.error) {
                           setVis(was);
-                          setError(result.error);
+                          if (!askGuestToSave(result.error)) setError(result.error);
                         }
                       });
                     }}

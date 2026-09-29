@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Avatar } from "@/components/avatar";
 import { AddFriendForm, FriendButton, ShareProfile } from "@/components/friends";
+import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
 import { listFriends } from "@/lib/social/friends";
@@ -12,6 +13,14 @@ export const metadata: Metadata = { title: "Friends" };
 // Your username to share, a box to add someone by theirs, requests waiting on you, and your friends.
 export default async function FriendsPage() {
   const user = await requireUser();
+  if (user.guest) {
+    const me = await getOrCreateProfile(user);
+    return (
+      <Screen back={{ href: `/u/${me.username}`, label: "You" }} title="Friends">
+        <GuestSave title="Friends need an account" detail="Save with Google to add friends, see their cards and share yours. Your verses and games come with you." next="/friends" />
+      </Screen>
+    );
+  }
   const [me, lists] = await Promise.all([getOrCreateProfile(user), listFriends(user.id)]);
 
   return (

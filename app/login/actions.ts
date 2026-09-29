@@ -34,6 +34,31 @@ export async function signInWithGoogle(formData: FormData) {
   redirect(data.url);
 }
 
+// Continue as guest: an anonymous Supabase account, so every page works as usual with a few
+// things held back (see GUEST_NOT_ALLOWED in lib/auth.ts). Needs anonymous sign-ins turned on in
+// Supabase (Authentication → Sign In / Providers).
+export async function continueAsGuest(formData: FormData) {
+  const next = safeNext(formData.get("next"));
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInAnonymously();
+  if (error) redirect("/login?link=guest");
+  redirect(next);
+}
+
+// A guest keeping their account: Google is linked to the same user, so their verses, cards and
+// games stay. Needs manual linking turned on in Supabase. Comes back through /auth/confirm.
+export async function saveWithGoogle(formData: FormData) {
+  const next = safeNext(formData.get("next"));
+  const origin = await siteOrigin();
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "google",
+    options: { redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}` },
+  });
+  if (error || !data.url) redirect(`${next}${next.includes("?") ? "&" : "?"}saved=failed`);
+  redirect(data.url);
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

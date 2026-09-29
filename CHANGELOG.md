@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.16.0 — Try Kept as a guest
+
+- New here? Continue as guest from the sign-in page to try Kept without an account: keep up to 10 verses, make cards and play the daily games.
+- Save with Google any time (on Home, your profile or Settings) and everything you did as a guest stays with you.
+- Friends, likes, sharing cards and profile photos need a saved account; trying them as a guest offers to save.
+
 ## 0.15.0 — Games, rules and badges
 
 - The Games page is new: a big card for each game with its name, what it's about, and where today's game stands. Games to play come first with a Play or Continue button, then the ones you've done with your result.

@@ -3,6 +3,7 @@ import { ChevronRight, Flame } from "lucide-react";
 import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
 import { Avatar } from "@/components/avatar";
 import { AppBadge, CountBadge } from "@/components/count-badge";
+import { GuestSave } from "@/components/guest-save";
 import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
@@ -26,7 +27,15 @@ function greeting(tz: string) {
   return "Good evening";
 }
 
-export default async function HomePage() {
+// Coming back from Save with Google without it working (see /auth/confirm).
+const SAVE_MESSAGES = {
+  taken: "That Google account already has Kept. You're still a guest here; sign out of guest to use that account instead.",
+  cancelled: "Saving with Google was cancelled. You're still a guest.",
+  failed: "Saving with Google isn't available right now. Try again in a moment.",
+};
+
+export default async function HomePage({ searchParams }: PageProps<"/">) {
+  const { saved } = await searchParams;
   const user = await requireUser();
   const tz = await getTimeZone();
   const day = localDate(tz);
@@ -46,7 +55,7 @@ export default async function HomePage() {
 
   const left = games.length - done;
   const tl = todays?.translation === "MBBTAG" ? bookByName(todays.book)?.tl : undefined;
-  const firstName = (me.displayName ?? "").split(/\s+/)[0] || `@${me.username}`;
+  const firstName = user.guest ? "Guest" : (me.displayName ?? "").split(/\s+/)[0] || `@${me.username}`;
 
   // The top card is you: greeting, streak and today's games; it opens your profile (or Add verse
   // when there's nothing to play yet).
@@ -144,6 +153,13 @@ export default async function HomePage() {
             </div>
           )}
         </Link>
+
+        {typeof saved === "string" && saved in SAVE_MESSAGES && (
+          <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {SAVE_MESSAGES[saved as keyof typeof SAVE_MESSAGES]}
+          </p>
+        )}
+        {user.guest && <GuestSave compact className="animate-rise" />}
 
         <nav className="grid grid-cols-2 gap-3" aria-label="Sections">
           {cards.map(({ href, title, detail, Icon, badge = 0 }, i) => (

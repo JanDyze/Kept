@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { likeCard, likeVerse } from "@/app/cards/actions";
+import { askGuestToSave } from "@/components/guest-prompt";
 import { cn } from "@/lib/utils";
 
 type Target = { card: string } | { verse: { bookNumber: number; chapter: number; verseStart: number } };
@@ -30,7 +31,11 @@ export function LikeButton({
     const next = !state.liked;
     setState({ liked: next, likes: Math.max(0, state.likes + (next ? 1 : -1)) });
     ("card" in target ? likeCard(target.card, next) : likeVerse(target.verse, next))
-      .then((r) => r.error && setState(was))
+      .then((r) => {
+        if (!r.error) return;
+        setState(was);
+        askGuestToSave(r.error);
+      })
       .catch(() => setState(was));
   };
 

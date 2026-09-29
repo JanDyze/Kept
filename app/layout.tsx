@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeScript } from "goodthemes/script";
+import { GuestPromptHost } from "@/components/guest-prompt";
 import { ActivityPing } from "@/components/activity-ping";
 import { AppFeel } from "@/components/app-feel";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AppFeel />
           <ServiceWorker />
           <InstallBanner />
+          <GuestPromptHost />
           <Suspense fallback={null}>
             <NavigationOverlayWithVerses />
           </Suspense>

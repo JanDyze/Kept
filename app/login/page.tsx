@@ -9,16 +9,34 @@ const LINK_MESSAGES = {
   expired: "That sign-in link has expired or was already used. Try again.",
   google: "Google sign-in isn't available right now. Try again in a moment.",
   cancelled: "Google sign-in was cancelled.",
+  guest: "Guest mode isn't available right now. Continue with Google instead.",
 };
 
 export const metadata: Metadata = { title: "Sign in" };
+
+// Continue as guest shows only while anonymous sign-ins are on in Supabase (checked every 5 min).
+async function guestsAllowed() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY! },
+      next: { revalidate: 300 },
+    });
+    const settings = (await res.json()) as { external?: { anonymous_users?: boolean } };
+    return settings.external?.anonymous_users === true;
+  } catch {
+    return false;
+  }
+}
 
 // One way in: Continue with Google, which also makes the account the first time.
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next, link } = await searchParams;
   // Arriving from someone's profile link (/u/name): show whose, so the link feels like theirs.
   const inviter = typeof next === "string" ? /^\/u\/([^/?#]+)/.exec(next)?.[1] : undefined;
-  const person = inviter ? await getProfileByUsername(decodeURIComponent(inviter)).catch(() => null) : null;
+  const [person, guests] = await Promise.all([
+    inviter ? getProfileByUsername(decodeURIComponent(inviter)).catch(() => null) : null,
+    guestsAllowed(),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-12">
@@ -47,7 +65,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           {LINK_MESSAGES[link as keyof typeof LINK_MESSAGES]}
         </p>
       )}
-      <LoginForm next={typeof next === "string" ? next : undefined} />
+      <LoginForm next={typeof next === "string" ? next : undefined} guests={guests} />
     </main>
   );
 }

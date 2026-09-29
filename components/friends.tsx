@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { Check, Copy, Loader2, Share2, UserPlus, X } from "lucide-react";
+import { askGuestToSave } from "@/components/guest-prompt";
 import { acceptFriendRequest, addFriend, removeFriendship, saveProfile, type ProfileFormState } from "@/app/friends/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,11 @@ export function FriendButton({
       const was = relation;
       setRelation(next);
       try {
-        await work();
+        const result = (await work()) as { error?: string } | undefined;
+        if (result?.error) {
+          setRelation(was);
+          askGuestToSave(result.error);
+        }
       } catch {
         setRelation(was);
       }
@@ -95,7 +100,7 @@ export function AddFriendForm() {
         setMessage(null);
         start(async () => {
           const result = await addFriend(username);
-          if (result.error) setMessage({ ok: false, text: result.error });
+          if (result.error && !askGuestToSave(result.error)) setMessage({ ok: false, text: result.error });
           else {
             setMessage({ ok: true, text: result.relation === "friends" ? `You and @${username} are friends.` : `Asked @${username}.` });
             setValue("");

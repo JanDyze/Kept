@@ -4,6 +4,7 @@ import { Avatar } from "@/components/avatar";
 import { CardGallery } from "@/components/card-gallery";
 import { CountBadge } from "@/components/count-badge";
 import { FriendButton, ShareProfile } from "@/components/friends";
+import { GuestSave } from "@/components/guest-save";
 import { ProgressDetails } from "@/components/progress-details";
 import { Screen } from "@/components/screen";
 import type { Relation } from "@/lib/social/friends";
@@ -23,6 +24,7 @@ export function ProfileView({
   tab = "shared",
   progress,
   requests = 0,
+  guest = false,
 }: {
   person: Profile;
   relation: Relation;
@@ -31,6 +33,7 @@ export function ProfileView({
   tab?: "progress" | "shared"; // your own profile opens on Progress
   progress?: { s: Awaited<ReturnType<typeof progressStats>>; day: string }; // yours only
   requests?: number; // friend requests waiting on you (yours only)
+  guest?: boolean; // your own page while you're a guest: no name to show or profile to share yet
 }) {
   const self = relation === "self";
   const numbers = [
@@ -71,11 +74,13 @@ export function ProfileView({
           className="size-20 text-3xl"
         />
         <h1 className="mt-3 font-brand text-2xl font-semibold tracking-tight">
-          {person.displayName ?? `@${person.username}`}
+          {guest ? "Guest" : (person.displayName ?? `@${person.username}`)}
         </h1>
-        {person.displayName && <p className="text-muted-foreground">@{person.username}</p>}
+        {person.displayName && !guest && <p className="text-muted-foreground">@{person.username}</p>}
         <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {self ? (
+          {guest ? (
+            <GuestSave next="/me" className="w-full text-left" />
+          ) : self ? (
             <>
               <Link
                 href="/profile/edit"

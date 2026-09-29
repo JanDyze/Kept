@@ -2,9 +2,23 @@
 
 import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
-import { signInWithGoogle } from "./actions";
+import { continueAsGuest, signInWithGoogle } from "./actions";
 
 // Google's own "G" mark, as its sign-in guidelines ask for on a neutral button.
+function GuestButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex h-12 w-full items-center justify-center gap-2 rounded-xl text-base font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-70"
+    >
+      {pending && <Loader2 className="size-5 animate-spin" aria-hidden />}
+      Continue as guest
+    </button>
+  );
+}
+
 function GoogleButton() {
   const { pending } = useFormStatus();
   return (
@@ -29,12 +43,25 @@ function GoogleButton() {
 }
 
 // Signing in and signing up are the same: Continue with Google (a new Google user gets an account
-// on the way). Email and password sign-in is off.
-export function LoginForm({ next }: { next?: string }) {
+// on the way). Email and password sign-in is off. Or try Kept as a guest and save it with Google later.
+export function LoginForm({ next, guests }: { next?: string; guests: boolean }) {
   return (
-    <form action={signInWithGoogle}>
-      <input type="hidden" name="next" value={next ?? ""} />
-      <GoogleButton />
-    </form>
+    <div className="flex flex-col gap-2">
+      <form action={signInWithGoogle}>
+        <input type="hidden" name="next" value={next ?? ""} />
+        <GoogleButton />
+      </form>
+      {guests && (
+        <>
+          <form action={continueAsGuest}>
+            <input type="hidden" name="next" value={next ?? ""} />
+            <GuestButton />
+          </form>
+          <p className="px-4 text-center text-xs text-muted-foreground">
+            As a guest you can keep a few verses and play. Save with Google any time to keep them and add friends.
+          </p>
+        </>
+      )}
+    </div>
   );
 }

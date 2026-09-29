@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth";
+import { GUEST_NOT_ALLOWED, requireUser } from "@/lib/auth";
 import { acceptFriend, removeFriend, requestFriend, type Relation } from "@/lib/social/friends";
 import { removeUploadedAvatar } from "@/lib/social/avatars";
 import { setAvatar, updateProfile } from "@/lib/social/profiles";
@@ -18,6 +18,7 @@ function refresh() {
 
 export async function addFriend(username: string): Promise<{ error?: string; relation?: Relation }> {
   const user = await requireUser();
+  if (user.guest) return { error: GUEST_NOT_ALLOWED };
   const result = await requestFriend(user.id, username);
   refresh();
   return result;
@@ -25,7 +26,7 @@ export async function addFriend(username: string): Promise<{ error?: string; rel
 
 export async function acceptFriendRequest(otherId: string) {
   const user = await requireUser();
-  if (!id.safeParse(otherId).success) return;
+  if (user.guest || !id.safeParse(otherId).success) return;
   await acceptFriend(user.id, otherId);
   refresh();
 }
@@ -42,6 +43,7 @@ export type ProfileFormState = { error?: string; saved?: boolean; username?: str
 
 export async function saveProfile(_prev: ProfileFormState, formData: FormData): Promise<ProfileFormState> {
   const user = await requireUser();
+  if (user.guest) return { error: GUEST_NOT_ALLOWED };
   const username = String(formData.get("username") ?? "");
   const displayName = String(formData.get("displayName") ?? "");
   const result = await updateProfile(user.id, { username, displayName });

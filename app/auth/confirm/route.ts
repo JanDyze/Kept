@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
   const next = asked && asked !== "/" ? asked : (remembered ?? "/");
   // Google (or another provider) came back without signing in, e.g. the user tapped Cancel.
   const origin = await siteOrigin();
-  if (url.searchParams.has("error")) return NextResponse.redirect(new URL("/login?link=cancelled", origin));
+  // A guest saving their account with a Google account that already has Kept stays a guest.
+  if (url.searchParams.get("error_code") === "identity_already_exists") return NextResponse.redirect(new URL("/?saved=taken", origin));
+  if (url.searchParams.has("error")) {
+    const signedIn = Boolean((await (await createClient()).auth.getClaims()).data?.claims?.sub);
+    return NextResponse.redirect(new URL(signedIn ? "/?saved=cancelled" : "/login?link=cancelled", origin));
+  }
 
   const supabase = await createClient();
 

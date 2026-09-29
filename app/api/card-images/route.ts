@@ -1,4 +1,4 @@
-import { getUser } from "@/lib/auth";
+import { getUser, GUEST_NOT_ALLOWED } from "@/lib/auth";
 import { MAX_IMAGE_BYTES, saveCardImage } from "@/lib/cards/images";
 import { cardImageUrl } from "@/lib/cards/style";
 
@@ -7,6 +7,7 @@ import { cardImageUrl } from "@/lib/cards/style";
 export async function POST(request: Request) {
   const user = await getUser();
   if (!user) return Response.json({ error: "Sign in again." }, { status: 401 });
+  if (user.guest) return Response.json({ error: GUEST_NOT_ALLOWED }, { status: 403 });
 
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_IMAGE_BYTES + 64 * 1024) return Response.json({ error: "That photo is too large." }, { status: 413 });

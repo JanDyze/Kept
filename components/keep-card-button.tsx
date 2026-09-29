@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { BookmarkPlus, Check, Loader2 } from "lucide-react";
+import { askGuestToSave } from "@/components/guest-prompt";
 import { keepSharedCard } from "@/app/cards/actions";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +33,9 @@ export function KeepCardButton({ verseId }: { verseId: string }) {
           start(async () => {
             setError(null);
             const result = await keepSharedCard(verseId);
-            if ("error" in result) setError(result.error);
+            if ("error" in result) {
+              if (!askGuestToSave(result.error)) setError(result.error);
+            }
             else setKept(result.id);
           })
         }

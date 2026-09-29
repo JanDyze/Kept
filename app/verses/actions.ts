@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth";
+import { GUEST_VERSE_LIMIT, requireUser, type SessionUser } from "@/lib/auth";
 import { formatReference, parseReference } from "@/lib/bible/books";
 import { getPassage } from "@/lib/bible/lookup";
 import { isLookupTranslation } from "@/lib/bible/translations";
@@ -20,6 +20,15 @@ export type VerseFormState = {
 };
 
 const idSchema = z.uuid();
+
+const GUEST_FULL = `Guests can keep ${GUEST_VERSE_LIMIT} verses. Save with Google to keep more.`;
+
+// Guests keep a few verses (archived ones count too, so archiving isn't a way round it).
+async function guestIsFull(user: SessionUser) {
+  if (!user.guest) return false;
+  const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(verses).where(eq(verses.userId, user.id));
+  return (row?.n ?? 0) >= GUEST_VERSE_LIMIT;
+}
 
 export async function saveVerse(_prev: VerseFormState, formData: FormData): Promise<VerseFormState> {
   const user = await requireUser();
@@ -53,6 +62,7 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
     if (updated.length === 0) return { errors: { form: "This verse can't be found." } };
     id = updated[0].id;
   } else {
+    if (await guestIsFull(user)) return { errors: { form: GUEST_FULL } };
     const [created] = await db
       .insert(verses)
       .values({ ...verse, card, userId: user.id })
@@ -137,6 +147,7 @@ export type KeepResult = { ok: true; id: string; reference: string } | { ok: fal
 export async function keepVerse(reference: string, translation: string): Promise<KeepResult> {
   const user = await requireUser();
   if (!isLookupTranslation(translation)) return { ok: false, error: "That translation can't be kept in one tap." };
+  if (await guestIsFull(user)) return { ok: false, error: GUEST_FULL };
 
   const result = await resolveVerse({ reference, translation, text: "", notes: "", tags: "" });
   if (!result.ok) return { ok: false, error: Object.values(result.errors)[0] ?? "That verse can't be kept." };

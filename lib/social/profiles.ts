@@ -4,7 +4,7 @@ import type { SessionUser } from "@/lib/auth";
 import { APP_VERSION } from "@/lib/changelog";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
-import { normalizeUsername, suggestUsername, usernameProblem } from "./username";
+import { guestUsername, isGuestUsername, normalizeUsername, suggestUsername, usernameProblem } from "./username";
 
 export type Profile = { userId: string; username: string; displayName: string | null; avatarUrl: string | null };
 
@@ -25,6 +25,8 @@ export async function getOrCreateProfile(user: SessionUser): Promise<Profile> {
     .limit(1);
   if (existing) {
     const { avatarRemoved, ...profile } = existing;
+    // A guest who just saved their account with Google: their name, picture and a real username.
+    if (!user.guest && isGuestUsername(profile.username)) return claimGoogleName(user, profile);
     // A Google picture fills an empty avatar, unless they took theirs off on purpose.
     if (!profile.avatarUrl && !avatarRemoved && user.avatarUrl) {
       await db.update(profiles).set({ avatarUrl: user.avatarUrl }).where(eq(profiles.userId, user.id));
@@ -36,7 +38,7 @@ export async function getOrCreateProfile(user: SessionUser): Promise<Profile> {
   const base = suggestUsername(user.name, user.email);
   const displayName = user.name;
   for (let n = 1; n < 50; n++) {
-    const username = n === 1 ? base : `${base.slice(0, 20 - String(n).length)}${n}`;
+    const username = user.guest ? guestUsername() : n === 1 ? base : `${base.slice(0, 20 - String(n).length)}${n}`;
     const [made] = await db
       .insert(profiles)
       // A new account has nothing to catch up on: What's new starts from the next release.
@@ -49,6 +51,24 @@ export async function getOrCreateProfile(user: SessionUser): Promise<Profile> {
     if (mine) return mine;
   }
   throw new Error("Couldn't make a username");
+}
+
+async function claimGoogleName(user: SessionUser, profile: Profile): Promise<Profile> {
+  const base = suggestUsername(user.name, user.email);
+  const avatarUrl = profile.avatarUrl ?? user.avatarUrl;
+  const displayName = profile.displayName ?? user.name;
+  for (let n = 1; n < 50; n++) {
+    const username = n === 1 ? base : `${base.slice(0, 20 - String(n).length)}${n}`;
+    const [taken] = await db.select({ id: profiles.userId }).from(profiles).where(eq(profiles.username, username)).limit(1);
+    if (taken) continue;
+    try {
+      await db.update(profiles).set({ username, displayName, avatarUrl }).where(eq(profiles.userId, user.id));
+      return { ...profile, username, displayName, avatarUrl };
+    } catch {
+      // Someone took the name in between: try the next one.
+    }
+  }
+  return profile;
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
