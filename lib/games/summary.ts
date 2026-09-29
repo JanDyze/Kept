@@ -1,6 +1,7 @@
 import type { DailyGame } from "@/lib/db/schema";
 import { MISSING_WORD_GUESSES } from "./missing-word";
 import { REFERENCE_GUESSES } from "./reference-wordle";
+import { grade, RECITE_TRIES, type RecitePuzzle } from "./recite";
 import { SPOT_LIVES } from "./spot-change";
 import type { TwoTonguesPuzzle } from "./two-tongues";
 
@@ -29,6 +30,15 @@ export function gameScore(game: Finished): GameScore | null {
   if (game.game === "missing_word" || game.game === "reference_wordle") {
     const max = game.game === "missing_word" ? MISSING_WORD_GUESSES : REFERENCE_GUESSES;
     return { kind: "tries", used: (state.guesses as unknown[] | undefined)?.length ?? 0, max, won };
+  }
+
+  // Type it out and Say it: right on the first check (every word) is Perfect; otherwise the checks it took.
+  if (game.game === "type_it" || game.game === "say_it") {
+    const attempts = (state.attempts as string[] | undefined) ?? [];
+    const first = attempts[0];
+    if (won && attempts.length === 1 && grade((game.puzzle as RecitePuzzle).tokens, first, game.game === "say_it").errors === 0)
+      return { kind: "perfect" };
+    return { kind: "tries", used: attempts.length, max: RECITE_TRIES, won };
   }
 
   if (game.game === "two_tongues") {
@@ -77,6 +87,7 @@ export function hasStarted(game: Pick<DailyGame, "state">) {
       nonEmpty(s.found) ||
       nonEmpty(s.matched) ||
       nonEmpty(s.answers) ||
+      nonEmpty(s.attempts) ||
       (typeof s.filled === "number" && s.filled > 0) ||
       (typeof s.typed === "number" && s.typed > 0) ||
       mistakesOf(s) > 0,

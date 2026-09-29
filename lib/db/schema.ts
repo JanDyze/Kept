@@ -28,6 +28,8 @@ export const gameKind = pgEnum("game_kind", [
   "spot_change",
   "match_up",
   "two_tongues",
+  "type_it",
+  "say_it",
 ]);
 export const gameStatus = pgEnum("game_status", ["in_progress", "won", "lost"]);
 // Who can see a verse's card besides its owner. A public link (share_token) is separate.

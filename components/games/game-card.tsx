@@ -13,6 +13,8 @@ const UNAVAILABLE: Partial<Record<GameId, string>> = {
   two_tongues: "Needs ESV or MBBTAG",
   unscramble: "Needs a longer verse",
   first_letters: "Needs a longer verse",
+  type_it: "Needs a verse under 80 words",
+  say_it: "Needs a verse under 80 words",
   missing_word: "Needs a longer word",
   spot_change: "Needs a longer verse",
 };

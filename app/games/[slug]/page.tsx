@@ -7,6 +7,7 @@ import { MatchUpGame } from "@/components/games/match-up";
 import { HowToPlay } from "@/components/games/how-to-play";
 import { MissingWordGame } from "@/components/games/missing-word";
 import { ReferenceWordleGame } from "@/components/games/reference-wordle";
+import { SayItGame, TypeItGame } from "@/components/games/recite";
 import { Replayable } from "@/components/games/replay";
 import { SpotChangeGame } from "@/components/games/spot-change";
 import { TwoTonguesGame } from "@/components/games/two-tongues";
@@ -23,6 +24,7 @@ import { getOrCreateDay } from "@/lib/games/daily";
 import type { FirstLettersPuzzle, FirstLettersState } from "@/lib/games/first-letters";
 import type { MatchUpPuzzle, MatchUpState } from "@/lib/games/match-up";
 import type { MissingWordPuzzle, MissingWordState } from "@/lib/games/missing-word";
+import type { RecitePuzzle, ReciteState } from "@/lib/games/recite";
 import type { ReferenceWordlePuzzle, ReferenceWordleState } from "@/lib/games/reference-wordle";
 import { gameById, gameBySlug } from "@/lib/games/registry";
 import { starredFirst, starredGames } from "@/lib/games/stars";
@@ -108,6 +110,10 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
         return <MatchUpGame {...common} puzzle={puzzle as MatchUpPuzzle} initialState={state as MatchUpState} />;
       case "two_tongues":
         return <TwoTonguesGame {...common} puzzle={puzzle as TwoTonguesPuzzle} initialState={state as TwoTonguesState} />;
+      case "type_it":
+        return <TypeItGame {...common} puzzle={puzzle as RecitePuzzle} initialState={state as ReciteState} />;
+      case "say_it":
+        return <SayItGame {...common} puzzle={puzzle as RecitePuzzle} initialState={state as ReciteState} />;
     }
   };
 

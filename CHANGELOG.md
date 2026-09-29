@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.20.0 — Type it out and Say it
+
+- Two new games. Type it out: type the whole verse from memory. Say it: recite it out loud.
+- Check as you go: the words you got right show, the rest stay blank for your next try. You have three tries.
+- Both count as a review, like Fill the Blanks and First Letters.
+
 ## 0.19.1 — Plainer words on Support Kept
 
 - Support Kept now simply says what tips pay for: the servers and new features.

@@ -5,6 +5,7 @@ import type { FirstLettersPuzzle, FirstLettersState } from "@/lib/games/first-le
 import { matchUpOutcome, type MatchUpPuzzle, type MatchUpState } from "@/lib/games/match-up";
 import { missingWordOutcome, type MissingWordPuzzle, type MissingWordState } from "@/lib/games/missing-word";
 import { referenceOutcome, type ReferenceWordlePuzzle, type ReferenceWordleState } from "@/lib/games/reference-wordle";
+import { reciteOutcome, type RecitePuzzle, type ReciteState } from "@/lib/games/recite";
 import type { GameId } from "@/lib/games/registry";
 import { spotOutcome, type SpotChangePuzzle, type SpotChangeState } from "@/lib/games/spot-change";
 import { twoTonguesOutcome, type TwoTonguesPuzzle, type TwoTonguesState } from "@/lib/games/two-tongues";
@@ -27,6 +28,9 @@ export function gameOutcome(game: GameId, puzzle: unknown, state: unknown): Outc
       return done(matchUpOutcome(puzzle as MatchUpPuzzle, state as MatchUpState));
     case "two_tongues":
       return done(twoTonguesOutcome(puzzle as TwoTonguesPuzzle, state as TwoTonguesState));
+    case "type_it":
+    case "say_it":
+      return done(reciteOutcome(game, puzzle as RecitePuzzle, state as ReciteState));
     case "fill_blanks": {
       const s = state as FillBlanksState;
       return ended(s.gaveUp, s.filled >= blankOrder(puzzle as FillBlanksPuzzle).length);

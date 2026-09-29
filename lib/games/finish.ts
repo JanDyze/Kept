@@ -6,6 +6,7 @@ import { dailyGames, reviews, verses, type DailyGame } from "@/lib/db/schema";
 import { blankOrder, type FillBlanksPuzzle, type FillBlanksState } from "@/lib/games/fill-blanks";
 import type { FirstLettersPuzzle } from "@/lib/games/first-letters";
 import { gameOutcome } from "@/lib/games/outcome";
+import type { RecitePuzzle, ReciteState } from "@/lib/games/recite";
 import type { UnscramblePuzzle } from "@/lib/games/unscramble";
 import { ratingFromMistakes, schedule, type ReviewRating } from "@/lib/srs";
 
@@ -22,6 +23,8 @@ const STATE_SCHEMAS = {
   spot_change: z.object({ found: z.array(count).max(10), misses: count, gaveUp: z.boolean().optional() }),
   match_up: z.object({ matched: z.array(count).max(10), mistakes: count, gaveUp: z.boolean().optional() }),
   two_tongues: z.object({ answers: z.array(count).max(10), gaveUp: z.boolean().optional() }),
+  type_it: z.object({ attempts: z.array(z.string().max(4000)).max(3), gaveUp: z.boolean().optional() }),
+  say_it: z.object({ attempts: z.array(z.string().max(4000)).max(3), gaveUp: z.boolean().optional() }),
 } satisfies Record<DailyGame["game"], z.ZodType>;
 
 async function loadGame(userId: string, id: string) {
@@ -73,12 +76,25 @@ function judge(game: DailyGame, state: unknown): Finish | null {
       const { mistakes } = state as { mistakes: number };
       return { status, ratings: [{ verseId: puzzle.verseId, rating: ratingFromMistakes(mistakes, gaveUp) }] };
     }
+    case "type_it":
+    case "say_it": {
+      // Each extra check counts like a mistake; not getting there at all is "again".
+      const puzzle = game.puzzle as RecitePuzzle;
+      const tries = (state as ReciteState).attempts.length;
+      return { status, ratings: [{ verseId: puzzle.verseId, rating: ratingFromMistakes(Math.max(0, tries - 1), status === "lost") }] };
+    }
     default:
       return { status, ratings: [] };
   }
 }
 
-const MODE = { fill_blanks: "fill_blank", unscramble: "unscramble", first_letters: "first_letter" } as const;
+const MODE = {
+  fill_blanks: "fill_blank",
+  unscramble: "unscramble",
+  first_letters: "first_letter",
+  type_it: "recite",
+  say_it: "recite",
+} as const;
 
 // Ends a game once. Recall games also rate each verse and move its review schedule.
 export async function completeGame(userId: string, id: string, state: unknown) {

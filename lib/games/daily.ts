@@ -12,6 +12,7 @@ import { buildFillBlanks } from "./fill-blanks";
 import { buildFirstLetters } from "./first-letters";
 import { buildMatchUp } from "./match-up";
 import { buildMissingWord } from "./missing-word";
+import { buildRecite } from "./recite";
 import { weakness, weightedOrder } from "@/lib/verses/mastery";
 import { seededRandom } from "./random";
 import type { ReferenceWordlePuzzle } from "./reference-wordle";
@@ -45,7 +46,6 @@ export async function getOrCreateDay(userId: string, day: string) {
   const existing = await getDay(userId, day);
   if (existing.length === GAMES.length) return existing;
   if (existing.length > 0 && toppedUp.has(`${userId}|${day}`)) return existing;
-  toppedUp.add(`${userId}|${day}`);
 
   const pool = await db
     .select()
@@ -57,6 +57,8 @@ export async function getOrCreateDay(userId: string, day: string) {
   const rows = (await buildDay(userId, day, pool)).filter((r) => !have.has(r.game));
   // One statement, so a day is created whole; a second device racing us just loses.
   if (rows.length > 0) await db.insert(dailyGames).values(rows).onConflictDoNothing();
+  // Only once that worked, so a failed insert is tried again on the next visit.
+  toppedUp.add(`${userId}|${day}`);
   return getDay(userId, day);
 }
 
@@ -169,6 +171,17 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
     if (puzzle) {
       add("first_letters", [v], puzzle);
       break;
+    }
+  }
+
+  // Type it out and Say it (recall): whole verses from memory, the most-needed ones not too long.
+  for (const game of ["type_it", "say_it"] as const) {
+    for (const v of fresh(byNeed)) {
+      const puzzle = buildRecite(asInput(v));
+      if (puzzle) {
+        add(game, [v], puzzle);
+        break;
+      }
     }
   }
 

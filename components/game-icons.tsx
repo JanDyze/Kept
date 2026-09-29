@@ -245,7 +245,74 @@ function TwoTonguesIcon({ className }: IconProps) {
   );
 }
 
+function TypeItIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
+      {/* the verse being typed, with its caret */}
+      <rect x="2" y="3" width="40" height="16" rx="6" className={ink} />
+      <g className={mark}>
+        <rect x="8" y="9" width="12" height="4" rx="2" />
+        <rect x="23" y="9" width="8" height="4" rx="2" />
+      </g>
+      <rect
+        x="45.5"
+        y="1"
+        width="4.5"
+        height="20"
+        rx="2.25"
+        className={`${part} ${accent} motion-safe:group-engaged:translate-x-1 motion-safe:group-engaged:scale-y-110`}
+      />
+      {/* the keyboard */}
+      <rect x="2" y="24" width="52" height="29" rx="8" className={ink} />
+      <g className={mark}>
+        {[8, 17, 26, 35, 44].map((x) => (
+          <rect key={x} x={x} y="29.5" width="4" height="4" rx="1.5" />
+        ))}
+        {[12.5, 21.5, 30.5, 39.5].map((x) => (
+          <rect key={x} x={x} y="37" width="4" height="4" rx="1.5" />
+        ))}
+      </g>
+      <rect
+        x="15"
+        y="44.5"
+        width="26"
+        height="4"
+        rx="2"
+        className={`${part} ${accent} motion-safe:group-engaged:translate-y-0.5`}
+      />
+    </svg>
+  );
+}
+
+function SayItIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
+      {/* a microphone */}
+      <path d="M11 25a15 15 0 0 0 30 0" fill="none" strokeWidth="4.5" strokeLinecap="round" className="stroke-icon-ink" />
+      <rect x="23.5" y="39" width="5" height="9" className={ink} />
+      <rect x="15" y="46.5" width="22" height="6" rx="3" className={ink} />
+      <rect x="16" y="3" width="20" height="33" rx="10" className={`${ink} stroke-icon-paper`} {...gap} />
+      <g className={mark}>
+        <rect x="21" y="12" width="10" height="3.5" rx="1.75" />
+        <rect x="21" y="19" width="10" height="3.5" rx="1.75" />
+      </g>
+      {/* the verse, spoken */}
+      <g
+        fill="none"
+        strokeWidth="4"
+        strokeLinecap="round"
+        className={`${part} stroke-icon-accent motion-safe:group-engaged:translate-x-1 motion-safe:group-engaged:scale-110`}
+      >
+        <path d="M43 12.5a11 11 0 0 1 0 15" />
+        <path d="M49.5 6.5a19 19 0 0 1 0 27" />
+      </g>
+    </svg>
+  );
+}
+
 const ICONS: Record<GameId, (props: IconProps) => React.JSX.Element> = {
+  type_it: TypeItIcon,
+  say_it: SayItIcon,
   fill_blanks: FillBlanksIcon,
   unscramble: UnscrambleIcon,
   first_letters: FirstLettersIcon,
