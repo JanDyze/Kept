@@ -430,12 +430,11 @@ export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: str
   const colors = card ? cardColors(card.bg, card.text) : {};
   const styled = Boolean(colors.bg || colors.fg);
   const quiet = styled ? "opacity-70" : "text-muted-foreground";
-  // A photo card sits in lists as a plain photo tile, frame or not; its page shows the frame.
-  const framed = Boolean(card && hasBorder(card.border) && (full || card.bg.kind !== "image"));
+  const framed = Boolean(card && hasBorder(card.border));
   const body = (
     <>
       {card && <CardBackdrop style={card} sizes="36rem" />}
-      {card && framed && <CardBorder style={card} />}
+      {card && <CardBorder style={card} />}
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           {card ? (
@@ -499,7 +498,7 @@ export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: str
     </>
   );
   const surface = cn("@container relative isolate block overflow-hidden rounded-2xl", full ? "p-5" : "p-4");
-  const padding = framed ? borderPadding(card) : undefined;
+  const padding = borderPadding(card);
   if (!href)
     return (
       <Morph name={morphName.surface(v.id)} fill>

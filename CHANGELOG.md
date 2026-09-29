@@ -2,10 +2,6 @@
 
 All notable changes to Kept, one version per feature.
 
-## 0.18.1 — Photo cards in the list
-
-- Verses with a photo card show as a clean photo tile in My verses, without the frame. The frame still shows on the verse's page.
-
 ## 0.18.0 — Games that are harder to guess
 
 - Fill the Blanks now offers wrong words that really fit the sentence, so you have to remember the verse, not just spot the grammar.
