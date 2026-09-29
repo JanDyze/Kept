@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.21.3 — Right numbers
+
+- Fixed a mix-up where a busy page could show another list's numbers, or keep loading.
+
 ## 0.21.2 — Say it hears you once
 
 - Say it no longer hears your words twice: saying "hello" shows "hello", not "hello hello".
