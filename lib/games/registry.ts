@@ -22,6 +22,8 @@ export type GameInfo = {
   rules: string[];
   // Recall games test real memory, so their results update the verse's review schedule.
   recall: boolean;
+  // The OKLCH hue its Games card is tinted with, so each game has its own feel.
+  hue: number;
 };
 
 export const GAMES: GameInfo[] = [
@@ -36,6 +38,7 @@ export const GAMES: GameInfo[] = [
       "A wrong word is a mistake. Fill every blank to finish; no mistakes is Perfect.",
     ],
     recall: true,
+    hue: 150,
   },
   {
     id: "unscramble",
@@ -48,6 +51,7 @@ export const GAMES: GameInfo[] = [
       "A tile out of place is a mistake. No mistakes is Perfect.",
     ],
     recall: true,
+    hue: 60,
   },
   {
     id: "first_letters",
@@ -60,6 +64,7 @@ export const GAMES: GameInfo[] = [
       "A wrong word is a mistake. No mistakes is Perfect.",
     ],
     recall: true,
+    hue: 250,
   },
   {
     id: "missing_word",
@@ -73,6 +78,7 @@ export const GAMES: GameInfo[] = [
       "You have six guesses.",
     ],
     recall: false,
+    hue: 115,
   },
   {
     id: "reference_wordle",
@@ -86,6 +92,7 @@ export const GAMES: GameInfo[] = [
       "You have six guesses.",
     ],
     recall: false,
+    hue: 300,
   },
   {
     id: "spot_change",
@@ -98,6 +105,7 @@ export const GAMES: GameInfo[] = [
       "Tapping a word that wasn't changed costs a life. You have three.",
     ],
     recall: false,
+    hue: 15,
   },
   {
     id: "match_up",
@@ -110,6 +118,7 @@ export const GAMES: GameInfo[] = [
       "A wrong pair is a mistake. No mistakes is Perfect.",
     ],
     recall: false,
+    hue: 200,
   },
   {
     id: "two_tongues",
@@ -122,6 +131,7 @@ export const GAMES: GameInfo[] = [
       "Up to three rounds. Get at least half right to win.",
     ],
     recall: false,
+    hue: 85,
   },
 ];
 

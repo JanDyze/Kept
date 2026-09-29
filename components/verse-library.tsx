@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowDownUp, BadgeCheck, Check, ChevronDown, GripVertical, Plus, Search, Star, X } from "lucide-react";
+import { ArrowDownUp, BadgeCheck, Check, ChevronDown, ChevronRight, GripVertical, Plus, Search, Star, X } from "lucide-react";
 import { saveVerseOrder } from "@/app/verses/actions";
 import { ArrangeList } from "@/components/arrange-list";
 import { CardBackdrop, CardBorder, cardFontClass } from "@/components/memory-card";
@@ -151,36 +151,18 @@ export function VerseLibrary({
     <>
       {items.length > 0 && (
         <div className="sticky top-(--header-offset) z-20 -mx-4 -mt-2 flex flex-col gap-3 bg-background/85 px-4 pb-3 pt-3 backdrop-blur-md transition-[top] duration-300 ease-out">
-          <label className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter your verses"
-              aria-label="Filter your verses"
-              className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 md:text-sm"
-            />
-          </label>
-
           <div className="flex items-center gap-2">
-            <div className="-ml-4 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-4 pr-3 [mask-image:linear-gradient(to_right,black_calc(100%-1.5rem),transparent)] [scrollbar-width:none]">
-              {tags.length > 0 &&
-                [undefined, ...tags].map((t) => (
-                  <button
-                    key={t ?? "all"}
-                    type="button"
-                    onClick={() => setTag(t)}
-                    aria-pressed={tag === t}
-                    className={cn(
-                      "h-8 shrink-0 rounded-full border px-3 text-sm transition-colors",
-                      tag === t ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    {t ? tagLabel(t) : "All"}
-                  </button>
-                ))}
-            </div>
+            <label className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter your verses"
+                aria-label="Filter your verses"
+                className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 md:text-sm"
+              />
+            </label>
             <SortMenu
               value={sort}
               onChange={chooseSort}
@@ -194,6 +176,25 @@ export function VerseLibrary({
               }
             />
           </div>
+
+          {tags.length > 0 && (
+            <TagStrip>
+              {[undefined, ...tags].map((t) => (
+                <button
+                  key={t ?? "all"}
+                  type="button"
+                  onClick={() => setTag(t)}
+                  aria-pressed={tag === t}
+                  className={cn(
+                    "h-8 shrink-0 rounded-full border px-3 text-sm transition-colors",
+                    tag === t ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {t ? tagLabel(t) : "All"}
+                </button>
+              ))}
+            </TagStrip>
+          )}
         </div>
       )}
 
@@ -262,6 +263,53 @@ export function VerseLibrary({
 
 
 
+// The tag chips, scrolling sideways when they don't fit: the side with more to see fades out, and
+// a chevron at the right end scrolls on.
+function TagStrip({ children }: { children: React.ReactNode }) {
+  const row = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState({ left: false, right: false });
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const measure = () => {
+      const left = el.scrollLeft > 1;
+      const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+      setMore((m) => (m.left === left && m.right === right ? m : { left, right }));
+    };
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const resize = new ResizeObserver(measure);
+    resize.observe(el);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      resize.disconnect();
+    };
+  }, [children]);
+  const fade = `linear-gradient(to right, ${more.left ? "transparent 1rem, black 3rem" : "black"}, ${more.right ? "black calc(100% - 4.5rem), transparent calc(100% - 2.5rem)" : "black"})`;
+
+  return (
+    <div className="relative -mx-4">
+      <div
+        ref={row}
+        className="flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ maskImage: fade, WebkitMaskImage: fade }}
+      >
+        {children}
+      </div>
+      {more.right && (
+        <button
+          type="button"
+          aria-label="More tags"
+          onClick={() => row.current?.scrollBy({ left: row.current.clientWidth * 0.6, behavior: "smooth" })}
+          className="animate-fade-in absolute right-3 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ChevronRight className="size-4.5" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Recent / Book / My order, as a small menu under the current choice, with Arrange at its foot.
 function SortMenu({
   value,
@@ -296,7 +344,7 @@ function SortMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Order: ${current.label}`}
-        className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-input bg-card px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <ArrowDownUp className="size-3.5" aria-hidden />
         {current.label}

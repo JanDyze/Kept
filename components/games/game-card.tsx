@@ -43,24 +43,27 @@ export function GameCard({ info, game }: GameEntry) {
       href={`/games/${info.slug}`}
       transitionTypes={["nav-forward"]}
       aria-label={`${info.name}: ${status}`}
+      style={{ "--game-hue": info.hue } as React.CSSProperties}
       className={cn(
-        "group flex items-start gap-4 rounded-3xl border bg-card p-4",
-        "transition-[transform,background-color,border-color] duration-200 ease-out hover:border-foreground/15 hover:bg-muted/40 active:scale-[0.98]",
+        "game-tint group flex items-start gap-4 rounded-3xl border p-4",
+        "transition-[transform,background-color,border-color] duration-200 ease-out active:scale-[0.98]",
         "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-        !game && "border-dashed bg-transparent",
+        game
+          ? "border-(--game-border) bg-(--game-bg) hover:bg-(--game-bg-hover)"
+          : "border-dashed bg-transparent hover:border-foreground/15 hover:bg-muted/40",
       )}
     >
       <span
         className={cn(
-          "relative flex size-18 shrink-0 items-center justify-center rounded-[26%] bg-icon-tile",
-          !game && "opacity-45",
+          "relative flex size-18 shrink-0 items-center justify-center rounded-[26%]",
+          game ? "bg-(--game-tile)" : "bg-icon-tile opacity-45",
         )}
       >
         <GameIcon game={info.id} className="size-[66%]" />
         {(won || lost) && (
           <span
             className={cn(
-              "absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full border-2 border-card",
+              "absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full border-2 border-(--game-bg)",
               won ? "bg-primary text-primary-foreground" : "bg-muted-foreground text-background",
             )}
           >
