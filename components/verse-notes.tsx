@@ -1,22 +1,49 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { ArrowUp, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { ArrowUp, Loader2, NotebookPen } from "lucide-react";
 import { addNote, deleteNote } from "@/app/verses/[id]/notes-actions";
 import type { NoteView } from "@/lib/verses/notes";
 import { cn } from "@/lib/utils";
 
 type Note = NoteView & { sending?: boolean };
 
-// A verse's notes as a thread: what it meant on a given day, added over time, newest at the foot
-// with the composer. New notes show at once and settle when saved.
+const OPEN_EVENT = "kept:add-note";
+
+// The "Note" button in the verse page's action row: opens the composer below.
+export function AddNoteButton({ className }: { className?: string }) {
+  return (
+    <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={className}>
+      <NotebookPen className="size-4" aria-hidden /> Note
+    </button>
+  );
+}
+
+// A verse's notes as a thread: what it meant on a given day, added over time, newest at the foot.
+// The composer stays out of sight until asked for (AddNoteButton); new notes show at once and
+// settle when saved.
 export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; initial: NoteView[]; readOnly?: boolean }) {
   const [notes, setNotes] = useState<Note[]>(initial);
   const [draft, setDraft] = useState("");
+  const [composing, setComposing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const field = useRef<HTMLTextAreaElement>(null);
 
-  if (readOnly && notes.length === 0) return null;
+  useEffect(() => {
+    const open = () => {
+      setComposing(true);
+      // The user asked for it, so the keyboard coming up is expected.
+      requestAnimationFrame(() => {
+        field.current?.focus();
+        field.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+    };
+    window.addEventListener(OPEN_EVENT, open);
+    return () => window.removeEventListener(OPEN_EVENT, open);
+  }, []);
+
+  if (notes.length === 0 && (readOnly || !composing)) return null;
 
   function send() {
     const body = draft.trim();
@@ -81,7 +108,7 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
         </ol>
       )}
 
-      {!readOnly && (
+      {!readOnly && composing && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -90,6 +117,7 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
           className="mt-4 flex items-end gap-2 rounded-2xl border bg-card p-1.5 pl-4 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40"
         >
           <textarea
+            ref={field}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {

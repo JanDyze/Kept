@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.17.3 — A quieter verse page
+
+- A verse's page now shows just the verse and what you can do with it.
+- Edit, Archive and when you added it are under ⋯ at the top.
+- Tap Note to write a note; your earlier notes still show below the verse.
+
 ## 0.17.2 — Add it from your search
 
 - Searched My verses for a verse you haven't kept? Add it right there: type a reference like "rom 8 28" and it opens ready to save.

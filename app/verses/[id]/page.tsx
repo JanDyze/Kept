@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Archive, ArchiveRestore, Palette, Pencil } from "lucide-react";
+import { Palette } from "lucide-react";
 import { z } from "zod";
 import { CardShare } from "@/components/card-share";
 import { TagChip } from "@/components/tag-chip";
 import { TextCard } from "@/components/verse-library";
-import { VerseNotes } from "@/components/verse-notes";
+import { AddNoteButton, VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
+import { VerseMore } from "@/components/verse-more";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
-import { SubmitButton } from "@/components/submit-button";
-import { buttonVariants } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
 import { sharePath } from "@/lib/cards/share";
@@ -54,18 +53,17 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
     <Screen
       back={archived ? { href: "/verses?view=archived", label: "Archived" } : { href: "/verses", label: "My verses" }}
       action={
-        !archived && (
-          <div className="flex items-center gap-1">
-            <StarButton verseId={verse.id} starred={verse.starredAt !== null} />
-            <Link
-              href={`/verses/${verse.id}/edit`}
-              transitionTypes={["nav-forward"]}
-              className={cn(buttonVariants({ variant: "ghost" }), "h-10 gap-1.5")}
-            >
-              <Pencil className="size-4" aria-hidden /> Edit
-            </Link>
-          </div>
-        )
+        // Editing, archiving and the verse's dates wait behind "⋯", out of the way until wanted.
+        <div className="flex items-center gap-1">
+          {!archived && <StarButton verseId={verse.id} starred={verse.starredAt !== null} />}
+          <VerseMore
+            reference={localRef ?? verse.reference}
+            editHref={archived ? null : `/verses/${verse.id}/edit`}
+            archived={archived}
+            details={`Added ${formatDate(verse.createdAt)}${archived ? "" : ` · ${MASTERY_NAME[mastery(verse.srs)]}`}`}
+            archiveAction={setArchived.bind(null, verse.id, !archived)}
+          />
+        </div>
       }
     >
       <VerseSwiper id={verse.id}>
@@ -125,6 +123,12 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
               initialVisibility={verse.visibility}
             />
+            <AddNoteButton
+              className={cn(
+                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
+                "transition-colors hover:bg-muted hover:text-foreground",
+              )}
+            />
           </div>
         )}
 
@@ -141,25 +145,6 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
         <VerseNotes verseId={verse.id} initial={notes} readOnly={archived} />
       </article>
 
-      <footer className="mt-auto flex items-center justify-between gap-3 pt-10 text-sm text-muted-foreground">
-        <span>
-          Added {formatDate(verse.createdAt)}
-          {!archived && ` · ${MASTERY_NAME[mastery(verse.srs)]}`}
-        </span>
-        <form action={setArchived.bind(null, verse.id, !archived)}>
-          <SubmitButton variant="ghost" className="h-10 gap-1.5 text-muted-foreground">
-            {archived ? (
-              <>
-                <ArchiveRestore className="size-4" aria-hidden /> Restore
-              </>
-            ) : (
-              <>
-                <Archive className="size-4" aria-hidden /> Archive
-              </>
-            )}
-          </SubmitButton>
-        </form>
-      </footer>
       </VerseSwiper>
     </Screen>
   );
