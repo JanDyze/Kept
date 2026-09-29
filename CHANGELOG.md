@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.20.1 — Done at a glance
+
+- A finished game's icon now shows how it went: a gold star for Perfect, a check when solved, a cross when not. Hover or hold the card to see the icon again.
+
 ## 0.20.0 — Type it out and Say it
 
 - Two new games. Type it out: type the whole verse from memory. Say it: recite it out loud.

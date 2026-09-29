@@ -62,19 +62,21 @@ export function GameCard({ info, game, starred }: GameEntry) {
         )}
       >
         <GameIcon game={info.id} className="size-[66%]" />
+        {/* A finished game's status covers its icon; hovering or holding the card lifts it off. */}
         {(won || lost) && (
           <span
+            aria-hidden
             className={cn(
-              "absolute -right-1.5 -top-1.5 flex size-7 items-center justify-center rounded-full border-[2.5px] border-(--game-bg)",
-              perfect ? "bg-icon-accent text-[#2a1a04]" : won ? "bg-(--game-strong) text-(--game-tile)" : "bg-muted-foreground text-background",
+              "absolute inset-0 flex items-center justify-center rounded-[inherit] backdrop-blur-[3px] transition-opacity duration-300 ease-out motion-safe:group-engaged:opacity-0",
+              perfect ? "bg-icon-accent/92 text-[#2a1a04]" : won ? "bg-(--game-strong)/92 text-(--game-tile)" : "bg-muted-foreground/88 text-background",
             )}
           >
             {perfect ? (
-              <Star className="size-3.5 fill-current" aria-hidden />
+              <Star className="size-9 fill-current" aria-hidden />
             ) : won ? (
-              <Check className="size-4" strokeWidth={3.5} aria-hidden />
+              <Check className="size-10" strokeWidth={3.25} aria-hidden />
             ) : (
-              <X className="size-4" strokeWidth={3.5} aria-hidden />
+              <X className="size-9" strokeWidth={3.25} aria-hidden />
             )}
           </span>
         )}
