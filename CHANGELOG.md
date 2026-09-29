@@ -6,17 +6,17 @@ All notable changes to Kept, one version per feature.
 
 - Verses with a photo card show as a clean photo tile in My verses, without the frame. The frame still shows on the verse's page.
 
-## 0.17.4 — A color for every game
-
-- Each game on the Games page has its own soft color, in light and dark.
-- In My verses, the order button sits beside the search.
-- When your tags don't all fit, the row fades at the edge and a › shows there are more.
-
 ## 0.18.0 — Games that are harder to guess
 
 - Fill the Blanks now offers wrong words that really fit the sentence, so you have to remember the verse, not just spot the grammar.
 - Spot the Change swaps in words that read naturally, so the change is harder to see.
 - Works for English and Tagalog verses. New verses get this a few moments after you save them.
+
+## 0.17.4 — A color for every game
+
+- Each game on the Games page has its own soft color, in light and dark.
+- In My verses, the order button sits beside the search.
+- When your tags don't all fit, the row fades at the edge and a › shows there are more.
 
 ## 0.17.3 — A quieter verse page
 
