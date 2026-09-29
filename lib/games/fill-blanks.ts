@@ -21,11 +21,15 @@ export type FillBlanksPuzzle = {
 // Blanks are filled in reading order across all verses; mistakes are tracked per verse.
 export type FillBlanksState = { filled: number; mistakes: number[]; gaveUp?: boolean };
 
+// Decoys: first words that fit the blanks' places (`alternatives`, from lib/games/ai: normalized
+// word → words a language model would put there), a few from each blank; then, to make up the
+// number, words from `decoyPool` of a similar length.
 export function buildFillBlanks(
   verses: { id: string; reference: string; translation: string; text: string }[],
   decoyPool: string[],
   rng: Rng,
   names?: Set<string>,
+  alternatives?: Record<string, string[]>,
 ): FillBlanksPuzzle {
   const built = verses.map((v) => {
     const tokens = tokenize(v.text);
@@ -42,12 +46,26 @@ export function buildFillBlanks(
   );
   const taken = new Set(answers.map(normalizeWord));
   const lengths = new Set(answers.map((a) => a.length));
-  const decoys = shuffle(
-    [...new Set(decoyPool.map(bankWord))].filter(
-      (w) => !taken.has(normalizeWord(w)) && !isStopword(w) && [...lengths].some((l) => Math.abs(l - w.length) <= 1),
-    ),
-    rng,
-  ).slice(0, DECOYS);
+  const usable = (w: string) => !taken.has(normalizeWord(w)) && !isStopword(w);
+
+  // Round-robin over the blanks (in a shuffled order), taking each one's likeliest fits first.
+  const fits = shuffle(answers, rng).map((a) => (alternatives?.[normalizeWord(a)] ?? []).slice(0, 3));
+  const decoys: string[] = [];
+  for (let rank = 0; rank < 3 && decoys.length < DECOYS; rank++) {
+    for (const list of fits) {
+      const w = list[rank] && bankWord(list[rank]);
+      if (w && usable(w) && !decoys.includes(w)) decoys.push(w);
+      if (decoys.length === DECOYS) break;
+    }
+  }
+  decoys.push(
+    ...shuffle(
+      [...new Set(decoyPool.map(bankWord))].filter(
+        (w) => usable(w) && !decoys.includes(w) && [...lengths].some((l) => Math.abs(l - w.length) <= 1),
+      ),
+      rng,
+    ).slice(0, DECOYS - decoys.length),
+  );
 
   return { verses: built, bank: shuffle([...answers, ...decoys], rng) };
 }

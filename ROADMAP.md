@@ -25,21 +25,22 @@ search by topic, feeling or wording). It already shows what the community keeps:
 
 ## Smarter games with AI
 
-Today every game is deterministic: blanks, swaps and decoys come from word lists and the user's
-other verses. That keeps them fair but sometimes easy to see through. Next:
+Built in 0.18.0 (`lib/games/ai`): a free fill-mask model from Hugging Face (DistilBERT for English,
+XLM-RoBERTa for Tagalog), run on the server with Transformers.js, reads each verse with one word
+hidden and suggests words that fit. Filtered to real Bible words (no names, no other forms of the
+answer), they're saved per verse text in `verse_alternatives` and used for Fill the Blanks decoys
+and Spot the Change swaps, with the old word lists as the fallback. Work happens after a verse is
+saved and in a daily catch-up cron (`/api/cron/alternatives`). `KEPT_AI=off` turns it off.
 
-- **Embeddings or an LLM for distractors.** Fill the Blanks and Missing Word get wrong answers
-  that fit the sentence (same part of speech, close in meaning), so the right word can't be
-  spotted by grammar alone.
-- **Spot the Change** swaps in words that are genuinely confusable in context — a near-synonym,
-  a plausible tense or number change — generated per verse instead of drawn from a common-word
-  list, so it really tests memory.
-- Likely via the Vercel AI Gateway, with results cached per verse (puzzles are saved per day
-  already), and the deterministic builders kept as the fallback.
+Next:
+
+- Missing Word could hint with a word that fits when a guess is far off.
+- Better Tagalog: XLM-RoBERTa guesses whole words less often than DistilBERT does in English.
 
 ## Before deploying
 
-- **Card photos and profile pictures move to Vercel Blob.** Today they're on local disk
-  (`data/card-images`); `lib/cards/storage.ts` (putImage / getImage / deleteImage) is the one
-  place to swap. Shared cards will need public or signed URLs.
+- Card photos and profile pictures are in Vercel Blob (done in 0.17): set `BLOB_READ_WRITE_TOKEN`
+  in the production environment too.
+- The word model downloads into `/tmp` on first use (about 67 MB English, 280 MB Tagalog), so the
+  first background run after a cold start takes longer.
 - Set `ADMIN_EMAILS` (the dashboard) and `SITE_URL` in the production environment.

@@ -7,6 +7,7 @@ import { commonWords, properNames } from "@/lib/bible/vocab";
 import { addDays } from "@/lib/day";
 import { db } from "@/lib/db";
 import { bibleVerses, dailyGames, verses, type DailyGame, type Verse } from "@/lib/db/schema";
+import { alternativesFor, queueAlternatives } from "./ai/alternatives";
 import { buildFillBlanks } from "./fill-blanks";
 import { buildFirstLetters } from "./first-letters";
 import { buildMatchUp } from "./match-up";
@@ -73,6 +74,12 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
   const rng = (game: GameId | "recall") => seededRandom(`${userId}|${day}|${game}`);
   const used = new Set<string>();
   const rows: (typeof dailyGames.$inferInsert)[] = [];
+  // Words that fit each verse's places (lib/games/ai), for decoys and swaps. Verses without them
+  // yet are worked out in the background, ready for another day.
+  const { found: fits, missing } = await alternativesFor(pool).catch(() => ({ found: new Map<string, Record<string, string[]>>(), missing: [] }));
+  try {
+    queueAlternatives(missing);
+  } catch {}
   const add = (game: GameId, picked: Verse[], puzzle: unknown) => {
     picked.forEach((v) => used.add(v.id));
     rows.push({ userId, day, game, verseIds: picked.map((v) => v.id), puzzle });
@@ -107,7 +114,8 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
     .filter((w) => !/^\p{Lu}/u.test(w));
   const decoys = [...fromOtherVerses, ...(await commonWords(translation).catch(() => [] as string[]))];
   const names = await properNames(translation).catch(() => new Set<string>());
-  add("fill_blanks", fillVerses, buildFillBlanks(fillVerses.map(asInput), decoys, rng("fill_blanks"), names));
+  const fillFits = Object.assign({}, ...fillVerses.map((v) => fits.get(v.id) ?? {})) as Record<string, string[]>;
+  add("fill_blanks", fillVerses, buildFillBlanks(fillVerses.map(asInput), decoys, rng("fill_blanks"), names, fillFits));
 
   for (const v of fresh(byNeed)) {
     const puzzle = buildUnscramble(asInput(v), rng("unscramble"));
@@ -166,7 +174,7 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
 
   for (const v of fresh(byStaleness)) {
     const pool = await commonWords(v.translation).catch(() => [] as string[]);
-    const puzzle = buildSpotChange(asInput(v), pool, rng("spot_change"));
+    const puzzle = buildSpotChange(asInput(v), pool, rng("spot_change"), fits.get(v.id));
     if (puzzle) {
       add("spot_change", [v], puzzle);
       break;

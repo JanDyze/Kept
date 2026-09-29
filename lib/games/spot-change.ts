@@ -1,4 +1,4 @@
-import { shuffle, type Rng } from "./random";
+import { pick, shuffle, type Rng } from "./random";
 import { isPlainWord, isStopword, normalizeWord, tokenize, type Token } from "./words";
 
 export const SPOT_LIVES = 3;
@@ -21,11 +21,14 @@ function matchCase(word: string, like: string) {
   return word;
 }
 
-// Swaps 1–3 meaningful words (by verse length) for similar-length common words.
+// Swaps 1–3 meaningful words (by verse length). A word with `alternatives` (from lib/games/ai:
+// words a language model would put in its place) becomes one of its three likeliest, so the change
+// reads naturally; words without any fall back to a similar-length word from `pool`.
 export function buildSpotChange(
   verse: { id: string; reference: string; translation: string; text: string },
   pool: string[],
   rng: Rng,
+  alternatives?: Record<string, string[]>,
 ): SpotChangePuzzle | null {
   const tokens = tokenize(verse.text);
   const candidates = tokens.flatMap((t, i) => (isPlainWord(t.word) && t.word.length >= 3 && !isStopword(t.word) ? [i] : []));
@@ -37,15 +40,30 @@ export function buildSpotChange(
     rng,
   );
 
+  const used = new Set<string>();
+  const fitsFor = (i: number) =>
+    (alternatives?.[normalizeWord(tokens[i].word)] ?? [])
+      .slice(0, 3)
+      .filter((w) => /^\p{L}+$/u.test(w) && !inVerse.has(w) && !used.has(w));
+
   const changed: number[] = [];
   const originals: string[] = [];
   const out = tokens.map((t) => ({ ...t }));
-  for (const i of shuffle(candidates, rng)) {
+  // Words with a natural stand-in go first.
+  const shuffled = shuffle(candidates, rng);
+  const tryOrder = [...shuffled.filter((i) => fitsFor(i).length > 0), ...shuffled.filter((i) => fitsFor(i).length === 0)];
+  for (const i of tryOrder) {
     if (changed.length === count) break;
-    const len = tokens[i].word.length;
-    const swapIndex = words.findIndex((w) => Math.abs(w.length - len) <= 1);
-    if (swapIndex === -1) continue;
-    const [swap] = words.splice(swapIndex, 1);
+    const fits = fitsFor(i);
+    let swap: string;
+    if (fits.length) swap = pick(fits, rng);
+    else {
+      const len = tokens[i].word.length;
+      const swapIndex = words.findIndex((w) => Math.abs(w.length - len) <= 1 && !used.has(w));
+      if (swapIndex === -1) continue;
+      [swap] = words.splice(swapIndex, 1);
+    }
+    used.add(swap);
     originals.push(tokens[i].word);
     out[i].word = matchCase(swap, tokens[i].word);
     changed.push(i);

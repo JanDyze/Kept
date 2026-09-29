@@ -1,6 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import { bookByName } from "@/lib/bible/books";
+import { queueAlternatives } from "@/lib/games/ai/alternatives";
 import { readCardStyle, type CardStyle } from "@/lib/cards/style";
 import { db } from "@/lib/db";
 import { cardLikes, verses } from "@/lib/db/schema";
@@ -189,5 +190,6 @@ export async function keepCard(viewerId: string, verseId: string): Promise<{ id:
     .insert(verses)
     .values({ ...resolved.verse, notes: null, card, userId: viewerId })
     .returning({ id: verses.id });
+  queueAlternatives([resolved.verse]);
   return { id: created.id };
 }

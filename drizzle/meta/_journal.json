@@ -92,6 +92,13 @@
       "when": 1790654178640,
       "tag": "0012_likes_stars_events",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790683428360,
+      "tag": "0013_verse_alternatives",
+      "breakpoints": true
     }
   ]
 }

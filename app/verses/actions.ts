@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { verses } from "@/lib/db/schema";
 import type { VerseField } from "@/lib/verses/input";
 import { readCardStyle, type CardStyle } from "@/lib/cards/style";
+import { queueAlternatives } from "@/lib/games/ai/alternatives";
 import { insertNote } from "@/lib/verses/notes";
 import { resolveVerse } from "@/lib/verses/resolve";
 import { SKIP_FIRST_VERSE_COOKIE } from "@/lib/verses/view";
@@ -73,6 +74,8 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
     if (firstNote) await insertNote(user.id, id, firstNote);
   }
 
+  // Words that fit its places, for the games (worked out in the background).
+  queueAlternatives([verse]);
   revalidatePath("/", "layout");
   // The form's page is replaced, so Back from the verse doesn't open the form again.
   redirect(`/verses/${id}`, RedirectType.replace);
@@ -165,6 +168,7 @@ export async function keepVerse(reference: string, translation: string): Promise
     .insert(verses)
     .values({ ...result.verse, notes: null, userId: user.id })
     .returning({ id: verses.id, reference: verses.reference });
+  queueAlternatives([result.verse]);
   revalidatePath("/", "layout");
   return { ok: true, ...created };
 }

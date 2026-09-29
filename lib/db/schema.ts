@@ -55,6 +55,18 @@ export const verseNotes = pgTable(
   (t) => [index("verse_notes_verse_idx").on(t.verseId, t.createdAt)],
 ).enableRLS();
 
+// Words that could stand in for each word of a verse, from a language model reading the verse
+// with that word hidden (lib/games/ai). Shared by everyone keeping the same text: keyed by a hash
+// of translation + text, so it's worked out once per verse, not per person.
+// `words`: normalized word → alternatives, most likely first.
+export const verseAlternatives = pgTable("verse_alternatives", {
+  textHash: text("text_hash").primaryKey(),
+  translation: text("translation").notNull(),
+  model: text("model").notNull(),
+  words: jsonb("words").$type<Record<string, string[]>>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}).enableRLS();
+
 // Photos a user uploaded as card backgrounds. The bytes live in lib/cards/storage.ts under
 // storage_key; the row says who owns them.
 export const cardImages = pgTable(
