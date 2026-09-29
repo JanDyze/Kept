@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.22.0 — Add a verse, right there
+
+- Home has an Add a verse button, just under Games, My verses, Bible and Discover.
+- In My verses, the add button now says Add verse instead of just showing a +.
+
 ## 0.21.4 — Steadier
 
 - Kept's latest fixes reach your phone again: an update had stopped going out.

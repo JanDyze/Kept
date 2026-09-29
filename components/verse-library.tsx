@@ -248,10 +248,9 @@ export function VerseLibrary({
               <Link
                 href="/verses/new"
                 transitionTypes={["nav-forward"]}
-                aria-label="Add verse"
-                className="pointer-events-auto flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:scale-105 active:scale-95"
+                className="pointer-events-auto flex h-14 items-center gap-2 rounded-2xl bg-primary pr-6 pl-5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:scale-105 active:scale-95"
               >
-                <Plus className="size-6" aria-hidden />
+                <Plus className="size-6" strokeWidth={2.5} aria-hidden /> Add verse
               </Link>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { ChevronRight, Flame } from "lucide-react";
+import { ChevronRight, Flame, Plus } from "lucide-react";
 import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
 import { Avatar } from "@/components/avatar";
 import { AppBadge, CountBadge } from "@/components/count-badge";
@@ -109,8 +109,8 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     },
   ];
 
-  // You, the four sections (sized to their content, icon and label together), then a verse of
-  // yours for today in its card's colors.
+  // You, the four sections (sized to their content, icon and label together), Add a verse, then a
+  // verse of yours for today in its card's colors.
   return (
     <Screen header={false} className="pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="flex flex-col gap-3">
@@ -199,8 +199,22 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           ))}
         </nav>
 
+        {/* Adding a verse is the main thing to do; a "+" tucked into My verses was easy to miss. */}
+        <Link
+          href="/verses/new"
+          transitionTypes={["nav-forward"]}
+          style={{ animationDelay: "260ms" }}
+          className={cn(
+            "animate-rise flex h-13 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground",
+            "transition-transform duration-200 ease-out active:scale-[0.98]",
+            "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          )}
+        >
+          <Plus className="size-5" strokeWidth={2.5} aria-hidden /> Add a verse
+        </Link>
+
         {todays && (
-          <section aria-labelledby="today-verse" className="animate-rise mt-3" style={{ animationDelay: "260ms" }}>
+          <section aria-labelledby="today-verse" className="animate-rise mt-3" style={{ animationDelay: "310ms" }}>
             <h2 id="today-verse" className="mb-2 px-0.5 text-sm font-medium text-muted-foreground">
               Verse for today
             </h2>
