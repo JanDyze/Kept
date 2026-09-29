@@ -5,6 +5,7 @@ import { ThemeScript } from "goodthemes/script";
 import { GuestPromptHost } from "@/components/guest-prompt";
 import { ActivityPing } from "@/components/activity-ping";
 import { AppFeel } from "@/components/app-feel";
+import { NavHistory } from "@/components/nav-history";
 import { NavigationOverlayWithVerses } from "@/components/navigation-overlay-verses";
 import { InstallBanner } from "@/components/install-banner";
 import { ServiceWorker } from "@/components/service-worker";
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <TimezoneSync />
           <ActivityPing />
           <AppFeel />
+          <NavHistory />
           <ServiceWorker />
           <InstallBanner />
           <GuestPromptHost />

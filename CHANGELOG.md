@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.17.0 — Swipe through your verses
+
+- Open a verse from My verses and swipe sideways for the next or previous one, in the order your list shows.
+- Your phone's Back button now goes back the way you came, instead of reopening the page you just left or a form you just saved.
+- New here? Skip adding your first verse for now and look around first.
+
 ## 0.16.0 — Try Kept as a guest
 
 - New here? Continue as guest from the sign-in page to try Kept without an account: keep up to 10 verses, make cards and play the daily games.

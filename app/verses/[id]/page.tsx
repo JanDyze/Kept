@@ -9,6 +9,7 @@ import { TagChip } from "@/components/tag-chip";
 import { VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
+import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -68,6 +69,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       }
     >
       <article>
+        <VerseSwiper id={verse.id}>
         {card ? (
           <>
             <h1 className="sr-only">{verse.reference}</h1>
@@ -96,6 +98,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             </Morph>
           </>
         )}
+        </VerseSwiper>
 
         {!archived && (
           <div className="mt-4 flex flex-wrap items-center gap-2">

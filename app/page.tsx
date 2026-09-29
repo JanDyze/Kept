@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { ChevronRight, Flame } from "lucide-react";
 import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
@@ -15,6 +16,7 @@ import { APP_VERSION, unseenReleases } from "@/lib/changelog";
 import { ReleaseNotes } from "@/components/release-notes";
 import { WhatsNewSheet } from "@/components/whats-new-sheet";
 import { verseCounts, verseForToday } from "@/lib/verses/queries";
+import { SKIP_FIRST_VERSE_COOKIE } from "@/lib/verses/view";
 import { TextCard } from "@/components/verse-library";
 import { bookByName } from "@/lib/bible/books";
 import { readCardStyle } from "@/lib/cards/style";
@@ -39,13 +41,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const user = await requireUser();
   const tz = await getTimeZone();
   const day = localDate(tz);
-  const [games, days, counts, me, todays, requests] = await Promise.all([
+  const [games, days, counts, me, todays, requests, jar] = await Promise.all([
     getOrCreateDay(user.id, day),
     streak(user.id, day),
     verseCounts(user.id),
     getOrCreateProfile(user),
     verseForToday(user.id),
     pendingRequestCount(user.id),
+    cookies(),
   ]);
   // After an update: what changed since the version they last saw (once).
   const seen = await seenVersion(user.id);
@@ -58,10 +61,17 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const firstName = user.guest ? "Guest" : (me.displayName ?? "").split(/\s+/)[0] || `@${me.username}`;
 
   // The top card is you: greeting, streak and today's games; it opens your profile (or Add verse
-  // when there's nothing to play yet).
-  const youHref = games.length === 0 ? "/verses/new" : `/u/${me.username}`;
+  // when there's nothing to play yet, unless they skipped it).
+  const addFirst = games.length === 0 && counts.active === 0 && !jar.get(SKIP_FIRST_VERSE_COOKIE);
+  const youHref = addFirst ? "/verses/new" : `/u/${me.username}`;
   const status =
-    games.length === 0 ? "Start with one verse" : allDone ? "All kept for today" : `${left} ${left === 1 ? "game" : "games"} left today`;
+    games.length === 0
+      ? addFirst
+        ? "Start with one verse"
+        : "Nothing to play yet"
+      : allDone
+        ? "All kept for today"
+        : `${left} ${left === 1 ? "game" : "games"} left today`;
 
   // Plain surfaces; the hand-drawn icons carry the color.
   const cards = [
@@ -106,7 +116,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <Link
           href={youHref}
           transitionTypes={["nav-forward"]}
-          aria-label={games.length === 0 ? "Add your first verse" : `${status}. Your profile`}
+          aria-label={addFirst ? "Add your first verse" : `${status}. Your profile`}
           className={cn(
             "animate-rise group relative isolate block shrink-0 overflow-hidden rounded-2xl bg-brand p-5 text-brand-foreground",
             "transition-transform duration-200 ease-out active:scale-[0.98]",

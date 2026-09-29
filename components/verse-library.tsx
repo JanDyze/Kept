@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cardColors, hasBorder, type CardStyle } from "@/lib/cards/style";
 import type { Mastery } from "@/lib/verses/mastery";
 import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/lib/scroll-memory";
+import { rememberVerseOrder } from "@/lib/verse-order";
 import { cn } from "@/lib/utils";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { orderBy } from "@/lib/verses/order";
@@ -75,7 +76,6 @@ export function VerseLibrary({
     restoring.current = null;
     window.scrollTo(0, memory.y);
   }, [query, tag]);
-  const rememberSpot = () => rememberList(currentPath(), { y: window.scrollY, query, tag });
 
   function chooseSort(next: LibrarySort) {
     setSort(next);
@@ -109,6 +109,12 @@ export function VerseLibrary({
           v.text.toLowerCase().includes(q)),
     );
   }, [ordered, tag, query]);
+
+  // Opening a verse: remember the spot to come back to, and the order shown, for swiping.
+  const rememberSpot = () => {
+    rememberList(currentPath(), { y: window.scrollY, query, tag });
+    rememberVerseOrder(shown.map((v) => v.id));
+  };
 
   // By book: consecutive verses grouped under their book, starred ones in their own group first.
   // Recent: one list, newest first (starred at the top).

@@ -2,7 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { ownsCardImage } from "@/lib/cards/images";
@@ -32,5 +32,5 @@ export async function saveCard(verseId: string, style: unknown): Promise<{ error
   if (updated.length === 0) return { error: "This verse can't be found." };
 
   revalidatePath("/verses", "layout");
-  redirect(`/verses/${verseId}`);
+  redirect(`/verses/${verseId}`, RedirectType.replace); // Back from the verse skips the editor
 }

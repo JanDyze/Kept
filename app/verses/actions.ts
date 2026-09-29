@@ -2,7 +2,8 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { redirect, RedirectType } from "next/navigation";
 import { z } from "zod";
 import { GUEST_VERSE_LIMIT, requireUser, type SessionUser } from "@/lib/auth";
 import { formatReference, parseReference } from "@/lib/bible/books";
@@ -14,6 +15,7 @@ import type { VerseField } from "@/lib/verses/input";
 import { readCardStyle, type CardStyle } from "@/lib/cards/style";
 import { insertNote } from "@/lib/verses/notes";
 import { resolveVerse } from "@/lib/verses/resolve";
+import { SKIP_FIRST_VERSE_COOKIE } from "@/lib/verses/view";
 
 export type VerseFormState = {
   errors?: Partial<Record<VerseField | "form", string>>;
@@ -72,7 +74,14 @@ export async function saveVerse(_prev: VerseFormState, formData: FormData): Prom
   }
 
   revalidatePath("/", "layout");
-  redirect(`/verses/${id}`);
+  // The form's page is replaced, so Back from the verse doesn't open the form again.
+  redirect(`/verses/${id}`, RedirectType.replace);
+}
+
+// "Skip" on Add verse for someone with nothing kept yet: back Home, which stops sending them here.
+export async function skipFirstVerse() {
+  (await cookies()).set(SKIP_FIRST_VERSE_COOKIE, "1", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  redirect("/", RedirectType.replace);
 }
 
 export async function setArchived(id: string, archived: boolean) {
