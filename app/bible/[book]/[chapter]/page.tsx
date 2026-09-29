@@ -49,10 +49,12 @@ export default async function ChapterPage({ params, searchParams }: PageProps<"/
         />
       )}
 
+      {/* Chapter to chapter replaces the page, so Back leaves the Bible instead of paging back. */}
       <nav className="mt-10 flex justify-between gap-3" aria-label="Chapters">
         {prev ? (
           <Link
             href={`/bible/${bookSlug(prev.book)}/${prev.chapter}?t=${t}`}
+            replace
             transitionTypes={["nav-back"]}
             className="inline-flex h-11 items-center gap-1 rounded-xl border px-4 text-sm hover:bg-muted"
           >
@@ -64,6 +66,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps<"/
         {next && (
           <Link
             href={`/bible/${bookSlug(next.book)}/${next.chapter}?t=${t}`}
+            replace
             transitionTypes={["nav-forward"]}
             className="inline-flex h-11 items-center gap-1 rounded-xl border px-4 text-sm hover:bg-muted"
           >

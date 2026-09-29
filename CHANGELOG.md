@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.18.4 — Back goes back
+
+- Your phone's Back button now retraces your steps after All games, Next game, a tag, or moving between Bible chapters, instead of reopening pages you already left.
+
 ## 0.18.3 — Support Kept
 
 - Settings has a Support Kept page: help keep Kept free and ad-free, or share it with a friend.

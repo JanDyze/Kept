@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BookOpenText, Check, ChevronRight, Loader2, PartyPopper, RotateCcw } from "lucide-react";
+import { BackNavLink } from "@/components/back-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useReplay } from "./replay";
@@ -88,7 +89,8 @@ export function GameResult({
 
       <div className="sticky bottom-0 -mx-4 mt-auto flex flex-col gap-2 bg-background/90 px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md">
         {next && (
-          <Link href={next.href} transitionTypes={["nav-forward"]} className={cn(buttonVariants(), "h-12 gap-1 text-base")}>
+          // Replaces the finished game, so Back goes to the games list, not through every game played.
+          <Link href={next.href} replace transitionTypes={["nav-forward"]} className={cn(buttonVariants(), "h-12 gap-1 text-base")}>
             Next: {next.name} <ChevronRight className="size-4" aria-hidden />
           </Link>
         )}
@@ -102,13 +104,13 @@ export function GameResult({
               <RotateCcw className="size-4" aria-hidden /> Play again
             </button>
           )}
-          <Link
+          <BackNavLink
             href="/games"
             transitionTypes={["nav-back"]}
             className={cn(buttonVariants({ variant: next ? "outline" : "default" }), "h-12 text-base")}
           >
             All games
-          </Link>
+          </BackNavLink>
         </div>
       </div>
     </section>

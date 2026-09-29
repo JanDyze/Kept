@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackNavLink } from "@/components/back-link";
 import { Hash, X } from "lucide-react";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { cn } from "@/lib/utils";
@@ -29,9 +29,10 @@ export function TagChip({
   );
   if (href)
     return (
-      <Link href={href} transitionTypes={["nav-back"]} className={cn(chip, "transition-colors hover:bg-primary/15")}>
+      // Up to My verses (filtered), like the back arrow: no new entry for the phone's Back.
+      <BackNavLink href={href} transitionTypes={["nav-back"]} className={cn(chip, "transition-colors hover:bg-primary/15")}>
         {body}
-      </Link>
+      </BackNavLink>
     );
   return (
     <span className={chip}>
