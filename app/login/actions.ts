@@ -41,7 +41,11 @@ export async function continueAsGuest(formData: FormData) {
   const next = safeNext(formData.get("next"));
   const supabase = await createClient();
   const { error } = await supabase.auth.signInAnonymously();
-  if (error) redirect("/login?link=guest");
+  if (error) {
+    // e.g. 422 anonymous_provider_disabled: the Supabase toggle is off.
+    console.error("Continue as guest failed:", error.status, error.code, error.message);
+    redirect("/login?link=guest");
+  }
   redirect(next);
 }
 
