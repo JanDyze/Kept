@@ -68,15 +68,17 @@ export function GameCard({ info, game, starred }: GameEntry) {
             aria-hidden
             className={cn(
               "absolute inset-0 flex items-center justify-center rounded-[inherit] transition-opacity duration-300 ease-out motion-safe:group-engaged:opacity-0",
-              perfect ? "bg-icon-accent/55 text-[#2a1a04]" : won ? "bg-(--game-strong)/55 text-(--game-tile)" : "bg-muted-foreground/50 text-background",
+              // The mark carries the color, ringed in the tile's so it reads over the icon.
+              "[&>svg]:[filter:drop-shadow(0_0_1.5px_var(--game-tile))_drop-shadow(0_0_1.5px_var(--game-tile))_drop-shadow(0_0_1px_var(--game-tile))]",
+              perfect ? "text-icon-accent" : won ? "text-(--game-strong)" : "text-muted-foreground",
             )}
           >
             {perfect ? (
-              <Star className="size-9 fill-current drop-shadow-[0_1px_3px_rgb(0_0_0/0.35)]" aria-hidden />
+              <Star className="size-10 fill-current" aria-hidden />
             ) : won ? (
-              <Check className="size-10 drop-shadow-[0_1px_3px_rgb(0_0_0/0.35)]" strokeWidth={3.25} aria-hidden />
+              <Check className="size-11" strokeWidth={3.5} aria-hidden />
             ) : (
-              <X className="size-9 drop-shadow-[0_1px_3px_rgb(0_0_0/0.35)]" strokeWidth={3.25} aria-hidden />
+              <X className="size-10" strokeWidth={3.5} aria-hidden />
             )}
           </span>
         )}
