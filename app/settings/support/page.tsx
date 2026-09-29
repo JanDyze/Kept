@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Support Kept" };
 // Not listed anywhere: it opens from the Kept logo at the foot of Settings, for whoever goes looking.
 // Giving is configured by env: SUPPORT_QR (a /public path or full URL) shows a GCash code with Save
 // QR (a phone can't scan its own screen, so it's saved and uploaded in GCash instead), SUPPORT_URL
-// adds a Give link (Ko-fi, ...). Sharing always shows.
+// adds a Give link. Sharing always shows.
 export default async function SupportPage() {
   await requireUser();
   const url = process.env.SUPPORT_URL?.trim() || null;

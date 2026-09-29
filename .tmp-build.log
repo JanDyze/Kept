@@ -1,0 +1,97 @@
+
+> kept@0.21.3 build
+> next build
+
+▲ Next.js 16.3.6 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 259ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 47s
+  Running TypeScript ...
+lib/db/index.ts(15,72): error TS2353: Object literal may only specify known properties, and 'max_pipeline' does not exist in type 'Options<{}>'.
+Failed to type check.
+
+Turbopack build encountered 2 warnings:
+./lib/cards/storage.ts:52:18
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m50 |[0m       [36mreturn[0m [36mnew[0m [33mUint8Array[0m([36mawait[0m [36mnew[0m [33mResponse[0m(found.stream).arrayBuffer());
+  [90m51 |[0m     }
+[33m[1m>[0m [90m52 |[0m     [36mreturn[0m [36mawait[0m readFile(fileFor(key));
+  [90m   |[0m                  [33m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m53 |[0m   } [36mcatch[0m {
+  [90m54 |[0m     [36mreturn[0m [36mnull[0m;
+  [90m55 |[0m   }
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.readFile(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./lib/cards/storage.ts
+    ./lib/cards/storage.ts
+    ./app/api/avatars/[userId]/[file]/route.ts
+
+  #2 [App Route]:
+    ./lib/cards/storage.ts
+    ./lib/cards/share.ts
+    ./app/s/[token]/photo/route.ts
+
+  #3 [Server Component]:
+    ./lib/cards/storage.ts
+    ./lib/cards/share.ts
+    ./app/verses/[id]/page.tsx
+
+  #4 [Server Component]:
+    ./lib/cards/storage.ts
+    ./lib/social/avatars.ts
+    ./app/friends/actions.ts
+
+
+./lib/cards/storage.ts:18:24
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m16 |[0m [36mfunction[0m fileFor(key: string) {
+  [90m17 |[0m   [36mconst[0m file = path.resolve([33mROOT[0m, key);
+[33m[1m>[0m [90m18 |[0m   [36mif[0m (!file.startsWith(path.resolve([33mROOT[0m) + path.sep)) [36mthrow[0m [36mnew[0m [33mError[0m([32m"Bad storage key"[0m);
+  [90m   |[0m                        [33m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m19 |[0m   [36mreturn[0m file;
+  [90m20 |[0m }
+  [90m21 |[0m
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./lib/cards/storage.ts
+    ./lib/cards/storage.ts
+    ./app/api/avatars/[userId]/[file]/route.ts
+
+  #2 [App Route]:
+    ./lib/cards/storage.ts
+    ./lib/cards/share.ts
+    ./app/s/[token]/photo/route.ts
+
+  #3 [Server Component]:
+    ./lib/cards/storage.ts
+    ./lib/cards/share.ts
+    ./app/verses/[id]/page.tsx
+
+  #4 [Server Component]:
+    ./lib/cards/storage.ts
+    ./lib/social/avatars.ts
+    ./app/friends/actions.ts
+
+

@@ -29,7 +29,7 @@ function fillDays(rows: { day: string; n: number }[], today: string, days = DAYS
 
 export async function adminStats(tz: string, today: string) {
   const since = addDays(today, -DAYS + 1);
-  const [active, activeByDay, users, signupsByDay, totals, games, pages, keptVerses, recent, support, tipTotals, recentTips] = await Promise.all([
+  const [active, activeByDay, users, signupsByDay, totals, games, pages, keptVerses, recent, support] = await Promise.all([
     db.execute<{ today: number; week: number; month: number }>(sql`
       with act as (${ACTIVITY})
       select
@@ -88,13 +88,11 @@ export async function adminStats(tz: string, today: string) {
       verses: number;
       games: number;
       provider: string | null;
-      supporter: boolean;
     }>(sql`
       with act as (${ACTIVITY}),
       seen as (select user_id, max(ts) as ts from act group by user_id)
       select u.id, u.email, u.created_at::text, p.username, p.display_name, seen.ts::text as last_active,
         u.raw_app_meta_data->>'provider' as provider,
-        exists (select 1 from tips t where t.email = lower(u.email)) as supporter,
         (select count(*) from verses v where v.user_id = u.id and v.archived_at is null)::int as verses,
         (select count(*) from daily_games g where g.user_id = u.id and g.status <> 'in_progress')::int as games
       from auth.users u
@@ -112,27 +110,6 @@ export async function adminStats(tz: string, today: string) {
       where created_at >= now() - interval '30 days'
         and (kind in ('support_give', 'support_share') or (kind = 'view' and path = '/settings/support'))
       group by kind`),
-    db.execute<{ currency: string; total: number; month: number; tips: number; people: number }>(sql`
-      select currency, sum(amount_cents)::int as total,
-        coalesce(sum(amount_cents) filter (where paid_at >= now() - interval '30 days'), 0)::int as month,
-        count(*)::int as tips,
-        count(distinct coalesce(email, from_name, external_id))::int as people
-      from tips group by currency order by total desc`),
-    db.execute<{
-      id: string;
-      from_name: string | null;
-      message: string | null;
-      amount_cents: number;
-      currency: string;
-      monthly: boolean;
-      paid_at: string;
-      username: string | null;
-    }>(sql`
-      select t.id, t.from_name, t.message, t.amount_cents, t.currency, t.monthly, t.paid_at::text, p.username
-      from tips t
-      left join auth.users u on lower(u.email) = t.email
-      left join profiles p on p.user_id = u.id
-      order by t.paid_at desc limit 10`),
   ]);
 
   const byGame = new Map(games.map((g) => [g.game, g]));
@@ -150,8 +127,6 @@ export async function adminStats(tz: string, today: string) {
       opens: support.find((r) => r.kind === "view") ?? { week: 0, month: 0, people: 0 },
       gives: support.find((r) => r.kind === "support_give") ?? { week: 0, month: 0, people: 0 },
       shares: support.find((r) => r.kind === "support_share") ?? { week: 0, month: 0, people: 0 },
-      tipTotals,
-      recentTips,
     },
   };
 }

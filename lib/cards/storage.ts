@@ -11,11 +11,12 @@ import { del, get, put } from "@vercel/blob";
 const useBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 const access = process.env.BLOB_ACCESS === "private" ? "private" : "public";
 
-const ROOT = process.env.CARD_IMAGE_DIR ?? path.join(process.cwd(), "data", "card-images");
+// turbopackIgnore: the disk fallback is only for dev, so the build shouldn't trace the whole project for it.
+const ROOT = process.env.CARD_IMAGE_DIR ?? path.join(/* turbopackIgnore: true */ process.cwd(), "data", "card-images");
 
 function fileFor(key: string) {
-  const file = path.resolve(ROOT, key);
-  if (!file.startsWith(path.resolve(ROOT) + path.sep)) throw new Error("Bad storage key");
+  const file = path.resolve(/* turbopackIgnore: true */ ROOT, key);
+  if (!file.startsWith(path.resolve(/* turbopackIgnore: true */ ROOT) + path.sep)) throw new Error("Bad storage key");
   return file;
 }
 
