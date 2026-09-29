@@ -29,6 +29,7 @@ export function GameCard({ info, game, starred }: GameEntry) {
   const won = game?.status === "won";
   const lost = game?.status === "lost";
   const perfect = score?.kind === "perfect";
+  const done = won || lost;
 
   const status = !game
     ? (UNAVAILABLE[info.id] ?? "Not today")
@@ -55,23 +56,29 @@ export function GameCard({ info, game, starred }: GameEntry) {
           : "border-dashed bg-transparent hover:border-foreground/15 hover:bg-muted/40",
       )}
     >
+      {/* A finished game's icon fades to a single status color (gold for Perfect, the game's own
+          when solved, grey when not) under a mark in that color; hovering or holding the card
+          brings the icon back. --status resolves here, so the icon's own colors can take it. */}
       <span
         className={cn(
           "relative flex size-18 shrink-0 items-center justify-center rounded-[26%]",
           game ? "bg-(--game-tile)" : "bg-icon-tile opacity-45",
+          perfect ? "[--status:var(--icon-accent)]" : won ? "[--status:var(--game-strong)]" : "[--status:var(--muted-foreground)]",
         )}
       >
-        <GameIcon game={info.id} className="size-[66%]" />
-        {/* A finished game's status covers its icon; hovering or holding the card lifts it off. */}
-        {(won || lost) && (
+        <span
+          className={cn(
+            "flex size-[66%] transition-opacity duration-300 ease-out",
+            done &&
+              "opacity-20 [--icon-accent:var(--status)] [--icon-ink:var(--status)] group-engaged:opacity-100 group-engaged:[--icon-accent:inherit] group-engaged:[--icon-ink:inherit]",
+          )}
+        >
+          <GameIcon game={info.id} className="size-full" />
+        </span>
+        {done && (
           <span
             aria-hidden
-            className={cn(
-              "absolute inset-0 flex items-center justify-center rounded-[inherit] transition-opacity duration-300 ease-out motion-safe:group-engaged:opacity-0",
-              // The mark carries the color, ringed in the tile's so it reads over the icon.
-              "[&>svg]:[filter:drop-shadow(0_0_1.5px_var(--game-tile))_drop-shadow(0_0_1.5px_var(--game-tile))_drop-shadow(0_0_1px_var(--game-tile))]",
-              perfect ? "text-icon-accent" : won ? "text-(--game-strong)" : "text-muted-foreground",
-            )}
+            className="absolute inset-0 flex items-center justify-center text-(--status) transition-[opacity,scale] duration-300 ease-out group-engaged:scale-75 group-engaged:opacity-0"
           >
             {perfect ? (
               <Star className="size-10 fill-current" aria-hidden />
