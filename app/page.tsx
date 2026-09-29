@@ -2,11 +2,13 @@ import Link from "next/link";
 import { ChevronRight, Flame } from "lucide-react";
 import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
 import { Avatar } from "@/components/avatar";
+import { AppBadge, CountBadge } from "@/components/count-badge";
 import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
+import { pendingRequestCount } from "@/lib/social/friends";
 import { getOrCreateProfile, seenVersion } from "@/lib/social/profiles";
 import { APP_VERSION, unseenReleases } from "@/lib/changelog";
 import { ReleaseNotes } from "@/components/release-notes";
@@ -28,12 +30,13 @@ export default async function HomePage() {
   const user = await requireUser();
   const tz = await getTimeZone();
   const day = localDate(tz);
-  const [games, days, counts, me, todays] = await Promise.all([
+  const [games, days, counts, me, todays, requests] = await Promise.all([
     getOrCreateDay(user.id, day),
     streak(user.id, day),
     verseCounts(user.id),
     getOrCreateProfile(user),
     verseForToday(user.id),
+    pendingRequestCount(user.id),
   ]);
   // After an update: what changed since the version they last saw (once).
   const seen = await seenVersion(user.id);
@@ -59,6 +62,7 @@ export default async function HomePage() {
       // today's count lives on the top card; this one just says what's here
       detail: games.length === 0 ? "Unlocks with your first verse" : allDone ? "Play again for practice" : "Today's puzzles",
       Icon: GamesIcon,
+      badge: left,
     },
     {
       href: "/verses",
@@ -78,8 +82,10 @@ export default async function HomePage() {
     {
       href: "/search",
       title: "Discover",
-      detail: "Cards and verses",
+      // Friend requests are reached from Discover (and your profile), so they show here.
+      detail: requests > 0 ? `${requests} friend ${requests === 1 ? "request" : "requests"}` : "Cards and verses",
       Icon: DiscoverIcon,
+      badge: requests,
     },
   ];
 
@@ -107,7 +113,10 @@ export default async function HomePage() {
             />
           </div>
           <div className="flex items-center gap-3">
-            <Avatar name={me.displayName} username={me.username} src={me.avatarUrl} eager className="size-11 text-lg ring-2 ring-brand-foreground/25" />
+            <span className="relative shrink-0">
+              <Avatar name={me.displayName} username={me.username} src={me.avatarUrl} eager className="size-11 text-lg ring-2 ring-brand-foreground/25" />
+              <CountBadge count={requests} className="-top-1 -right-1 bg-brand-foreground text-brand ring-brand" />
+            </span>
             <p className="min-w-0 flex-1 leading-tight">
               <span className="block text-sm text-brand-foreground/70">{greeting(tz)},</span>
               <span className="block truncate font-brand text-lg font-semibold">{firstName}</span>
@@ -137,7 +146,7 @@ export default async function HomePage() {
         </Link>
 
         <nav className="grid grid-cols-2 gap-3" aria-label="Sections">
-          {cards.map(({ href, title, detail, Icon }, i) => (
+          {cards.map(({ href, title, detail, Icon, badge = 0 }, i) => (
             <Link
               key={href}
               href={href}
@@ -149,12 +158,15 @@ export default async function HomePage() {
                 "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               )}
             >
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-icon-tile">
-              <Icon className="size-[66%]" />
-            </span>
+              <span className="relative flex size-14 items-center justify-center rounded-2xl bg-icon-tile">
+                <Icon className="size-[66%]" />
+                <CountBadge count={badge} />
+              </span>
               <div>
                 <span className="block font-brand text-lg font-semibold leading-tight tracking-tight">{title}</span>
-                <span className="mt-0.5 block text-sm text-muted-foreground">{detail}</span>
+                <span className={cn("mt-0.5 block text-sm", badge > 0 && href === "/search" ? "font-medium text-primary" : "text-muted-foreground")}>
+                  {detail}
+                </span>
               </div>
             </Link>
           ))}
@@ -196,6 +208,7 @@ export default async function HomePage() {
           ))}
         </WhatsNewSheet>
       )}
+      <AppBadge count={requests + left} />
     </Screen>
   );
 }

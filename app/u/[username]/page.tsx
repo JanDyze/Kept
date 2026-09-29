@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/profile-view";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
-import { relationTo } from "@/lib/social/friends";
+import { pendingRequestCount, relationTo } from "@/lib/social/friends";
 import { galleryCards } from "@/lib/social/gallery";
 import { getProfileByUsername } from "@/lib/social/profiles";
 import { profileStats } from "@/lib/social/stats";
@@ -30,7 +30,20 @@ export default async function ProfilePage({ params, searchParams }: PageProps<"/
 
   // Your own profile also has your progress in detail (only you ever see it).
   const self = relation === "self";
-  const progress = self && tab === "progress" ? { s: await progressStats(user.id, day), day } : undefined;
+  const [progress, requests] = await Promise.all([
+    self && tab === "progress" ? progressStats(user.id, day).then((s) => ({ s, day })) : undefined,
+    self ? pendingRequestCount(user.id) : 0,
+  ]);
 
-  return <ProfileView person={person} relation={relation} stats={stats} cards={cards} tab={self ? tab : "shared"} progress={progress} />;
+  return (
+    <ProfileView
+      person={person}
+      relation={relation}
+      stats={stats}
+      cards={cards}
+      tab={self ? tab : "shared"}
+      progress={progress}
+      requests={requests}
+    />
+  );
 }

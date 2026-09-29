@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FillBlanksGame } from "@/components/games/fill-blanks";
 import { FirstLettersGame } from "@/components/games/first-letters";
 import { MatchUpGame } from "@/components/games/match-up";
+import { HowToPlay } from "@/components/games/how-to-play";
 import { MissingWordGame } from "@/components/games/missing-word";
 import { ReferenceWordleGame } from "@/components/games/reference-wordle";
 import { Replayable } from "@/components/games/replay";
@@ -43,7 +44,7 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
 
   if (!game) {
     return (
-      <Screen back={{ href: "/games", label: "Games" }} title={info.name}>
+      <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={<HowToPlay info={info} />}>
         <p className="text-muted-foreground">
           {games.length === 0
             ? "Games are made from your saved verses. Add one to start."
@@ -101,7 +102,7 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
   };
 
   return (
-    <Screen back={{ href: "/games", label: "Games" }} title={info.name} className="pb-0">
+    <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={<HowToPlay info={info} />} className="pb-0">
       <Replayable game={game.game} puzzle={game.puzzle} fresh={render({}, "in_progress")}>
         {render(game.state, game.status)}
       </Replayable>

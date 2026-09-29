@@ -10,6 +10,7 @@ import {
   type MissingWordState,
   type TileColor,
 } from "@/lib/games/missing-word";
+import { checkWord } from "@/app/games/actions";
 import { normalizeWord } from "@/lib/games/words";
 import { cn } from "@/lib/utils";
 import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
@@ -43,6 +44,7 @@ export function MissingWordGame({
   const [typed, setTyped] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [shakeRow, setShakeRow] = useState(0);
+  const [checking, setChecking] = useState(false);
   const words = useMemo(() => new Set(dictionary), [dictionary]);
   const length = puzzle.answer.length;
   const { guesses } = game.state;
@@ -60,16 +62,23 @@ export function MissingWordGame({
   }, [guesses, scored]);
 
   function press(key: string) {
-    if (!game.playing) return;
+    if (!game.playing || checking) return;
     setMessage(null);
     if (key === "enter") return submit();
     if (key === "back") return setTyped((t) => t.slice(0, -1));
     if (/^[a-z]$/.test(key) && typed.length < length) setTyped((t) => t + key);
   }
 
-  function submit() {
+  async function submit() {
     if (typed.length < length) return reject(`Needs ${length} letters.`);
-    if (!words.has(typed)) return reject("Not in the word list.");
+    // Words from this Bible are known here; anything else is checked against the English list.
+    if (!words.has(typed)) {
+      setChecking(true);
+      const real = await checkWord(typed).catch(() => null);
+      setChecking(false);
+      if (real === null) return reject("Couldn't check that word. Try again.");
+      if (!real) return reject("Not a word we know.");
+    }
     const state = { guesses: [...guesses, typed] };
     setTyped("");
     if (missingWordOutcome(puzzle, state) === "playing") game.update(state);
@@ -202,7 +211,7 @@ export function MissingWordGame({
       </div>
 
       <ActionBar
-        left={<span aria-live="polite" className={cn(message && "font-medium text-foreground")}>{message ?? countText(left, "guess", "guesses") + " left"}</span>}
+        left={<span aria-live="polite" className={cn(message && "font-medium text-foreground")}>{message ?? (checking ? "Checking…" : countText(left, "guess", "guesses") + " left")}</span>}
         disabled={!game.playing}
         onGiveUp={() => void game.finish({ guesses, gaveUp: true })}
       >

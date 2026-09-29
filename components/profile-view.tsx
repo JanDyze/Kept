@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Flame, Pencil, Settings } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { CardGallery } from "@/components/card-gallery";
+import { CountBadge } from "@/components/count-badge";
 import { FriendButton, ShareProfile } from "@/components/friends";
 import { ProgressDetails } from "@/components/progress-details";
 import { Screen } from "@/components/screen";
@@ -21,6 +22,7 @@ export function ProfileView({
   cards,
   tab = "shared",
   progress,
+  requests = 0,
 }: {
   person: Profile;
   relation: Relation;
@@ -28,13 +30,19 @@ export function ProfileView({
   cards: GalleryCard[];
   tab?: "progress" | "shared"; // your own profile opens on Progress
   progress?: { s: Awaited<ReturnType<typeof progressStats>>; day: string }; // yours only
+  requests?: number; // friend requests waiting on you (yours only)
 }) {
   const self = relation === "self";
   const numbers = [
     { label: "day streak", value: stats.streak, icon: stats.streak > 0 },
     { label: stats.verses === 1 ? "verse" : "verses", value: stats.verses, href: self ? "/verses" : undefined },
     { label: "games won", value: stats.gamesWon, href: self ? "/games" : undefined },
-    { label: stats.friends === 1 ? "friend" : "friends", value: stats.friends, href: self ? "/friends" : undefined },
+    {
+      label: stats.friends === 1 ? "friend" : "friends",
+      value: stats.friends,
+      href: self ? "/friends" : undefined,
+      badge: self ? requests : 0,
+    },
   ];
 
   return (
@@ -89,9 +97,11 @@ export function ProfileView({
           const body = (
             <>
               <dt className="mt-0.5 text-xs text-muted-foreground">{n.label}</dt>
-              <dd className="flex items-center justify-center gap-1 font-brand text-2xl font-semibold tabular-nums tracking-tight">
+              <dd className="relative flex items-center justify-center gap-1 font-brand text-2xl font-semibold tabular-nums tracking-tight">
                 {n.icon && <Flame className="size-4.5 text-icon-accent" aria-hidden />}
                 {n.value.toLocaleString()}
+                {"badge" in n && <CountBadge count={n.badge ?? 0} className="-top-1 -right-4" />}
+                {"badge" in n && (n.badge ?? 0) > 0 && <span className="sr-only">, {n.badge} waiting</span>}
               </dd>
             </>
           );

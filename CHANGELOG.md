@@ -2,6 +2,13 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.15.0 — Games, rules and badges
+
+- The Games page is new: a big card for each game with its name, what it's about, and where today's game stands. Games to play come first with a Play or Continue button, then the ones you've done with your result.
+- Every game has How to play: tap the ? at the top of a game. It opens by itself the first time you play each one.
+- Missing Word accepts any real English word now, not only words found in the Bible.
+- Badges show what's waiting: friend requests on Discover, your picture and your friends count, and games left today on Games. On an installed app, the icon shows the count too where the phone supports it.
+
 ## 0.14.0 — Stars, likes and mastery
 
 - Star a verse (top right of its page) to keep it at the top of My verses in every order.
