@@ -215,22 +215,23 @@ export function SayItGame(props: Props) {
     [],
   );
 
-  // While listening, the words said right so far fill in as they're heard.
-  const live = useMemo(() => (listening && heard ? grade(props.puzzle.tokens, heard, true) : undefined), [listening, heard, props.puzzle]);
+  // While reciting, the words said right so far fill in as they're heard.
+  const live = useMemo(() => (heard ? grade(props.puzzle.tokens, heard, true) : undefined), [heard, props.puzzle]);
+  // The phone turned the mic off at a pause, with words already heard: Keep going or Check.
+  const paused = !listening && heard !== "" && !micError;
 
-  function start() {
+  // resume: Keep going after a pause, adding to what was heard.
+  function start(resume = false) {
     const Recognition = recognitionClass();
     if (!Recognition || !game.playing) return;
     const recognition = new Recognition();
     recognition.lang = props.puzzle.translation === "MBBTAG" ? "fil-PH" : "en-US";
-    // Continuous, so the mic stays on through the verse (each restart plays the phone's mic sound).
-    // Phones still end a session after a long silence; pausing to remember the next line shouldn't
-    // end the try, so listening picks up again, keeping what was heard (`before`). Only the Done tap
-    // or an error ends it.
+    // Continuous, but phones (Chrome on Android) still turn the mic off after each phrase, with a
+    // sound. Restarting it by itself made an on-off-on loop of sounds, so a pause waits for the
+    // player instead: Keep going listens again, keeping what was heard (`before`); Check ends the try.
     recognition.continuous = true;
     recognition.interimResults = true;
-    let before = "";
-    let restarts = 0;
+    const before = resume ? heardRef.current : "";
     recognition.onresult = (e) => {
       const text = [before, joinHeard(Array.from(e.results, (result) => result[0].transcript))].join(" ").trim();
       heardRef.current = text;
@@ -242,27 +243,25 @@ export function SayItGame(props: Props) {
       setMicError(MIC_ERRORS[e.error] ?? "Couldn't listen. Try again.");
     };
     recognition.onend = () => {
-      if (!done.current && !failed.current && restarts++ < 30) {
-        before = heardRef.current;
-        try {
-          recognition.start();
-          return;
-        } catch {}
-      }
       setListening(false);
       rec.current = null;
-      if (heardRef.current.trim()) check.current(heardRef.current);
-      heardRef.current = "";
-      setHeard("");
+      if (!done.current && !failed.current && heardRef.current.trim()) return; // paused
+      submit();
     };
-    heardRef.current = "";
+    heardRef.current = before;
     done.current = false;
     failed.current = false;
-    setHeard("");
+    setHeard(before);
     setMicError(null);
     rec.current = recognition;
     recognition.start();
     setListening(true);
+  }
+
+  function submit() {
+    if (heardRef.current.trim()) check.current(heardRef.current);
+    heardRef.current = "";
+    setHeard("");
   }
 
   function finishSaying() {
@@ -296,22 +295,43 @@ export function SayItGame(props: Props) {
             >
               {micError ?? heard}
             </p>
-            <button
-              type="button"
-              disabled={!game.playing || canListen === null}
-              onClick={() => (listening ? finishSaying() : start())}
-              aria-label={listening ? "Done" : "Start reciting"}
-              aria-pressed={listening}
-              className={cn(
-                "relative flex size-18 items-center justify-center rounded-full text-primary-foreground transition-[transform,background-color] active:scale-95 disabled:opacity-40",
-                listening ? "bg-(--mark-miss)" : "bg-primary",
-                r.misses > 0 && !listening && "animate-shake",
-              )}
-              key={r.misses}
-            >
-              {listening && <span className="absolute inset-0 animate-ping rounded-full bg-(--mark-miss)/40" aria-hidden />}
-              {listening ? <Square className="relative size-6 fill-current" aria-hidden /> : <Mic className="size-8" aria-hidden />}
-            </button>
+            {paused ? (
+              <div className="flex w-full gap-2">
+                <button
+                  type="button"
+                  disabled={!game.playing}
+                  onClick={() => start(true)}
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border bg-card text-base font-semibold transition-transform active:scale-[0.98] disabled:opacity-40"
+                >
+                  <Mic className="size-5" aria-hidden /> Keep going
+                </button>
+                <button
+                  type="button"
+                  disabled={!game.playing}
+                  onClick={submit}
+                  className="h-12 flex-1 rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
+                >
+                  Check
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={!game.playing || canListen === null}
+                onClick={() => (listening ? finishSaying() : start())}
+                aria-label={listening ? "Done" : "Start reciting"}
+                aria-pressed={listening}
+                className={cn(
+                  "relative flex size-18 items-center justify-center rounded-full text-primary-foreground transition-[transform,background-color] active:scale-95 disabled:opacity-40",
+                  listening ? "bg-(--mark-miss)" : "bg-primary",
+                  r.misses > 0 && !listening && "animate-shake",
+                )}
+                key={r.misses}
+              >
+                {listening && <span className="absolute inset-0 animate-ping rounded-full bg-(--mark-miss)/40" aria-hidden />}
+                {listening ? <Square className="relative size-6 fill-current" aria-hidden /> : <Mic className="size-8" aria-hidden />}
+              </button>
+            )}
           </div>
         )}
       </ActionBar>
