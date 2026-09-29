@@ -39,7 +39,7 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
 
   return (
     <Screen back={back} className="pb-0">
-      <CardSwiper key={id} prevHref={href(around?.prev)} nextHref={href(around?.next)}>
+      <CardSwiper key={id} className="flex flex-1 flex-col" prevHref={href(around?.prev)} nextHref={href(around?.next)}>
         <MemoryCard
           style={style}
           reference={reference}
@@ -48,7 +48,6 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
           morphId={row.id}
           className={cn("mx-auto", style.shape === "landscape" ? "max-w-xl" : style.shape === "square" ? "max-w-md" : "max-w-sm")}
         />
-      </CardSwiper>
 
       <div className="mt-5 flex items-center gap-2">
         <Link
@@ -92,6 +91,7 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
           <KeepCardButton verseId={row.id} />
         )}
       </div>
+      </CardSwiper>
     </Screen>
   );
 }

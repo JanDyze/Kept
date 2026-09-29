@@ -137,11 +137,30 @@ export function AddFriendForm() {
   );
 }
 
-// Copy your username (to type into a friend's Add box), or share your profile link: the phone's
-// share sheet where there is one, otherwise the link is copied.
+// A small copy button beside a username (to type into a friend's Add box).
+export function CopyUsername({ username }: { username: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        void navigator.clipboard.writeText(username).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        })
+      }
+      aria-label={copied ? "Username copied" : "Copy username"}
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+    >
+      {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+    </button>
+  );
+}
+
+// Share your profile link: the phone's share sheet where there is one, otherwise the link is copied.
 export function ShareProfile({ username }: { username: string }) {
-  const [copied, setCopied] = useState<"username" | "link" | null>(null);
-  const copy = async (what: "username" | "link", text: string) => {
+  const [copied, setCopied] = useState<"link" | null>(null);
+  const copy = async (what: "link", text: string) => {
     await navigator.clipboard.writeText(text);
     setCopied(what);
     setTimeout(() => setCopied(null), 1600);
@@ -149,10 +168,6 @@ export function ShareProfile({ username }: { username: string }) {
   const url = () => `${location.origin}/u/${username}`;
   return (
     <span className="flex gap-1.5">
-      <button type="button" onClick={() => void copy("username", username)} className={cn(pill, "border text-muted-foreground hover:bg-muted")}>
-        {copied === "username" ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-        {copied === "username" ? "Copied" : "Copy username"}
-      </button>
       <button
         type="button"
         onClick={() => {

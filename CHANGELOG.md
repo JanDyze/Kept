@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.17.1 — Swipe the whole page
+
+- On a verse or a Discover card, swipe anywhere on the page, not just the card, for the next or previous one.
+- A verse's page now shows it the way My verses does, with the whole text.
+- Profiles have a small copy button right beside the username.
+
 ## 0.17.0 — Swipe through your verses
 
 - Open a verse from My verses and swipe sideways for the next or previous one, in the order your list shows.

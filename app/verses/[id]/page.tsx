@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { Archive, ArchiveRestore, Palette, Pencil } from "lucide-react";
 import { z } from "zod";
 import { CardShare } from "@/components/card-share";
-import { MemoryCard } from "@/components/memory-card";
 import { TagChip } from "@/components/tag-chip";
+import { TextCard } from "@/components/verse-library";
 import { VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
@@ -68,18 +68,25 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
         )
       }
     >
+      <VerseSwiper id={verse.id}>
       <article>
-        <VerseSwiper id={verse.id}>
         {card ? (
           <>
             <h1 className="sr-only">{verse.reference}</h1>
             {archived && <Badge variant="outline" className="mb-3">Archived</Badge>}
-            <MemoryCard
-              style={card}
-              reference={localRef ?? verse.reference}
-              translation={verse.translation}
-              text={verse.text}
-              morphId={verse.id}
+            {/* The verse as it looks in My verses, whole: the full card is in the card editor and when shared. */}
+            <TextCard
+              full
+              v={{
+                id: verse.id,
+                reference: verse.reference,
+                localReference: localRef,
+                book: verse.book,
+                translation: verse.translation,
+                text: verse.text,
+                tags: [],
+                card,
+              }}
             />
           </>
         ) : (
@@ -98,7 +105,6 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             </Morph>
           </>
         )}
-        </VerseSwiper>
 
         {!archived && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -154,6 +160,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
           </SubmitButton>
         </form>
       </footer>
+      </VerseSwiper>
     </Screen>
   );
 }

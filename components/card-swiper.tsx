@@ -7,16 +7,18 @@ import { cn } from "@/lib/utils";
 
 const THRESHOLD = 60; // px of travel that counts as a swipe
 
-// Swipe the card sideways for the next or previous one in the list it came from (arrow keys and
-// the side buttons too). The card follows the finger, then the next one slides in. Pages replace
-// each other, so Back still returns to the list.
+// Swipe the page sideways for the next or previous one in the list it came from (arrow keys and
+// the side buttons too). The page follows the finger, then the next one slides in. Pages replace
+// each other, so Back still returns to the list. A drag that starts in a text field is left alone.
 export function CardSwiper({
   prevHref,
   nextHref,
+  className,
   children,
 }: {
   prevHref: string | null;
   nextHref: string | null;
+  className?: string; // e.g. "flex flex-1 flex-col" to wrap a whole page's content
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -45,15 +47,16 @@ export function CardSwiper({
   });
 
   return (
-    <div className="relative">
+    <div className={cn("relative", className)}>
       <div
-        className="touch-pan-y"
+        className={cn("touch-pan-y", className)}
         style={{
-          transform: dx ? `translateX(${dx}px) rotate(${dx / 40}deg)` : undefined,
+          transform: dx ? `translateX(${dx}px)` : undefined,
           transition: dragging ? "none" : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)",
         }}
         onPointerDown={(e) => {
           if (e.pointerType === "mouse" && e.button !== 0) return;
+          if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
           start.current = { x: e.clientX, y: e.clientY, id: e.pointerId, axis: null };
         }}
         onPointerMove={(e) => {
@@ -117,7 +120,7 @@ function SideButton({ dir, disabled, onClick }: { dir: "prev" | "next"; disabled
       disabled={disabled}
       aria-label={dir === "prev" ? "Previous card" : "Next card"}
       className={cn(
-        "absolute top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border bg-background/90 text-muted-foreground shadow-sm backdrop-blur-sm transition-opacity hover:text-foreground disabled:opacity-0 md:flex",
+        "absolute top-40 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border bg-background/90 text-muted-foreground shadow-sm backdrop-blur-sm transition-opacity hover:text-foreground disabled:opacity-0 md:flex",
         dir === "prev" ? "-left-14" : "-right-14",
       )}
     >

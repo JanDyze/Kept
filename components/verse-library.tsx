@@ -373,8 +373,9 @@ function MasteryMark({ level, quiet }: { level: Mastery; quiet: string }) {
 }
 
 // A verse with a card shows its background, photo and font here too.
-// Without an href it's a still preview (the card editor shows one).
-export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; onOpen?: () => void }) {
+// Without an href it's a still preview (the card editor shows one). `full` is the verse page's
+// version: larger, with the whole text.
+export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: string; onOpen?: () => void; full?: boolean }) {
   const card = v.card;
   const colors = card ? cardColors(card.bg, card.text) : {};
   const styled = Boolean(colors.bg || colors.fg);
@@ -387,7 +388,12 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           {card ? (
-            <p className={cn("font-brand font-semibold leading-tight tracking-tight", framed ? "text-base" : "text-lg")}>
+            <p
+              className={cn(
+                "font-brand font-semibold leading-tight tracking-tight",
+                full ? (framed ? "text-xl" : "text-2xl") : framed ? "text-base" : "text-lg",
+              )}
+            >
               {v.localReference ?? v.reference}
             </p>
           ) : (
@@ -405,15 +411,23 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
       <Morph name={morphName.text(v.id)}>
       <p
         className={cn(
-          "mt-2.5 line-clamp-3",
+          full ? "mt-4 whitespace-pre-line" : "mt-2.5 line-clamp-3",
           card ? cardFontClass(card.font) : "font-serif",
-          card?.font === "hand"
-            ? framed
-              ? "text-[1.15rem] leading-snug"
-              : "text-[1.3rem] leading-snug"
-            : framed
-              ? "text-[0.95rem] leading-relaxed"
-              : "text-[1.05rem] leading-relaxed",
+          full
+            ? card?.font === "hand"
+              ? framed
+                ? "text-[1.5rem] leading-snug"
+                : "text-[1.65rem] leading-snug"
+              : framed
+                ? "text-[1.2rem] leading-relaxed"
+                : "text-[1.35rem] leading-relaxed"
+            : card?.font === "hand"
+              ? framed
+                ? "text-[1.15rem] leading-snug"
+                : "text-[1.3rem] leading-snug"
+              : framed
+                ? "text-[0.95rem] leading-relaxed"
+                : "text-[1.05rem] leading-relaxed",
           !styled && "text-foreground/85",
         )}
         style={card?.bg.kind === "image" ? { textShadow: "0 1px 10px rgb(0 0 0 / 0.35)" } : undefined}
@@ -433,7 +447,7 @@ export function TextCard({ v, href, onOpen }: { v: LibraryItem; href?: string; o
       )}
     </>
   );
-  const surface = "@container relative isolate block overflow-hidden rounded-2xl p-4";
+  const surface = cn("@container relative isolate block overflow-hidden rounded-2xl", full ? "p-5" : "p-4");
   const padding = borderPadding(card);
   if (!href)
     return (

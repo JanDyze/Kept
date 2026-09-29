@@ -3,7 +3,7 @@ import { Flame, Pencil, Settings } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { CardGallery } from "@/components/card-gallery";
 import { CountBadge } from "@/components/count-badge";
-import { FriendButton, ShareProfile } from "@/components/friends";
+import { CopyUsername, FriendButton, ShareProfile } from "@/components/friends";
 import { GuestSave } from "@/components/guest-save";
 import { ProgressDetails } from "@/components/progress-details";
 import { Screen } from "@/components/screen";
@@ -73,10 +73,22 @@ export function ProfileView({
           eager
           className="size-20 text-3xl"
         />
-        <h1 className="mt-3 font-brand text-2xl font-semibold tracking-tight">
+        {/* The copy button hangs off the right, so the name itself stays centered. */}
+        <h1
+          className={cn(
+            "mt-3 flex items-center gap-1 font-brand text-2xl font-semibold tracking-tight",
+            !guest && !person.displayName && "-mr-9",
+          )}
+        >
           {guest ? "Guest" : (person.displayName ?? `@${person.username}`)}
+          {!guest && !person.displayName && <CopyUsername username={person.username} />}
         </h1>
-        {person.displayName && !guest && <p className="text-muted-foreground">@{person.username}</p>}
+        {person.displayName && !guest && (
+          <p className="-mr-8 flex items-center gap-0.5 text-muted-foreground">
+            @{person.username}
+            <CopyUsername username={person.username} />
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           {guest ? (
             <GuestSave next="/me" className="w-full text-left" />
