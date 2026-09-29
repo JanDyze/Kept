@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { HandHeart } from "lucide-react";
 import { Screen } from "@/components/screen";
-import { ShareKept } from "@/components/support-kept";
+import { GiveLink, ShareKept } from "@/components/support-kept";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Support Kept" };
@@ -22,17 +22,12 @@ export default async function SupportPage() {
           <HandHeart className="size-7 text-icon-ink" aria-hidden />
         </span>
         <p className="mt-4 max-w-sm leading-relaxed text-muted-foreground">
-          Kept is free, with no ads. If it helps you hide God&apos;s Word in your heart, you can help keep it going.
+          Kept is free, with no ads. Tips help pay for the servers and new features.
         </p>
         {url && (
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-medium text-primary-foreground hover:bg-primary/85"
-          >
+          <GiveLink href={url} className="mt-5">
             <HandHeart className="size-4" aria-hidden /> Give
-          </a>
+          </GiveLink>
         )}
       </section>
 

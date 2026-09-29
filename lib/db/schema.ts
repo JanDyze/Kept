@@ -304,11 +304,33 @@ export const appEvents = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => authUsers.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(), // "view"
+    kind: text("kind").notNull(), // "view", or a tap: "support_give", "support_share"
     path: text("path").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("app_events_created_idx").on(t.createdAt), index("app_events_user_idx").on(t.userId, t.createdAt)],
+).enableRLS();
+
+// Tips from outside Kept, for the admin dashboard: one row per Ko-fi payment, sent by its webhook
+// (/api/ko-fi). Not tied to a user id: the dashboard matches `email` to an account when it can.
+export const tips = pgTable(
+  "tips",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    source: text("source").notNull(), // "kofi"
+    externalId: text("external_id").notNull(), // Ko-fi's message_id, so a retried webhook adds nothing
+    kind: text("kind").notNull(), // Ko-fi's type: Donation, Subscription, Commission, Shop Order
+    fromName: text("from_name"),
+    email: text("email"),
+    message: text("message"),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull(),
+    monthly: boolean("monthly").notNull().default(false),
+    isPublic: boolean("is_public").notNull().default(true), // the supporter's choice on Ko-fi
+    paidAt: timestamp("paid_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("tips_source_external_idx").on(t.source, t.externalId), index("tips_paid_idx").on(t.paidAt)],
 ).enableRLS();
 
 export type Verse = typeof verses.$inferSelect;

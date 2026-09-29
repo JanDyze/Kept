@@ -41,14 +41,17 @@ Next:
 
 - **Support Kept**: built (0.18.3). Settings → Support Kept: a Give link (`SUPPORT_URL`, e.g.
   Ko-fi), an optional GCash/Maya QR (`SUPPORT_QR`), and Share Kept. Tips only, nothing unlocked.
+  The admin dashboard counts page opens and taps on Give and Share (`app_events`), and Ko-fi tips
+  arrive through its webhook (`/api/ko-fi`, `KOFI_VERIFICATION_TOKEN`) into `tips`, matched to an
+  account by email. GCash/Maya QR tips can't report themselves; a manual "Add tip" form could.
 - **Premium** (planned): memorizing stays free (keeping verses, reviews, the daily games). Paid
   extras on top:
   - **Premium games**: new game types beyond the free daily set.
   - **Auto-designed cards**: one tap turns a verse into a card with a random design (background,
     type, layout), and you can shuffle until one fits.
   - **Multiplayer games** (maybe premium, maybe free with premium modes; see Social).
-- Needs real payments first: a processor that takes GCash, Maya and cards (PayMongo, or Stripe
-  where it's available), a webhook that records who paid, and a per-user entitlement
+- Needs real payments first (the Ko-fi webhook and `tips` table are a start): a processor that
+  takes GCash, Maya and cards (PayMongo, or Stripe where it's available), a webhook that records who paid, and a per-user entitlement
   (`profiles.plan` or a `subscriptions` table) that premium features check. Monthly and yearly,
   maybe lifetime. Supporters who tipped before launch could get a thank-you (badge or a free
   month).

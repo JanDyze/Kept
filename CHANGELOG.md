@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.19.1 — Plainer words on Support Kept
+
+- Support Kept now simply says what tips pay for: the servers and new features.
+
 ## 0.19.0 — Results you can see
 
 - Finished games show how they went at a glance: a gold Perfect, your mistakes as marks, guesses as tiles, rounds as dots, lives as hearts.
