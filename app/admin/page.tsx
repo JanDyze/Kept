@@ -37,6 +37,7 @@ export default async function AdminPage() {
   const today = localDate(tz);
   const s = await adminStats(tz, today);
   const t = s.totals;
+  const kofi = Boolean(process.env.KOFI_VERIFICATION_TOKEN?.trim()); // tips only show once Ko-fi is set up
 
   const tiles = [
     { label: "People", value: s.users.total, note: s.users.week ? `+${s.users.week} this week` : undefined },
@@ -114,7 +115,7 @@ export default async function AdminPage() {
             ] as const
           ).map(([label, x]) => [label, x.week.toLocaleString(), x.month.toLocaleString(), x.people.toLocaleString()])}
         />
-        {s.support.tipTotals.length ? (
+        {!s.support.tipTotals.length && !kofi ? null : s.support.tipTotals.length ? (
           <>
             <dl className="mt-3 grid grid-cols-2 gap-3">
               {s.support.tipTotals.map((t) => (

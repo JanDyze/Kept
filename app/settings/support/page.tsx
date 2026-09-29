@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { HandHeart } from "lucide-react";
+import { Download, HandHeart } from "lucide-react";
 import { Screen } from "@/components/screen";
 import { GiveLink, ShareKept } from "@/components/support-kept";
 import { requireUser } from "@/lib/auth";
@@ -44,6 +44,14 @@ export default async function SupportPage() {
             unoptimized
             className="mt-3 size-56 rounded-xl bg-white object-contain p-2"
           />
+          {/* On a phone the code can't scan itself: save it, then upload it in GCash's Scan QR. */}
+          <a
+            href={qr}
+            download="kept-support-qr.png"
+            className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-base font-medium hover:bg-muted"
+          >
+            <Download className="size-4" aria-hidden /> Save QR
+          </a>
         </section>
       )}
 
