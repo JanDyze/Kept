@@ -64,14 +64,15 @@ export function FillBlanksGame({
   const roundDone = roundFilled === roundBlanks.length;
   const active = order[filled];
 
-  // This round's words minus the ones already placed (one instance each).
+  // This round's words, the ones already placed marked (one instance each). Placed words keep
+  // their spot, invisible, so the rest don't jump around.
   const remaining = useMemo(() => {
-    const left = roundBank(puzzle, shown).map((word, index) => ({ word, index }));
+    const words = roundBank(puzzle, shown).map((word, index) => ({ word, index, placed: false }));
     for (const b of roundBlanks.slice(0, roundFilled)) {
-      const at = left.findIndex((w) => isRightWord(w.word, b.answer));
-      if (at !== -1) left.splice(at, 1);
+      const at = words.findIndex((w) => !w.placed && isRightWord(w.word, b.answer));
+      if (at !== -1) words[at].placed = true;
     }
-    return left;
+    return words;
   }, [puzzle, shown, roundBlanks, roundFilled]);
 
   function choose(word: string, index: number) {
@@ -136,14 +137,17 @@ export function FillBlanksGame({
         onGiveUp={() => void game.finish({ ...game.state, gaveUp: true })}
       >
         <div className="flex min-h-11 flex-wrap gap-2">
-          {remaining.map(({ word, index }) => (
+          {remaining.map(({ word, index, placed }) => (
             <button
               key={`${shown}-${index}-${wrong?.index === index ? wrong.n : 0}`}
               type="button"
-              disabled={roundDone || !game.playing}
+              disabled={roundDone || !game.playing || placed}
+              aria-hidden={placed || undefined}
+              tabIndex={placed ? -1 : undefined}
               onClick={() => choose(word, index)}
               className={cn(
-                "h-11 rounded-xl border bg-card px-4 font-serif text-lg transition-[background-color,opacity,scale] hover:bg-muted active:scale-95 disabled:opacity-40",
+                "h-11 rounded-xl border bg-card px-4 font-serif text-lg transition-[background-color,opacity,scale] duration-200 hover:bg-muted active:scale-95 disabled:opacity-40",
+                placed && "pointer-events-none scale-90 opacity-0 disabled:opacity-0",
                 wrong?.index === index && "animate-shake border-destructive/50 text-destructive",
               )}
             >

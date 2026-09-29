@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.18.2 — Steadier word choices
+
+- In Unscramble and Fill the Blanks, the words you pick fade out in place, so the rest stay put instead of jumping around.
+
 ## 0.18.0 — Games that are harder to guess
 
 - Fill the Blanks now offers wrong words that really fit the sentence, so you have to remember the verse, not just spot the grammar.

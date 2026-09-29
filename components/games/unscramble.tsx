@@ -88,23 +88,28 @@ export function UnscrambleGame({
         disabled={!game.playing}
         onGiveUp={() => void game.finish({ ...game.state, gaveUp: true })}
       >
+        {/* A chosen chunk fades out but keeps its place, so the others never jump around. */}
         <div className="flex min-h-11 flex-wrap gap-2">
-          {puzzle.order
-            .filter((c) => !used.includes(c))
-            .map((c) => (
+          {puzzle.order.map((c) => {
+            const taken = used.includes(c);
+            return (
               <button
                 key={`${c}-${wrong?.index === c ? wrong.n : 0}`}
                 type="button"
-                disabled={!game.playing}
+                disabled={!game.playing || taken}
+                aria-hidden={taken || undefined}
+                tabIndex={taken ? -1 : undefined}
                 onClick={() => tap(c)}
                 className={cn(
-                  "min-h-11 rounded-xl border bg-card px-3.5 py-2 text-left font-serif text-lg transition-[background-color,scale] hover:bg-muted active:scale-95",
+                  "min-h-11 rounded-xl border bg-card px-3.5 py-2 text-left font-serif text-lg transition-[background-color,scale,opacity] duration-200 hover:bg-muted active:scale-95",
+                  taken && "pointer-events-none scale-90 opacity-0",
                   wrong?.index === c && "animate-shake border-destructive/50 text-destructive",
                 )}
               >
                 {puzzle.chunks[c]}
               </button>
-            ))}
+            );
+          })}
         </div>
       </ActionBar>
       <GameError message={game.error} saving={game.saving} />
