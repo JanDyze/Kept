@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.18.1 — Photo cards in the list
+
+- Verses with a photo card show as a clean photo tile in My verses, without the frame. The frame still shows on the verse's page.
+
 ## 0.17.4 — A color for every game
 
 - Each game on the Games page has its own soft color, in light and dark.
