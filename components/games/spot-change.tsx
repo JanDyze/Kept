@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { SPOT_LIVES, spotOutcome, type SpotChangePuzzle, type SpotChangeState } from "@/lib/games/spot-change";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { ActionBar, countText, DoneBadge, GameError, GameResult, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -62,15 +63,7 @@ export function SpotChangeGame({
         <GameResult
           won={won}
           headline={won ? "Sharp eyes" : "Not this time"}
-          result={
-            won
-              ? misses === 0
-                ? "No misses"
-                : countText(misses, "miss", "misses")
-              : gaveUp
-                ? "Gave up"
-                : "Out of lives"
-          }
+          score={gameScore({ game: "spot_change", status: game.status, state: game.state, puzzle })}
           next={next}
         >
           <VerseCard reference={puzzle.reference} translation={puzzle.translation}>

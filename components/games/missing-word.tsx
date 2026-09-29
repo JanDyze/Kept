@@ -13,6 +13,7 @@ import {
 import { checkWord } from "@/app/games/actions";
 import { normalizeWord } from "@/lib/games/words";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -143,7 +144,8 @@ export function MissingWordGame({
         <GameResult
           won={won}
           headline={won ? "You found it" : "Not this time"}
-          result={won ? `${guesses.length} of ${MISSING_WORD_GUESSES} guesses` : `The word was “${puzzle.shown ?? puzzle.answer}”`}
+          score={gameScore({ game: "missing_word", status: game.status, state: game.state, puzzle })}
+          result={won ? undefined : `The word was “${puzzle.shown ?? puzzle.answer}”`}
           next={next}
         >
           {scored.length > 0 && (

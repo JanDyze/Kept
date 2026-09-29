@@ -2,11 +2,11 @@
 
 import { useOptimistic, useTransition } from "react";
 import { Star } from "lucide-react";
-import { setStarred } from "@/app/verses/actions";
 import { cn } from "@/lib/utils";
 
-// Star a verse to keep it at the top of My verses. Flips at once; the save follows.
-export function StarButton({ verseId, starred }: { verseId: string; starred: boolean }) {
+// Star something to keep it at the top of its list (a verse in My verses, a game in Games).
+// Flips at once; the save follows. `action` is a server action bound to what's being starred.
+export function StarButton({ starred, action }: { starred: boolean; action: (starred: boolean) => Promise<unknown> }) {
   const [shown, setShown] = useOptimistic(starred);
   const [, start] = useTransition();
   return (
@@ -17,7 +17,7 @@ export function StarButton({ verseId, starred }: { verseId: string; starred: boo
       onClick={() =>
         start(async () => {
           setShown(!shown);
-          await setStarred(verseId, !shown);
+          await action(!shown);
         })
       }
       className={cn(

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { matchUpOutcome, type MatchUpPuzzle, type MatchUpState } from "@/lib/games/match-up";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { ActionBar, GameError, GameResult, mistakesText, Segments, useResultShown } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -51,8 +52,8 @@ export function MatchUpGame({
       <div className="flex flex-1 flex-col">
         <GameResult
           won={won}
-          headline={won ? (mistakes === 0 ? "Perfect" : "All matched") : "Here they are"}
-          result={won ? mistakesText(mistakes) : "Gave up"}
+          headline={won ? "All matched" : "Here they are"}
+          score={gameScore({ game: "match_up", status: game.status, state: game.state, puzzle })}
           next={next}
         >
           <ul className="divide-y rounded-2xl border bg-card">

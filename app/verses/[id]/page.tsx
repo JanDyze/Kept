@@ -23,7 +23,7 @@ import { mastery } from "@/lib/verses/mastery";
 import { getVerse } from "@/lib/verses/queries";
 import { cn } from "@/lib/utils";
 import { StarButton } from "@/components/star-button";
-import { setArchived } from "../actions";
+import { setArchived, setStarred } from "../actions";
 
 const MASTERY_NAME = { new: "Not practiced yet", learning: "Learning", mastered: "Mastered" } as const;
 
@@ -55,7 +55,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       action={
         // Editing, archiving and the verse's dates wait behind "⋯", out of the way until wanted.
         <div className="flex items-center gap-1">
-          {!archived && <StarButton verseId={verse.id} starred={verse.starredAt !== null} />}
+          {!archived && <StarButton starred={verse.starredAt !== null} action={setStarred.bind(null, verse.id)} />}
           <VerseMore
             reference={localRef ?? verse.reference}
             editHref={archived ? null : `/verses/${verse.id}/edit`}

@@ -16,6 +16,7 @@ import {
   type ReferenceWordleState,
 } from "@/lib/games/reference-wordle";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { BookPicker } from "./book-picker";
 import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
@@ -75,7 +76,8 @@ export function ReferenceWordleGame({
         <GameResult
           won={won}
           headline={won ? "Right on" : "Not this time"}
-          result={won ? `${guesses.length} of ${REFERENCE_GUESSES} guesses` : `It was ${puzzle.reference}`}
+          score={gameScore({ game: "reference_wordle", status: game.status, state: game.state, puzzle })}
+          result={won ? undefined : `It was ${puzzle.reference}`}
           next={next}
         >
           <VerseCard reference={puzzle.reference} translation={puzzle.translation} className="[&>div]:text-lg [&>div]:leading-relaxed">

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Check, ChevronRight, Play, X } from "lucide-react";
+import { Check, ChevronRight, Play, Star, X } from "lucide-react";
 import { GameIcon } from "@/components/game-icons";
 import type { DailyGame } from "@/lib/db/schema";
 import type { GameId, GameInfo } from "@/lib/games/registry";
-import { hasStarted, resultLabel } from "@/lib/games/summary";
+import { gameScore, hasStarted, scoreText } from "@/lib/games/summary";
+import { ResultMark } from "./result-mark";
 import { cn } from "@/lib/utils";
 
 // Why a game isn't on today's shelf (the verses don't fit it yet).
@@ -16,15 +17,16 @@ const UNAVAILABLE: Partial<Record<GameId, string>> = {
   spot_change: "Needs a longer verse",
 };
 
-export type GameEntry = { info: GameInfo; game?: Pick<DailyGame, "game" | "status" | "state" | "puzzle"> };
+export type GameEntry = { info: GameInfo; game?: Pick<DailyGame, "game" | "status" | "state" | "puzzle">; starred?: boolean };
 
 // One game on the Games page: its icon, name and line, where today's game stands, and Play.
-export function GameCard({ info, game }: GameEntry) {
+export function GameCard({ info, game, starred }: GameEntry) {
   const playing = game?.status === "in_progress";
   const started = game ? hasStarted(game) : false;
-  const result = game ? resultLabel(game) : null;
+  const score = game ? gameScore(game) : null;
   const won = game?.status === "won";
   const lost = game?.status === "lost";
+  const perfect = score?.kind === "perfect";
 
   const status = !game
     ? (UNAVAILABLE[info.id] ?? "Not today")
@@ -32,11 +34,9 @@ export function GameCard({ info, game }: GameEntry) {
       ? started
         ? "In progress"
         : "Not started"
-      : won
-        ? `Done · ${result}`
-        : result === "Gave up" || result === "Out of lives"
-          ? result
-          : "Not solved";
+      : score
+        ? scoreText(score)
+        : "Done";
 
   return (
     <Link
@@ -63,33 +63,39 @@ export function GameCard({ info, game }: GameEntry) {
         {(won || lost) && (
           <span
             className={cn(
-              "absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full border-2 border-(--game-bg)",
-              won ? "bg-primary text-primary-foreground" : "bg-muted-foreground text-background",
+              "absolute -right-1.5 -top-1.5 flex size-7 items-center justify-center rounded-full border-[2.5px] border-(--game-bg)",
+              perfect ? "bg-icon-accent text-[#2a1a04]" : won ? "bg-(--game-strong) text-(--game-tile)" : "bg-muted-foreground text-background",
             )}
           >
-            {won ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : <X className="size-3.5" strokeWidth={3} aria-hidden />}
+            {perfect ? (
+              <Star className="size-3.5 fill-current" aria-hidden />
+            ) : won ? (
+              <Check className="size-4" strokeWidth={3.5} aria-hidden />
+            ) : (
+              <X className="size-4" strokeWidth={3.5} aria-hidden />
+            )}
           </span>
         )}
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className={cn("block font-brand text-xl font-semibold leading-tight tracking-tight", !game && "text-muted-foreground")}>
+        <span className={cn("flex items-center gap-1.5 font-brand text-xl font-semibold leading-tight tracking-tight", !game && "text-muted-foreground")}>
           {info.name}
+          {starred && <Star className="size-4 shrink-0 fill-icon-accent text-icon-accent" aria-label="Starred" />}
         </span>
         <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">{info.blurb}</span>
         {/* Where today's game stands, with Play (or Continue) beside it. */}
         <span className="mt-2.5 flex min-h-9 items-center justify-between gap-3">
-          <span
-            className={cn(
-              "flex items-center gap-1.5 text-sm",
-              playing && started ? "font-medium text-primary" : won ? "font-medium text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {playing && (
-              <span aria-hidden className={cn("size-2 shrink-0 rounded-full", started ? "bg-primary" : "border-[1.5px] border-muted-foreground/60")} />
-            )}
-            {status}
-          </span>
+          {score ? (
+            <ResultMark score={score} />
+          ) : (
+            <span className={cn("flex items-center gap-1.5 text-sm", playing && started ? "font-medium text-primary" : "text-muted-foreground")}>
+              {playing && (
+                <span aria-hidden className={cn("size-2 shrink-0 rounded-full", started ? "bg-primary" : "border-[1.5px] border-muted-foreground/60")} />
+              )}
+              {status}
+            </span>
+          )}
           {playing ? (
             <span
               aria-hidden

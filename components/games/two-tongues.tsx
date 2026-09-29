@@ -5,6 +5,7 @@ import { Check, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { correctCount, twoTonguesOutcome, type TwoTonguesPuzzle, type TwoTonguesState } from "@/lib/games/two-tongues";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { ActionBar, GameDetail, GameError, GameResult, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -46,7 +47,7 @@ export function TwoTonguesGame({
         <GameResult
           won={won}
           headline={won ? "Bilingual" : "Not this time"}
-          result={gaveUp ? "Gave up" : `${score} of ${total} right`}
+          score={gameScore({ game: "two_tongues", status: game.status, state: game.state, puzzle })}
           next={next}
         >
           <ul className="divide-y rounded-2xl border bg-card">

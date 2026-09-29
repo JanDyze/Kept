@@ -99,6 +99,13 @@
       "when": 1790683428360,
       "tag": "0013_verse_alternatives",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790685666196,
+      "tag": "0014_game_stars",
+      "breakpoints": true
     }
   ]
 }

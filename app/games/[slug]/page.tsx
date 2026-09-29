@@ -12,6 +12,7 @@ import { SpotChangeGame } from "@/components/games/spot-change";
 import { TwoTonguesGame } from "@/components/games/two-tongues";
 import { UnscrambleGame } from "@/components/games/unscramble";
 import { Screen } from "@/components/screen";
+import { StarButton } from "@/components/star-button";
 import { buttonVariants } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { wordsOfLength } from "@/lib/bible/vocab";
@@ -24,9 +25,11 @@ import type { MatchUpPuzzle, MatchUpState } from "@/lib/games/match-up";
 import type { MissingWordPuzzle, MissingWordState } from "@/lib/games/missing-word";
 import type { ReferenceWordlePuzzle, ReferenceWordleState } from "@/lib/games/reference-wordle";
 import { gameById, gameBySlug } from "@/lib/games/registry";
+import { starredFirst, starredGames } from "@/lib/games/stars";
 import type { SpotChangePuzzle, SpotChangeState } from "@/lib/games/spot-change";
 import type { TwoTonguesPuzzle, TwoTonguesState } from "@/lib/games/two-tongues";
 import type { UnscramblePuzzle, UnscrambleState } from "@/lib/games/unscramble";
+import { setGameStarred } from "../actions";
 
 export async function generateMetadata({ params }: PageProps<"/games/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -39,12 +42,19 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
   if (!info) notFound();
 
   const user = await requireUser();
-  const games = await getOrCreateDay(user.id, await today());
+  const [day, starred] = await Promise.all([getOrCreateDay(user.id, await today()), starredGames(user.id)]);
+  const games = starredFirst(day, (g) => g.game, starred); // the Games page's order
   const game = games.find((g) => g.game === info.id);
+  const action = (
+    <div className="flex items-center gap-1">
+      <StarButton starred={starred.includes(info.id)} action={setGameStarred.bind(null, info.id)} />
+      <HowToPlay info={info} />
+    </div>
+  );
 
   if (!game) {
     return (
-      <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={<HowToPlay info={info} />}>
+      <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={action}>
         <p className="text-muted-foreground">
           {games.length === 0
             ? "Games are made from your saved verses. Add one to start."
@@ -102,10 +112,13 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
   };
 
   return (
-    <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={<HowToPlay info={info} />} className="pb-0">
-      <Replayable game={game.game} puzzle={game.puzzle} fresh={render({}, "in_progress")}>
-        {render(game.state, game.status)}
-      </Replayable>
+    <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={action} className="pb-0">
+      {/* The game's own hue, for its result marks. */}
+      <div className="game-tint contents" style={{ "--game-hue": info.hue } as React.CSSProperties}>
+        <Replayable game={game.game} puzzle={game.puzzle} fresh={render({}, "in_progress")}>
+          {render(game.state, game.status)}
+        </Replayable>
+      </div>
     </Screen>
   );
 }

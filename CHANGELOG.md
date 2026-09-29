@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.19.0 — Results you can see
+
+- Finished games show how they went at a glance: a gold Perfect, your mistakes as marks, guesses as tiles, rounds as dots, lives as hearts.
+- The same marks, bigger, when a game ends.
+- Love a game? Tap the star at the top of it and it moves to the top of your games.
+
 ## 0.18.4 — Back goes back
 
 - Your phone's Back button now retraces your steps after All games, Next game, a tag, or moving between Bible chapters, instead of reopening pages you already left.

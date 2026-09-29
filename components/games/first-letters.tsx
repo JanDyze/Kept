@@ -14,6 +14,7 @@ import {
   useResultShown,
   VerseCard,
 } from "./game-parts";
+import { gameScore } from "@/lib/games/summary";
 import { useGame, type GameStatus } from "./use-game";
 
 export function FirstLettersGame({
@@ -78,8 +79,8 @@ export function FirstLettersGame({
       <div className="flex flex-1 flex-col">
         <GameResult
           won={won}
-          headline={won ? (mistakes === 0 ? "Perfect" : "All typed") : "Here's the verse"}
-          result={won ? mistakesText(mistakes) : "Gave up"}
+          headline={won ? "All typed" : "Here's the verse"}
+          score={gameScore({ game: "first_letters", status: game.status, state: game.state, puzzle })}
           next={next}
         >
           <VerseCard reference={puzzle.reference} translation={puzzle.translation}>

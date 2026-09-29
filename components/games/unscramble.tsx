@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { isNextChunk, type UnscramblePuzzle, type UnscrambleState } from "@/lib/games/unscramble";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { ActionBar, DoneBadge, GameError, GameResult, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -48,8 +49,8 @@ export function UnscrambleGame({
       <div className="flex flex-1 flex-col">
         <GameResult
           won={won}
-          headline={won ? (mistakes === 0 ? "Perfect" : "Back in order") : "Here's the verse"}
-          result={won ? mistakesText(mistakes) : "Gave up"}
+          headline={won ? "Back in order" : "Here's the verse"}
+          score={gameScore({ game: "unscramble", status: game.status, state: game.state, puzzle })}
           next={next}
         >
           <VerseCard reference={puzzle.reference} translation={puzzle.translation}>

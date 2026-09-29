@@ -12,6 +12,7 @@ import {
   type FillBlanksVerse,
 } from "@/lib/games/fill-blanks";
 import { cn } from "@/lib/utils";
+import { gameScore } from "@/lib/games/summary";
 import { ActionBar, countText, DoneBadge, GameDetail, GameError, GameResult, mistakesText, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -98,8 +99,9 @@ export function FillBlanksGame({
       <div className="flex flex-1 flex-col">
         <GameResult
           won={won}
-          headline={won ? (totalMistakes === 0 ? "Perfect" : "All filled in") : "Here's the rest"}
-          result={won ? `${mistakesText(totalMistakes)} · ${countText(rounds, "verse")}` : "Gave up"}
+          headline={won ? "All filled in" : "Here's the rest"}
+          score={gameScore({ game: "fill_blanks", status: game.status, state: game.state, puzzle })}
+          result={won ? countText(rounds, "verse") : undefined}
           next={next}
         >
           <VerseSummary puzzle={puzzle} order={order} state={game.state} />

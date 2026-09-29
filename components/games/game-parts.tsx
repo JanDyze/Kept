@@ -6,6 +6,8 @@ import { BookOpenText, Check, ChevronRight, Loader2, PartyPopper, RotateCcw } fr
 import { BackNavLink } from "@/components/back-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { GameScore } from "@/lib/games/summary";
+import { ResultMark } from "./result-mark";
 import { useReplay } from "./replay";
 
 // Which round is showing ("Verse 2 of 3"); the game's name is in the top bar.
@@ -55,13 +57,15 @@ export function GiveUp({ onConfirm, disabled, className }: { onConfirm: () => vo
 export function GameResult({
   won,
   headline,
+  score,
   result,
   next,
   children,
 }: {
   won: boolean;
   headline: string;
-  result: string;
+  score: GameScore | null;
+  result?: string; // anything the marks don't say: the answer, how many verses
   next?: { href: string; name: string };
   children?: React.ReactNode;
 }) {
@@ -78,7 +82,8 @@ export function GameResult({
           <Icon className={cn("size-8", won ? "text-icon-accent" : "text-icon-ink")} aria-hidden />
         </span>
         <h2 className="mt-4 font-brand text-3xl font-semibold tracking-tight">{headline}</h2>
-        <p className="mt-1 text-muted-foreground">{result}</p>
+        {score && <ResultMark score={score} size="lg" className="mt-3" />}
+        {result && <p className="mt-3 text-muted-foreground">{result}</p>}
       </div>
 
       {children && (

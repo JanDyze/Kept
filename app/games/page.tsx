@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth";
 import { today } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
 import { GAMES } from "@/lib/games/registry";
+import { starredFirst, starredGames } from "@/lib/games/stars";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Games" };
@@ -15,7 +16,7 @@ export const metadata: Metadata = { title: "Games" };
 export default async function GamesPage() {
   const user = await requireUser();
   const day = await today();
-  const [games, days] = await Promise.all([getOrCreateDay(user.id, day), streak(user.id, day)]);
+  const [games, days, starred] = await Promise.all([getOrCreateDay(user.id, day), streak(user.id, day), starredGames(user.id)]);
   const dateLabel = new Date(`${day}T12:00:00Z`).toLocaleDateString("en", {
     weekday: "long",
     month: "long",
@@ -23,7 +24,12 @@ export default async function GamesPage() {
     timeZone: "UTC",
   });
 
-  const entries: GameEntry[] = GAMES.map((info) => ({ info, game: games.find((g) => g.game === info.id) }));
+  // Starred games lead each group.
+  const entries: GameEntry[] = starredFirst(GAMES, (g) => g.id, starred).map((info) => ({
+    info,
+    game: games.find((g) => g.game === info.id),
+    starred: starred.includes(info.id),
+  }));
   const toPlay = entries.filter((e) => e.game?.status === "in_progress");
   const done = entries.filter((e) => e.game && e.game.status !== "in_progress");
   const notToday = entries.filter((e) => !e.game);

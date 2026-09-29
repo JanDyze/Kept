@@ -233,6 +233,19 @@ export const dailyGames = pgTable(
   (t) => [uniqueIndex("daily_games_user_day_game_idx").on(t.userId, t.day, t.game)],
 ).enableRLS();
 
+// Games a user loves: listed first on the Games page.
+export const gameStars = pgTable(
+  "game_stars",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    game: gameKind("game").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.game] })],
+).enableRLS();
+
 // OpenBible.info Topical Bible (CC BY 4.0): which verses people found relevant to a topic, with
 // vote counts. Loaded by scripts/import-topics.mjs; powers topic search ("depression", "mothers").
 export const topicVerses = pgTable(
