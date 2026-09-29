@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.21.1 — Back to exit
+
+- On Home, pressing your phone's Back asks first: press it again to leave Kept, instead of going back to a page you'd already left.
+
 ## 0.21.0 — Share to Stories
 
 - Put a verse on your Instagram or Facebook Story: open Share on a verse, tap Share to Stories, then pick Instagram or Facebook and choose Story. A card goes as the card itself; a verse without one goes as its words.

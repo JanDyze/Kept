@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { BackNavLink } from "@/components/back-link";
 import { HideOnScroll } from "@/components/hide-on-scroll";
@@ -57,10 +56,10 @@ export function AppHeader({
             <span className="truncate">{back.label}</span>
           </BackNavLink>
         ) : (
-          <Link href="/" transitionTypes={["nav-back"]} className="flex items-center gap-2">
+          <BackNavLink href="/" transitionTypes={["nav-back"]} className="flex items-center gap-2">
             <Image src="/logo-animated.svg" alt="" width={30} height={30} unoptimized className="dark:brightness-0 dark:invert" />
             <span className="font-brand text-[1.6rem] font-semibold leading-none tracking-tight">Kept</span>
-          </Link>
+          </BackNavLink>
         )}
         {children}
       </div>

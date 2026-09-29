@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { navigationApi, takePendingSteps } from "@/lib/nav-history";
+import { homeGuardKey, navigationApi, takePendingSteps } from "@/lib/nav-history";
 
 // Mounted once in the root layout. Keeps the tab's history the way you came, so the phone's own
 // Back goes where you'd expect. After a page replaces the current entry:
@@ -18,6 +18,7 @@ export function NavHistory() {
       if (e.navigationType !== "replace" || !current?.url) return;
       const steps = takePendingSteps();
       if (steps) return history.go(-steps);
+      if (current.key === homeGuardKey()) return; // Home's guard sits on Home on purpose
       const before = nav.entries().find((x) => x.index === current.index - 1);
       if (before?.url === current.url) history.back();
     };

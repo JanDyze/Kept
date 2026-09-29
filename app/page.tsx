@@ -5,6 +5,7 @@ import { ANIMATED_LOGO_SVG } from "@/components/animated-logo-markup";
 import { Avatar } from "@/components/avatar";
 import { AppBadge, CountBadge } from "@/components/count-badge";
 import { GuestSave } from "@/components/guest-save";
+import { HomeBackGuard } from "@/components/home-back-guard";
 import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
@@ -235,6 +236,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </WhatsNewSheet>
       )}
       <AppBadge count={requests + left} />
+      <HomeBackGuard />
     </Screen>
   );
 }

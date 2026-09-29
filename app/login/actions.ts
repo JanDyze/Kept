@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { NEXT_COOKIE } from "@/lib/next-path";
 import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
@@ -46,7 +46,8 @@ export async function continueAsGuest(formData: FormData) {
     console.error("Continue as guest failed:", error.status, error.code, error.message);
     redirect("/login?link=guest");
   }
-  redirect(next);
+  // Replaces the sign-in page, so Home is where the app's history starts (Back from it exits).
+  redirect(next, RedirectType.replace);
 }
 
 // A guest keeping their account: Google is linked to the same user, so their verses, cards and
