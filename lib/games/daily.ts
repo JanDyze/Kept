@@ -16,7 +16,7 @@ import { buildRecite } from "./recite";
 import { weakness, weightedOrder } from "@/lib/verses/mastery";
 import { seededRandom } from "./random";
 import type { ReferenceWordlePuzzle } from "./reference-wordle";
-import { GAMES, type GameId } from "./registry";
+import { PLAYABLE, type GameId } from "./registry";
 import { buildSpotChange } from "./spot-change";
 import { buildTwoTongues } from "./two-tongues";
 import { buildUnscramble } from "./unscramble";
@@ -24,8 +24,9 @@ import { tokenize } from "./words";
 
 const MAX_RECALL_VERSES = 3;
 
+// A game under development drops out, along with any of its rows made before it was.
 function inShelfOrder(rows: DailyGame[]) {
-  return GAMES.flatMap((g) => rows.filter((r) => r.game === g.id));
+  return PLAYABLE.flatMap((g) => rows.filter((r) => r.game === g.id));
 }
 
 export async function getDay(userId: string, day: string) {
@@ -44,7 +45,7 @@ const toppedUp = new Set<string>();
 // started before new games were added gets just the missing ones.
 export async function getOrCreateDay(userId: string, day: string) {
   const existing = await getDay(userId, day);
-  if (existing.length === GAMES.length) return existing;
+  if (existing.length === PLAYABLE.length) return existing;
   if (existing.length > 0 && toppedUp.has(`${userId}|${day}`)) return existing;
 
   const pool = await db
@@ -83,6 +84,7 @@ async function buildDay(userId: string, day: string, pool: Verse[]) {
     queueAlternatives(missing);
   } catch {}
   const add = (game: GameId, picked: Verse[], puzzle: unknown) => {
+    if (!PLAYABLE.some((g) => g.id === game)) return;
     picked.forEach((v) => used.add(v.id));
     rows.push({ userId, day, game, verseIds: picked.map((v) => v.id), puzzle });
   };

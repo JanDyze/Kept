@@ -26,6 +26,8 @@ export type GameInfo = {
   recall: boolean;
   // The OKLCH hue its Games card is tinted with, so each game has its own feel.
   hue: number;
+  // Shown on the shelf as under development and left out of each day's games.
+  underDevelopment?: boolean;
 };
 
 export const GAMES: GameInfo[] = [
@@ -93,6 +95,7 @@ export const GAMES: GameInfo[] = [
     ],
     recall: true,
     hue: 330,
+    underDevelopment: true, // its speech-to-text isn't ready for everyone yet
   },
   {
     id: "missing_word",
@@ -162,6 +165,9 @@ export const GAMES: GameInfo[] = [
     hue: 85,
   },
 ];
+
+// The games a day is made of.
+export const PLAYABLE = GAMES.filter((g) => !g.underDevelopment);
 
 export function gameBySlug(slug: string) {
   return GAMES.find((g) => g.slug === slug);

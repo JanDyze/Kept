@@ -54,6 +54,14 @@ export default async function GamePage({ params }: PageProps<"/games/[slug]">) {
     </div>
   );
 
+  if (info.underDevelopment) {
+    return (
+      <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={action}>
+        <p className="text-muted-foreground">{info.name} is under development. It will be back soon.</p>
+      </Screen>
+    );
+  }
+
   if (!game) {
     return (
       <Screen back={{ href: "/games", label: "Games" }} title={info.name} action={action}>

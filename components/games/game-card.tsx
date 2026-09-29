@@ -31,15 +31,17 @@ export function GameCard({ info, game, starred }: GameEntry) {
   const perfect = score?.kind === "perfect";
   const done = won || lost;
 
-  const status = !game
-    ? (UNAVAILABLE[info.id] ?? "Not today")
-    : playing
-      ? started
-        ? "In progress"
-        : "Not started"
-      : score
-        ? scoreText(score)
-        : "Done";
+  const status = info.underDevelopment
+    ? "Under development"
+    : !game
+      ? (UNAVAILABLE[info.id] ?? "Not today")
+      : playing
+        ? started
+          ? "In progress"
+          : "Not started"
+        : score
+          ? scoreText(score)
+          : "Done";
 
   return (
     <Link

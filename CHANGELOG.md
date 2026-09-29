@@ -2,10 +2,9 @@
 
 All notable changes to Kept, one version per feature.
 
-## 0.23.0 — Say it, start to finish
+## 0.23.1 — Say it, coming back
 
-- Say it listens the whole way through: tap once, say the verse at your own pace, pauses and all, then tap Done. No more mic switching off and on.
-- Words fill in after each phrase you say.
+- Say it is under development for now, so it's not in today's games. It will be back soon.
 
 ## 0.22.1 — Say it, smoother
 
