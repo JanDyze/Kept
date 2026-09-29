@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.17.2 — Add it from your search
+
+- Searched My verses for a verse you haven't kept? Add it right there: type a reference like "rom 8 28" and it opens ready to save.
+- Searched for words instead? Find them in the Bible in one tap.
+
 ## 0.17.1 — Swipe the whole page
 
 - On a verse or a Discover card, swipe anywhere on the page, not just the card, for the next or previous one.

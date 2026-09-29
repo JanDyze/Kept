@@ -8,6 +8,7 @@ import { ArrangeList } from "@/components/arrange-list";
 import { CardBackdrop, CardBorder, cardFontClass } from "@/components/memory-card";
 import { Morph, morphName } from "@/components/verse-morph";
 import { buttonVariants } from "@/components/ui/button";
+import { formatReference, parseReference } from "@/lib/bible/books";
 import { cardColors, hasBorder, type CardStyle } from "@/lib/cards/style";
 import type { Mastery } from "@/lib/verses/mastery";
 import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/lib/scroll-memory";
@@ -201,6 +202,7 @@ export function VerseLibrary({
       ) : shown.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-14 text-center">
           <p className="text-muted-foreground">No verses match.</p>
+          {!archived && query.trim() && <AddFromSearch query={query.trim()} />}
           {filtering && (
             <button
               type="button"
@@ -473,6 +475,36 @@ export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: str
       {body}
     </Link>
     </Morph>
+  );
+}
+
+// Searching My verses for one that isn't there: add it. A reference ("jn 3 16") opens Add verse
+// filled in; other words can also be looked up in the Bible.
+function AddFromSearch({ query }: { query: string }) {
+  const parsed = parseReference(query);
+  const reference = parsed.ok
+    ? formatReference(parsed.ref.book.name, parsed.ref.chapter, parsed.ref.verseStart, parsed.ref.verseEnd)
+    : null;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <Link
+        href={reference ? `/verses/new?ref=${encodeURIComponent(reference)}&from=verses` : "/verses/new"}
+        transitionTypes={["nav-forward"]}
+        className={cn(buttonVariants(), "h-11 gap-1.5 px-5 text-base")}
+      >
+        <Plus className="size-5" aria-hidden /> {reference ? `Add ${reference}` : "Add a verse"}
+      </Link>
+      {!reference && (
+        <Link
+          href={`/bible/search?q=${encodeURIComponent(query)}`}
+          transitionTypes={["nav-forward"]}
+          className="inline-flex h-10 max-w-full items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-primary hover:bg-muted"
+        >
+          <Search className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">Find &ldquo;{query}&rdquo; in the Bible</span>
+        </Link>
+      )}
+    </div>
   );
 }
 

@@ -9,7 +9,8 @@ import { skipFirstVerse } from "../actions";
 
 export const metadata: Metadata = { title: "Add verse" };
 
-// ?ref=John%203:16&t=MBBTAG pre-fills the form (used by the Bible reader).
+// ?ref=John%203:16&t=MBBTAG pre-fills the form (used by the Bible reader; with &from=verses, by a
+// search in My verses that found nothing).
 export default async function NewVersePage({ searchParams }: PageProps<"/verses/new">) {
   const user = await requireUser();
   const sp = await searchParams;
@@ -17,7 +18,7 @@ export default async function NewVersePage({ searchParams }: PageProps<"/verses/
 
   const ref = typeof sp.ref === "string" ? sp.ref : "";
   const t = typeof sp.t === "string" && isLookupTranslation(sp.t) ? sp.t : undefined;
-  const fromBible = Boolean(ref);
+  const fromBible = Boolean(ref) && sp.from !== "verses";
   // A guest or someone with nothing kept yet may not have a verse in mind: they can skip for now.
   const canSkip = !fromBible && (user.guest || counts.active + counts.archived === 0);
 
@@ -39,7 +40,9 @@ export default async function NewVersePage({ searchParams }: PageProps<"/verses/
       <VerseForm
         allTags={tags}
         lastTranslation={t ?? translation}
-        initial={fromBible ? { reference: ref, translation: t ?? "ESV", text: "", notes: "", tags: [] } : undefined}
+        initial={
+          ref ? { reference: ref, translation: t ?? (fromBible ? "ESV" : (translation ?? "ESV")), text: "", notes: "", tags: [] } : undefined
+        }
       />
     </Screen>
   );
