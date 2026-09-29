@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.21.2 — Say it hears you once
+
+- Say it no longer hears your words twice: saying "hello" shows "hello", not "hello hello".
+
 ## 0.21.1 — Back to exit
 
 - On Home, pressing your phone's Back asks first: press it again to leave Kept, instead of going back to a page you'd already left.

@@ -223,15 +223,17 @@ export function SayItGame(props: Props) {
     if (!Recognition || !game.playing) return;
     const recognition = new Recognition();
     recognition.lang = props.puzzle.translation === "MBBTAG" ? "fil-PH" : "en-US";
-    recognition.continuous = true;
+    // Not continuous: on Android Chrome and iOS Safari each continuous result repeats the words before
+    // it, so "hello" came out "hello hello". One phrase per session instead, and pausing to remember
+    // the next line starts a new one, keeping what was heard (`before`). Only the Done tap or an
+    // error ends the try.
+    recognition.continuous = false;
     recognition.interimResults = true;
-    // Phones end a session after a short silence; pausing to remember the next line shouldn't end
-    // the try, so listening picks up again, keeping what was heard (`before`). Only the Done tap or
-    // an error ends it.
     let before = "";
     let restarts = 0;
     recognition.onresult = (e) => {
-      const text = [before, ...Array.from(e.results, (result) => result[0].transcript)].join(" ").trim();
+      const said = e.results[e.results.length - 1]?.[0].transcript ?? "";
+      const text = [before, said].join(" ").trim();
       heardRef.current = text;
       setHeard(text);
     };
@@ -241,7 +243,7 @@ export function SayItGame(props: Props) {
       setMicError(MIC_ERRORS[e.error] ?? "Couldn't listen. Try again.");
     };
     recognition.onend = () => {
-      if (!done.current && !failed.current && restarts++ < 30) {
+      if (!done.current && !failed.current && restarts++ < 100) {
         before = heardRef.current;
         try {
           recognition.start();
