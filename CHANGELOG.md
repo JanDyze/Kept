@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.21.4 — Steadier
+
+- Kept's latest fixes reach your phone again: an update had stopped going out.
+
 ## 0.21.3 — Right numbers
 
 - Fixed a mix-up where a busy page could show another list's numbers, or keep loading.
