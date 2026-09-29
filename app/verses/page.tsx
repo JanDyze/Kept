@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Screen } from "@/components/screen";
 import { VerseLibrary, type LibraryItem } from "@/components/verse-library";
 import { requireUser } from "@/lib/auth";
@@ -48,6 +49,18 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       back={archived ? { href: "/verses", label: "My verses" } : { href: "/", label: "Home" }}
       title={archived ? "Archived" : "My verses"}
       subtitle={`${list.length} ${list.length === 1 ? "verse" : "verses"}`}
+      action={
+        // In the top bar with a word, not a floating "+": people new to apps didn't find that.
+        !archived && (
+          <Link
+            href="/verses/new"
+            transitionTypes={["nav-forward"]}
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-primary pr-4 pl-3 text-sm font-semibold text-primary-foreground transition-transform active:scale-95"
+          >
+            <Plus className="size-5" strokeWidth={2.5} aria-hidden /> Add
+          </Link>
+        )
+      }
     >
       <VerseLibrary items={items} archived={archived} initialSort={sort} initialTag={tag} />
 

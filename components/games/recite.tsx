@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Mic, Square } from "lucide-react";
-import { grade, RECITE_TRIES, reciteOutcome, type ReciteGame, type RecitePuzzle, type ReciteState } from "@/lib/games/recite";
+import { grade, joinHeard, RECITE_TRIES, reciteOutcome, type ReciteGame, type RecitePuzzle, type ReciteState } from "@/lib/games/recite";
 import { gameScore } from "@/lib/games/summary";
 import { cn } from "@/lib/utils";
 import { ActionBar, GameError, GameResult, KeyboardFit, Segments, useResultShown, VerseCard } from "./game-parts";
@@ -223,17 +223,16 @@ export function SayItGame(props: Props) {
     if (!Recognition || !game.playing) return;
     const recognition = new Recognition();
     recognition.lang = props.puzzle.translation === "MBBTAG" ? "fil-PH" : "en-US";
-    // Not continuous: on Android Chrome and iOS Safari each continuous result repeats the words before
-    // it, so "hello" came out "hello hello". One phrase per session instead, and pausing to remember
-    // the next line starts a new one, keeping what was heard (`before`). Only the Done tap or an
-    // error ends the try.
-    recognition.continuous = false;
+    // Continuous, so the mic stays on through the verse (each restart plays the phone's mic sound).
+    // Phones still end a session after a long silence; pausing to remember the next line shouldn't
+    // end the try, so listening picks up again, keeping what was heard (`before`). Only the Done tap
+    // or an error ends it.
+    recognition.continuous = true;
     recognition.interimResults = true;
     let before = "";
     let restarts = 0;
     recognition.onresult = (e) => {
-      const said = e.results[e.results.length - 1]?.[0].transcript ?? "";
-      const text = [before, said].join(" ").trim();
+      const text = [before, joinHeard(Array.from(e.results, (result) => result[0].transcript))].join(" ").trim();
       heardRef.current = text;
       setHeard(text);
     };
@@ -243,7 +242,7 @@ export function SayItGame(props: Props) {
       setMicError(MIC_ERRORS[e.error] ?? "Couldn't listen. Try again.");
     };
     recognition.onend = () => {
-      if (!done.current && !failed.current && restarts++ < 100) {
+      if (!done.current && !failed.current && restarts++ < 30) {
         before = heardRef.current;
         try {
           recognition.start();

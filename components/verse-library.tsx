@@ -239,23 +239,6 @@ export function VerseLibrary({
         </div>
       )}
 
-      {!archived && (
-        <>
-          {/* keeps the last card clear of the floating button */}
-          <div className="h-20" aria-hidden />
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30">
-            <div className="mx-auto flex max-w-xl justify-end px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-              <Link
-                href="/verses/new"
-                transitionTypes={["nav-forward"]}
-                className="pointer-events-auto flex h-14 items-center gap-2 rounded-2xl bg-primary pr-6 pl-5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:scale-105 active:scale-95"
-              >
-                <Plus className="size-6" strokeWidth={2.5} aria-hidden /> Add verse
-              </Link>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }

@@ -63,23 +63,43 @@ export function grade(tokens: Token[], text: string, lenient = false) {
         cost[i][j - 1] + 1,
       );
 
+  // Walking back from the end, a verse word is left missing whenever that costs no more than
+  // matching it, so a word said once lines up with its first place in the verse: saying "In" (the
+  // first word) fills the first "In", not one twenty words on that hasn't been reached yet.
   const marks: WordMark[] = Array(n).fill("missing");
   let extra = 0;
   let i = n;
   let j = m;
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && cost[i][j] === cost[i - 1][j - 1] + (sameWord(said[j - 1], verse[i - 1], lenient) ? 0 : 1)) {
+    if (i > 0 && cost[i][j] === cost[i - 1][j] + 1) {
+      marks[--i] = "missing";
+    } else if (i > 0 && j > 0 && cost[i][j] === cost[i - 1][j - 1] + (sameWord(said[j - 1], verse[i - 1], lenient) ? 0 : 1)) {
       marks[i - 1] = sameWord(said[j - 1], verse[i - 1], lenient) ? "right" : "wrong";
       i--;
       j--;
-    } else if (i > 0 && cost[i][j] === cost[i - 1][j] + 1) {
-      marks[--i] = "missing";
     } else {
       extra++;
       j--;
     }
   }
   return { marks, extra, errors: cost[n][m] };
+}
+
+// Speech results in order, as one text. Chrome on Android repeats earlier words in later results
+// when listening continuously (the phrase so far again, or the same phrase twice), which turned
+// "hello" into "hello hello": a result that starts with everything so far replaces it, and one
+// that's already at the end is skipped.
+export function joinHeard(results: string[]) {
+  let text = "";
+  for (const r of results) {
+    const said = r.trim();
+    if (!said) continue;
+    const sofar = text.toLowerCase();
+    const next = said.toLowerCase();
+    if (next.startsWith(sofar)) text = said;
+    else if (!sofar.endsWith(next)) text = `${text} ${said}`;
+  }
+  return text;
 }
 
 // Typing must be word for word. Speech recognition mishears now and then, so Say it passes at 90%.

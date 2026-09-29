@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.22.1 — Say it, smoother
+
+- Say it keeps the mic on while you recite, instead of switching off and on between phrases.
+- Words fill in where you've reached: saying the first "In" no longer fills an "In" further along.
+- In My verses, Add is now at the top, next to the title.
+
 ## 0.22.0 — Add a verse, right there
 
 - Home has an Add a verse button, just under Games, My verses, Bible and Discover.
