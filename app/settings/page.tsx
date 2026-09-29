@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { sql } from "drizzle-orm";
-import { ChartColumn, ChevronRight, LogOut, Palette, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { ChartColumn, ChevronRight, HandHeart, LogOut, Palette, Sparkles } from "lucide-react";
 import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
-import { SupportKept } from "@/components/support-kept";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdmin } from "@/lib/admin";
 import { requireUser } from "@/lib/auth";
@@ -30,6 +30,7 @@ export default async function SettingsPage() {
   const links = [
     { href: "/settings/theme", label: "Theme", Icon: Palette },
     { href: "/whats-new", label: "What's new", detail: APP_VERSION, Icon: Sparkles },
+    { href: "/settings/support", label: "Support Kept", Icon: HandHeart },
     ...(isAdmin(user) ? [{ href: "/admin", label: "Dashboard", Icon: ChartColumn }] : []),
   ];
 
@@ -77,7 +78,10 @@ export default async function SettingsPage() {
         )}
       </form>
 
-      <SupportKept version={APP_VERSION} supportUrl={process.env.SUPPORT_URL?.trim() || null} />
+      <footer className="mt-10 flex flex-col items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+        <Image src="/logo.svg" alt="" width={22} height={22} unoptimized className="size-[22px] opacity-50 dark:brightness-0 dark:invert" />
+        Kept {APP_VERSION}
+      </footer>
     </Screen>
   );
 }

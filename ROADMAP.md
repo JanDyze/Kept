@@ -37,6 +37,24 @@ Next:
 - Missing Word could hint with a word that fits when a guess is far off.
 - Better Tagalog: XLM-RoBERTa guesses whole words less often than DistilBERT does in English.
 
+## Support and Premium
+
+- **Support Kept**: built (0.18.3). Settings → Support Kept: a Give link (`SUPPORT_URL`, e.g.
+  Ko-fi), an optional GCash/Maya QR (`SUPPORT_QR`), and Share Kept. Tips only, nothing unlocked.
+- **Premium** (planned): memorizing stays free (keeping verses, reviews, the daily games). Paid
+  extras on top:
+  - **Premium games**: new game types beyond the free daily set.
+  - **Auto-designed cards**: one tap turns a verse into a card with a random design (background,
+    type, layout), and you can shuffle until one fits.
+  - **Multiplayer games** (maybe premium, maybe free with premium modes; see Social).
+- Needs real payments first: a processor that takes GCash, Maya and cards (PayMongo, or Stripe
+  where it's available), a webhook that records who paid, and a per-user entitlement
+  (`profiles.plan` or a `subscriptions` table) that premium features check. Monthly and yearly,
+  maybe lifetime. Supporters who tipped before launch could get a thank-you (badge or a free
+  month).
+- If Kept is ever wrapped for the App Store or Play Store, their in-app purchase rules apply to
+  premium; on the web (PWA) they don't.
+
 ## Before deploying
 
 - Card photos and profile pictures are in Vercel Blob (done in 0.17): set `BLOB_READ_WRITE_TOKEN`

@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.18.3 — Support Kept
+
+- Settings has a Support Kept page: help keep Kept free and ad-free, or share it with a friend.
+
 ## 0.18.2 — Steadier word choices
 
 - In Unscramble and Fill the Blanks, the words you pick fade out in place, so the rest stay put instead of jumping around.
