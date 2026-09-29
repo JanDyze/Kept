@@ -67,16 +67,16 @@ export function GameCard({ info, game, starred }: GameEntry) {
           <span
             aria-hidden
             className={cn(
-              "absolute inset-0 flex items-center justify-center rounded-[inherit] backdrop-blur-[3px] transition-opacity duration-300 ease-out motion-safe:group-engaged:opacity-0",
-              perfect ? "bg-icon-accent/92 text-[#2a1a04]" : won ? "bg-(--game-strong)/92 text-(--game-tile)" : "bg-muted-foreground/88 text-background",
+              "absolute inset-0 flex items-center justify-center rounded-[inherit] transition-opacity duration-300 ease-out motion-safe:group-engaged:opacity-0",
+              perfect ? "bg-icon-accent/55 text-[#2a1a04]" : won ? "bg-(--game-strong)/55 text-(--game-tile)" : "bg-muted-foreground/50 text-background",
             )}
           >
             {perfect ? (
-              <Star className="size-9 fill-current" aria-hidden />
+              <Star className="size-9 fill-current drop-shadow-[0_1px_3px_rgb(0_0_0/0.35)]" aria-hidden />
             ) : won ? (
-              <Check className="size-10" strokeWidth={3.25} aria-hidden />
+              <Check className="size-10 drop-shadow-[0_1px_3px_rgb(0_0_0/0.35)]" strokeWidth={3.25} aria-hidden />
             ) : (
-              <X className="size-9" strokeWidth={3.25} aria-hidden />
+              <X className="size-9 drop-shadow-[0_1px_3px_rgb(0_0_0/0.35)]" strokeWidth={3.25} aria-hidden />
             )}
           </span>
         )}
