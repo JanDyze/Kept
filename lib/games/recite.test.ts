@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRecite, grade, joinHeard, passes, reciteOutcome } from "./recite";
+import { buildRecite, grade, passes, reciteOutcome } from "./recite";
 import { tokenize } from "./words";
 
 const verse = { id: "v", reference: "John 11:35", translation: "ESV", text: "For God so loved the world, that he gave his only Son." };
@@ -46,17 +46,6 @@ describe("partway through", () => {
   it("still finds both when the whole verse is said", () => {
     const { marks } = grade(john, "In the beginning was the Word and the Word was with God and the Word was God He was in the beginning with God", true);
     expect(marks.every((m) => m === "right")).toBe(true);
-  });
-});
-
-describe("joinHeard", () => {
-  it("joins results in order", () => {
-    expect(joinHeard(["For God so loved", " the world"])).toBe("For God so loved the world");
-  });
-
-  it("drops the repeats Android sends", () => {
-    expect(joinHeard(["hello", "hello"])).toBe("hello");
-    expect(joinHeard(["For God", "for God so loved", "For God so loved the world"])).toBe("For God so loved the world");
   });
 });
 

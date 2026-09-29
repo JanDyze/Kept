@@ -2,9 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
-## 0.22.2 — Say it, at your pace
+## 0.23.0 — Say it, start to finish
 
-- Say it no longer turns the mic off and on by itself. When your phone stops listening at a pause, tap Keep going to carry on, or Check when you're done.
+- Say it listens the whole way through: tap once, say the verse at your own pace, pauses and all, then tap Done. No more mic switching off and on.
+- Words fill in after each phrase you say.
 
 ## 0.22.1 — Say it, smoother
 

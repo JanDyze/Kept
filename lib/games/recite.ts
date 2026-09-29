@@ -85,23 +85,6 @@ export function grade(tokens: Token[], text: string, lenient = false) {
   return { marks, extra, errors: cost[n][m] };
 }
 
-// Speech results in order, as one text. Chrome on Android repeats earlier words in later results
-// when listening continuously (the phrase so far again, or the same phrase twice), which turned
-// "hello" into "hello hello": a result that starts with everything so far replaces it, and one
-// that's already at the end is skipped.
-export function joinHeard(results: string[]) {
-  let text = "";
-  for (const r of results) {
-    const said = r.trim();
-    if (!said) continue;
-    const sofar = text.toLowerCase();
-    const next = said.toLowerCase();
-    if (next.startsWith(sofar)) text = said;
-    else if (!sofar.endsWith(next)) text = `${text} ${said}`;
-  }
-  return text;
-}
-
 // Typing must be word for word. Speech recognition mishears now and then, so Say it passes at 90%.
 export function passes(game: ReciteGame, puzzle: RecitePuzzle, text: string) {
   const { errors } = grade(puzzle.tokens, text, game === "say_it");

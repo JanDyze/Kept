@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Mic, Square } from "lucide-react";
-import { grade, joinHeard, RECITE_TRIES, reciteOutcome, type ReciteGame, type RecitePuzzle, type ReciteState } from "@/lib/games/recite";
+import { useMemo, useState } from "react";
+import { LoaderCircle, Mic, Square } from "lucide-react";
+import { grade, RECITE_TRIES, reciteOutcome, type ReciteGame, type RecitePuzzle, type ReciteState } from "@/lib/games/recite";
 import { gameScore } from "@/lib/games/summary";
 import { cn } from "@/lib/utils";
 import { ActionBar, GameError, GameResult, KeyboardFit, Segments, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
+import { useCanRecord, useVoice } from "./use-voice";
 
 type Props = {
   id: string;
@@ -160,114 +161,16 @@ export function TypeItGame(props: Props) {
 
 // ---------- Say it ----------
 
-type Recognition = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((e: { results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
-  onerror: ((e: { error: string }) => void) | null;
-  onend: (() => void) | null;
-};
-type RecognitionClass = new () => Recognition;
-
-function recognitionClass() {
-  const w = window as unknown as { SpeechRecognition?: RecognitionClass; webkitSpeechRecognition?: RecognitionClass };
-  return window.isSecureContext ? (w.SpeechRecognition ?? w.webkitSpeechRecognition) : undefined;
-}
-const noop = () => () => {};
-// Whether this browser can listen: null while rendering on the server.
-function useCanListen() {
-  return useSyncExternalStore(noop, () => Boolean(recognitionClass()), () => null);
-}
-
-const MIC_ERRORS: Record<string, string> = {
-  "not-allowed": "Allow the microphone to play.",
-  "service-not-allowed": "Allow the microphone to play.",
-  "no-speech": "Didn't hear anything. Try again.",
-  "audio-capture": "No microphone found.",
-};
-
 export function SayItGame(props: Props) {
   const r = useRecite("say_it", props);
   const { game, attempts, graded } = r;
-  const canListen = useCanListen();
-  const [listening, setListening] = useState(false);
-  const [heard, setHeard] = useState("");
-  const [micError, setMicError] = useState<string | null>(null);
-  const rec = useRef<Recognition | null>(null);
-  const heardRef = useRef("");
-  const done = useRef(false); // the Done tap: end the try
-  const failed = useRef(false);
-  const check = useRef(r.check);
-  useEffect(() => {
-    check.current = r.check;
-  });
-  useEffect(
-    // Leaving mid-recitation drops it rather than counting it as a try.
-    () => () => {
-      if (!rec.current) return;
-      rec.current.onend = null;
-      rec.current.abort();
-    },
-    [],
-  );
+  const canRecord = useCanRecord();
+  const voice = useVoice({ lang: props.puzzle.translation === "MBBTAG" ? "tl" : "en", onDone: r.check });
+  const busy = voice.phase !== "idle";
+  const listening = voice.phase === "listening";
 
-  // While reciting, the words said right so far fill in as they're heard.
-  const live = useMemo(() => (heard ? grade(props.puzzle.tokens, heard, true) : undefined), [heard, props.puzzle]);
-  // The phone turned the mic off at a pause, with words already heard: Keep going or Check.
-  const paused = !listening && heard !== "" && !micError;
-
-  // resume: Keep going after a pause, adding to what was heard.
-  function start(resume = false) {
-    const Recognition = recognitionClass();
-    if (!Recognition || !game.playing) return;
-    const recognition = new Recognition();
-    recognition.lang = props.puzzle.translation === "MBBTAG" ? "fil-PH" : "en-US";
-    // Continuous, but phones (Chrome on Android) still turn the mic off after each phrase, with a
-    // sound. Restarting it by itself made an on-off-on loop of sounds, so a pause waits for the
-    // player instead: Keep going listens again, keeping what was heard (`before`); Check ends the try.
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    const before = resume ? heardRef.current : "";
-    recognition.onresult = (e) => {
-      const text = [before, joinHeard(Array.from(e.results, (result) => result[0].transcript))].join(" ").trim();
-      heardRef.current = text;
-      setHeard(text);
-    };
-    recognition.onerror = (e) => {
-      if (e.error === "no-speech" && heardRef.current) return; // a pause after speaking: keep going
-      failed.current = true;
-      setMicError(MIC_ERRORS[e.error] ?? "Couldn't listen. Try again.");
-    };
-    recognition.onend = () => {
-      setListening(false);
-      rec.current = null;
-      if (!done.current && !failed.current && heardRef.current.trim()) return; // paused
-      submit();
-    };
-    heardRef.current = before;
-    done.current = false;
-    failed.current = false;
-    setHeard(before);
-    setMicError(null);
-    rec.current = recognition;
-    recognition.start();
-    setListening(true);
-  }
-
-  function submit() {
-    if (heardRef.current.trim()) check.current(heardRef.current);
-    heardRef.current = "";
-    setHeard("");
-  }
-
-  function finishSaying() {
-    done.current = true;
-    rec.current?.stop();
-  }
+  // While reciting, the words said right so far fill in as each phrase comes back.
+  const live = useMemo(() => (voice.heard ? grade(props.puzzle.tokens, voice.heard, true) : undefined), [voice.heard, props.puzzle]);
 
   if (r.resultShown) return <Result kind="say_it" props={props} state={r} />;
   const tally = tallyOf({ attempts, graded: live ?? graded, total: props.puzzle.tokens.length });
@@ -278,8 +181,8 @@ export function SayItGame(props: Props) {
       <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl">
         <ReciteVerse puzzle={props.puzzle} graded={live ?? graded} />
       </div>
-      <ActionBar left={tally.left} right={tally.right} disabled={!game.playing || listening} onGiveUp={r.giveUp}>
-        {canListen === false ? (
+      <ActionBar left={tally.left} right={tally.right} disabled={!game.playing || busy} onGiveUp={r.giveUp}>
+        {canRecord === false ? (
           <>
             <p className="mb-2 text-sm text-muted-foreground">This browser can&apos;t listen, so type it instead.</p>
             <TypeBox initial={attempts.at(-1) ?? ""} onCheck={r.check} disabled={!game.playing} misses={r.misses} />
@@ -290,48 +193,33 @@ export function SayItGame(props: Props) {
               aria-live="polite"
               className={cn(
                 "line-clamp-2 min-h-10 text-center text-sm",
-                micError ? "text-destructive" : "font-serif text-muted-foreground italic",
+                voice.error ? "text-destructive" : "font-serif text-muted-foreground italic",
               )}
             >
-              {micError ?? heard}
+              {voice.error ?? (voice.phase === "checking" ? "Checking…" : voice.heard)}
             </p>
-            {paused ? (
-              <div className="flex w-full gap-2">
-                <button
-                  type="button"
-                  disabled={!game.playing}
-                  onClick={() => start(true)}
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border bg-card text-base font-semibold transition-transform active:scale-[0.98] disabled:opacity-40"
-                >
-                  <Mic className="size-5" aria-hidden /> Keep going
-                </button>
-                <button
-                  type="button"
-                  disabled={!game.playing}
-                  onClick={submit}
-                  className="h-12 flex-1 rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
-                >
-                  Check
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                disabled={!game.playing || canListen === null}
-                onClick={() => (listening ? finishSaying() : start())}
-                aria-label={listening ? "Done" : "Start reciting"}
-                aria-pressed={listening}
-                className={cn(
-                  "relative flex size-18 items-center justify-center rounded-full text-primary-foreground transition-[transform,background-color] active:scale-95 disabled:opacity-40",
-                  listening ? "bg-(--mark-miss)" : "bg-primary",
-                  r.misses > 0 && !listening && "animate-shake",
-                )}
-                key={r.misses}
-              >
-                {listening && <span className="absolute inset-0 animate-ping rounded-full bg-(--mark-miss)/40" aria-hidden />}
-                {listening ? <Square className="relative size-6 fill-current" aria-hidden /> : <Mic className="size-8" aria-hidden />}
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={!game.playing || canRecord === null || voice.phase === "starting" || voice.phase === "checking"}
+              onClick={() => (listening ? void voice.finish() : void voice.start())}
+              aria-label={listening ? "Done" : "Start reciting"}
+              aria-pressed={listening}
+              className={cn(
+                "relative flex size-18 items-center justify-center rounded-full text-primary-foreground transition-[transform,background-color] active:scale-95 disabled:opacity-40",
+                listening ? "bg-(--mark-miss)" : "bg-primary",
+                r.misses > 0 && !busy && "animate-shake",
+              )}
+              key={r.misses}
+            >
+              {listening && <span className="absolute inset-0 animate-ping rounded-full bg-(--mark-miss)/40" aria-hidden />}
+              {voice.phase === "checking" ? (
+                <LoaderCircle className="size-7 animate-spin" aria-hidden />
+              ) : listening ? (
+                <Square className="relative size-6 fill-current" aria-hidden />
+              ) : (
+                <Mic className="size-8" aria-hidden />
+              )}
+            </button>
           </div>
         )}
       </ActionBar>
