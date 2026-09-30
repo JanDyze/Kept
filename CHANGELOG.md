@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.24.0 — Practice on a verse
+
+- A verse's page has a practice switch under it: Blanks hides the words (tap one to peek), Flip shows only the reference until you tap to check, and Hide ref hides the reference so you can recall where it's from.
+- The switch stays on as you swipe through My verses.
+- Discover no longer slides sideways a little on a phone.
+
 ## 0.23.1 — Say it, coming back
 
 - Say it is under development for now, so it's not in today's games. It will be back soon.

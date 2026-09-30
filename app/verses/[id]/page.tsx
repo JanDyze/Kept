@@ -10,6 +10,7 @@ import { AddNoteButton, VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
 import { VerseMore } from "@/components/verse-more";
+import { PracticeProvider, PracticeReference, PracticeText, PracticeToggle } from "@/components/verse-practice";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
@@ -67,6 +68,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       }
     >
       <VerseSwiper id={verse.id}>
+      <PracticeProvider>
       <article>
         {card ? (
           <>
@@ -75,6 +77,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             {/* The verse as it looks in My verses, whole: the full card is in the card editor and when shared. */}
             <TextCard
               full
+              practice
               v={{
                 id: verse.id,
                 reference: verse.reference,
@@ -94,15 +97,25 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               {archived && <Badge variant="outline">Archived</Badge>}
             </div>
             <Morph name={morphName.reference(verse.id)}>
-              <h1 className="mt-3 w-fit font-brand text-3xl font-semibold tracking-tight">{verse.reference}</h1>
+              <h1 className="mt-3 w-fit font-brand text-3xl font-semibold tracking-tight">
+                <PracticeReference text={verse.reference} />
+              </h1>
             </Morph>
-            {localRef && <p className="text-muted-foreground">{localRef}</p>}
+            {localRef && (
+              <p className="text-muted-foreground">
+                <PracticeReference text={localRef} />
+              </p>
+            )}
 
             <Morph name={morphName.text(verse.id)}>
-              <p className="mt-5 whitespace-pre-line font-serif text-[1.35rem] leading-relaxed">{verse.text}</p>
+              <p className="mt-5 whitespace-pre-line font-serif text-[1.35rem] leading-relaxed">
+                <PracticeText text={verse.text} />
+              </p>
             </Morph>
           </>
         )}
+
+        <PracticeToggle className="mt-4" />
 
         {!archived && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -146,6 +159,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
 
         <VerseNotes verseId={verse.id} initial={notes} readOnly={archived} />
       </article>
+      </PracticeProvider>
 
       </VerseSwiper>
     </Screen>

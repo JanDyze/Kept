@@ -57,6 +57,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
     <Screen
       back={{ href: "/", label: "Home" }}
       title="Discover"
+      // Nothing here scrolls sideways except the chip rows (which scroll inside themselves): a
+      // gallery card or a long row can't nudge the whole page sideways on a phone.
+      className="overflow-x-clip"
       action={
         <div className="flex items-center gap-1">
           {(!browsing || view === "verses") && (
@@ -266,7 +269,7 @@ function Results({
                 ))}
               </p>
             )}
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {h.saved ? (
                 <span className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-muted-foreground">
                   <Check className="size-4" aria-hidden /> Kept

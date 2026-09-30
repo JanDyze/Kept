@@ -14,6 +14,7 @@ import type { Mastery } from "@/lib/verses/mastery";
 import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/lib/scroll-memory";
 import { rememberVerseOrder } from "@/lib/verse-order";
 import { cn } from "@/lib/utils";
+import { PracticeReference, PracticeText } from "@/components/verse-practice";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { orderBy } from "@/lib/verses/order";
 import { LIBRARY_SORTS, SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
@@ -407,7 +408,20 @@ function MasteryMark({ level, quiet }: { level: Mastery; quiet: string }) {
 // A verse with a card shows its background, photo and font here too.
 // Without an href it's a still preview (the card editor shows one). `full` is the verse page's
 // version: larger, with the whole text.
-export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: string; onOpen?: () => void; full?: boolean }) {
+// `practice` lets the verse page hide the words or the reference (components/verse-practice.tsx).
+export function TextCard({
+  v,
+  href,
+  onOpen,
+  full,
+  practice,
+}: {
+  v: LibraryItem;
+  href?: string;
+  onOpen?: () => void;
+  full?: boolean;
+  practice?: boolean;
+}) {
   const card = v.card;
   const colors = card ? cardColors(card.bg, card.text) : {};
   const styled = Boolean(colors.bg || colors.fg);
@@ -426,7 +440,7 @@ export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: str
                 full ? (framed ? "text-xl" : "text-2xl") : framed ? "text-base" : "text-lg",
               )}
             >
-              {v.localReference ?? v.reference}
+              {practice ? <PracticeReference text={v.localReference ?? v.reference} /> : (v.localReference ?? v.reference)}
             </p>
           ) : (
             <Morph name={morphName.reference(v.id)}>
@@ -435,7 +449,12 @@ export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: str
           )}
           <p className={cn("text-xs", quiet)}>
             {v.translation}
-            {v.localReference && ` · ${v.reference}`}
+            {v.localReference && (
+              <>
+                {" · "}
+                {practice ? <PracticeReference text={v.reference} /> : v.reference}
+              </>
+            )}
           </p>
         </div>
         {v.starred && <Star className="mt-0.5 size-4 shrink-0 fill-current text-icon-accent" aria-label="Starred" />}
@@ -464,7 +483,7 @@ export function TextCard({ v, href, onOpen, full }: { v: LibraryItem; href?: str
         )}
         style={card?.bg.kind === "image" ? { textShadow: "0 1px 10px rgb(0 0 0 / 0.35)" } : undefined}
       >
-        {v.text}
+        {practice ? <PracticeText text={v.text} /> : v.text}
       </p>
       </Morph>
       {(v.tags.length > 0 || v.mastery) && (
