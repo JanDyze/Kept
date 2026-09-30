@@ -5,12 +5,12 @@ import { Palette } from "lucide-react";
 import { z } from "zod";
 import { CardShare } from "@/components/card-share";
 import { TagChip } from "@/components/tag-chip";
-import { TextCard } from "@/components/verse-library";
+import { CardBack, TextCard } from "@/components/verse-library";
 import { AddNoteButton, VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
 import { VerseMore } from "@/components/verse-more";
-import { PracticeCard, PracticeProvider, PracticeReference, PracticeText, PracticeToggle } from "@/components/verse-practice";
+import { PracticeBar, PracticeButton, PracticeCard, PracticeProvider, PracticeReference, PracticeText } from "@/components/verse-practice";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
@@ -49,6 +49,8 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
   const card = readCardStyle(verse.card);
   const tagalog = verse.translation === "MBBTAG" ? bookByName(verse.book)?.tl : undefined;
   const localRef = tagalog ? verse.reference.replace(verse.book, tagalog) : null;
+  // The reference side of the verse, for practising with Flip.
+  const back = <CardBack v={{ reference: verse.reference, localReference: localRef, translation: verse.translation, card }} />;
 
   return (
     <Screen
@@ -70,29 +72,30 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       <VerseSwiper id={verse.id}>
       <PracticeProvider>
       <article>
-        <PracticeCard>
         {card ? (
           <>
             <h1 className="sr-only">{verse.reference}</h1>
             {archived && <Badge variant="outline" className="mb-3">Archived</Badge>}
             {/* The verse as it looks in My verses, whole: the full card is in the card editor and when shared. */}
-            <TextCard
-              full
-              practice
-              v={{
-                id: verse.id,
-                reference: verse.reference,
-                localReference: localRef,
-                book: verse.book,
-                translation: verse.translation,
-                text: verse.text,
-                tags: [],
-                card,
-              }}
-            />
+            <PracticeCard back={back}>
+              <TextCard
+                full
+                practice
+                v={{
+                  id: verse.id,
+                  reference: verse.reference,
+                  localReference: localRef,
+                  book: verse.book,
+                  translation: verse.translation,
+                  text: verse.text,
+                  tags: [],
+                  card,
+                }}
+              />
+            </PracticeCard>
           </>
         ) : (
-          <>
+          <PracticeCard back={back} plain>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{verse.translation}</Badge>
               {archived && <Badge variant="outline">Archived</Badge>}
@@ -113,11 +116,10 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
                 <PracticeText text={verse.text} />
               </p>
             </Morph>
-          </>
+          </PracticeCard>
         )}
-        </PracticeCard>
 
-        <PracticeToggle className="mt-4" />
+        <PracticeBar className="mt-4" />
 
         {!archived && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -141,6 +143,12 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               initialVisibility={verse.visibility}
             />
             <AddNoteButton
+              className={cn(
+                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
+                "transition-colors hover:bg-muted hover:text-foreground",
+              )}
+            />
+            <PracticeButton
               className={cn(
                 "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
                 "transition-colors hover:bg-muted hover:text-foreground",

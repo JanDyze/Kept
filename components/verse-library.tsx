@@ -527,6 +527,31 @@ export function TextCard({
   );
 }
 
+// The back of a verse when practising Flip (components/verse-practice.tsx): the same surface as
+// TextCard's, filling the front's size, with only the reference on it.
+export function CardBack({ v }: { v: Pick<LibraryItem, "reference" | "localReference" | "translation" | "card"> }) {
+  const card = v.card;
+  const colors = card ? cardColors(card.bg, card.text) : {};
+  const styled = Boolean(colors.bg || colors.fg);
+  return (
+    <div
+      style={{ backgroundColor: colors.bg, color: colors.fg, ...borderPadding(card) }}
+      className={cn(
+        "@container relative isolate flex h-full flex-col items-center justify-center overflow-hidden rounded-2xl p-5 text-center",
+        !styled && "border bg-card",
+      )}
+    >
+      {card && <CardBackdrop style={card} sizes="36rem" />}
+      {card && <CardBorder style={card} />}
+      <p className="font-brand text-3xl font-semibold leading-tight tracking-tight">{v.localReference ?? v.reference}</p>
+      <p className={cn("mt-1 text-sm", styled ? "opacity-70" : "text-muted-foreground")}>
+        {v.translation}
+        {v.localReference && ` · ${v.reference}`}
+      </p>
+    </div>
+  );
+}
+
 // Searching My verses for one that isn't there: add it. A reference ("jn 3 16") opens Add verse
 // filled in; other words can also be looked up in the Bible.
 function AddFromSearch({ query }: { query: string }) {

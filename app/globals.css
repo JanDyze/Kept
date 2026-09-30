@@ -357,15 +357,9 @@
 .animate-shake { animation: shake 420ms ease-in-out; }
 .animate-pop { animation: pop 180ms ease-out; }
 .animate-flip { animation: flip-in 480ms ease-in-out both; }
-/* A card turning over sideways: edge-on halfway, where the practice switch swaps its face
-   (components/verse-practice.tsx, FLIP_MS). */
-.animate-flip-y { animation: flip-y 520ms ease-in-out both; }
-@keyframes flip-y {
-  0% { transform: perspective(1200px) rotateY(0); }
-  49.99% { transform: perspective(1200px) rotateY(90deg); }
-  50% { transform: perspective(1200px) rotateY(-90deg); }
-  100% { transform: perspective(1200px) rotateY(0); }
-}
+/* A cover laid over a word when practising (components/verse-practice.tsx). */
+.animate-cover { animation: cover-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes cover-in { from { opacity: 0; } to { opacity: 1; } }
 .animate-rise { animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 /* Home's faint Kept mark, once woven in: a slow sway of a few pixels and degrees, like paper settling. */
 .animate-drift { animation: drift 14s ease-in-out 2.6s infinite alternate both; }
@@ -378,7 +372,7 @@
   ::view-transition-new(*) {
     animation: none !important;
   }
-  .animate-shake, .animate-pop, .animate-flip, .animate-flip-y, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
+  .animate-shake, .animate-pop, .animate-flip, .animate-cover, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
 }
 
 /* ---------- Feel like an app, not a web page ---------- */

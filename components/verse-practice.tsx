@@ -1,82 +1,74 @@
 "use client";
 
-import { createContext, useContext, useRef, useState, useSyncExternalStore } from "react";
-import { BookText, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { createContext, useContext, useState } from "react";
+import { BookText, Brain, EyeOff, RotateCcw, Shuffle, X } from "lucide-react";
+import { seededRandom, shuffle } from "@/lib/games/random";
 import { tokenize } from "@/lib/games/words";
 import { cn } from "@/lib/utils";
 
-// Practising on a verse's page: read it, cover its words (tap one to peek), flip it so only the
-// reference shows (tap to turn it over), or hide the reference to recall where it's from. The mode sticks
-// for the session, so swiping through My verses keeps practising the same way.
+// Practising on a verse's page, only once asked for (Practice): cover its words, a few or all
+// (tap one to peek), flip it over like a card so only the reference shows, or cover the reference
+// to recall where it's from. Every verse opens plain.
 export type PracticeMode = "read" | "words" | "flip" | "reference";
+type Level = 1 | 2 | 3; // a third, two thirds or all of the words covered
 
-const MODES: { mode: PracticeMode; label: string; Icon: typeof Eye }[] = [
-  { mode: "read", label: "Read", Icon: Eye },
-  { mode: "words", label: "Blanks", Icon: EyeOff },
-  { mode: "flip", label: "Flip", Icon: RotateCcw },
-  { mode: "reference", label: "Hide ref", Icon: BookText },
+const MODES: { mode: Exclude<PracticeMode, "read">; label: string; name: string; Icon: typeof EyeOff }[] = [
+  { mode: "words", label: "Words", name: "Cover the words", Icon: EyeOff },
+  { mode: "flip", label: "Flip", name: "Flip to the reference", Icon: RotateCcw },
+  { mode: "reference", label: "Ref", name: "Cover the reference", Icon: BookText },
+];
+const LEVELS: { level: Level; label: string }[] = [
+  { level: 1, label: "Some" },
+  { level: 2, label: "More" },
+  { level: 3, label: "All" },
 ];
 
-const KEY = "kept:practice";
-const CHANGE = "kept-practice";
-
-function readMode(): PracticeMode {
-  try {
-    const m = sessionStorage.getItem(KEY);
-    return MODES.some((x) => x.mode === m) ? (m as PracticeMode) : "read";
-  } catch {
-    return "read";
-  }
-}
-
-function saveMode(mode: PracticeMode) {
-  try {
-    sessionStorage.setItem(KEY, mode);
-  } catch {}
-  window.dispatchEvent(new Event(CHANGE));
-}
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(CHANGE, onChange);
-  return () => window.removeEventListener(CHANGE, onChange);
-}
-
 type Practice = {
+  open: boolean;
+  setOpen: (v: boolean) => void;
   mode: PracticeMode;
   setMode: (m: PracticeMode) => void;
-  shown: boolean; // the flipped card, or the hidden reference, turned over
-  setShown: (v: boolean) => void;
-  turning: boolean; // mid-flip
-  flip: () => void;
-  peeked: Set<number>; // hidden words tapped open
+  faceDown: boolean; // Flip: showing the reference side
+  turn: () => void;
+  refShown: boolean; // Cover ref: tapped open
+  setRefShown: (v: boolean) => void;
+  level: Level;
+  setLevel: (l: Level) => void;
+  seed: number; // which words a partial cover picks; a new one reshuffles
+  reshuffle: () => void;
+  peeked: Set<number>; // covered words tapped open
   peek: (i: number) => void;
 };
-
-const FLIP_MS = 520;
 
 const Ctx = createContext<Practice | null>(null);
 
 export function PracticeProvider({ children }: { children: React.ReactNode }) {
-  const mode = useSyncExternalStore(subscribe, readMode, () => "read" as const);
-  const [shown, setShown] = useState(false);
+  const [open, setOpenState] = useState(false);
+  const [mode, setModeState] = useState<PracticeMode>("read");
+  const [faceDown, setFaceDown] = useState(false);
+  const [refShown, setRefShown] = useState(false);
+  const [level, setLevelState] = useState<Level>(1);
+  const [seed, setSeed] = useState(0);
   const [peeked, setPeeked] = useState<Set<number>>(() => new Set());
-  const [turning, setTurning] = useState(false);
-  const timers = useRef<number[]>([]);
-  // The card turns edge-on, swaps faces there, and turns back (FLIP_MS in globals.css' flip-y).
-  const flip = () => {
-    if (turning) return;
-    setTurning(true);
-    timers.current = [
-      window.setTimeout(() => setShown((v) => !v), FLIP_MS / 2),
-      window.setTimeout(() => setTurning(false), FLIP_MS),
-    ];
-  };
+
   const setMode = (m: PracticeMode) => {
-    timers.current.forEach(clearTimeout);
-    setTurning(false);
-    setShown(false);
     setPeeked(new Set());
-    saveMode(m);
+    setRefShown(false);
+    setFaceDown(m === "flip");
+    if (m === "words") setSeed(Math.random());
+    setModeState(m);
+  };
+  const setOpen = (v: boolean) => {
+    setOpenState(v);
+    if (!v) setMode("read");
+  };
+  const setLevel = (l: Level) => {
+    setPeeked(new Set());
+    setLevelState(l);
+  };
+  const reshuffle = () => {
+    setPeeked(new Set());
+    setSeed(Math.random());
   };
   const peek = (i: number) =>
     setPeeked((p) => {
@@ -85,131 +77,199 @@ export function PracticeProvider({ children }: { children: React.ReactNode }) {
       else next.add(i);
       return next;
     });
-  return <Ctx value={{ mode, setMode, shown, setShown, turning, flip, peeked, peek }}>{children}</Ctx>;
+
+  return (
+    <Ctx
+      value={{
+        open,
+        setOpen,
+        mode,
+        setMode,
+        faceDown,
+        turn: () => setFaceDown((v) => !v),
+        refShown,
+        setRefShown,
+        level,
+        setLevel,
+        seed,
+        reshuffle,
+        peeked,
+        peek,
+      }}
+    >
+      {children}
+    </Ctx>
+  );
 }
 
-// The mode switch, under the verse.
-export function PracticeToggle({ className }: { className?: string }) {
+// The Practice pill beside Make it a card, Share and Add note.
+export function PracticeButton({ className }: { className?: string }) {
   const p = useContext(Ctx);
   if (!p) return null;
   return (
-    <div role="radiogroup" aria-label="Practice" className={cn("grid grid-cols-4 gap-1 rounded-xl bg-muted p-1", className)}>
-      {MODES.map(({ mode, label, Icon }) => (
+    <button
+      type="button"
+      aria-expanded={p.open}
+      onClick={() => p.setOpen(!p.open)}
+      className={cn(className, p.open && "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground")}
+    >
+      <Brain className="size-4" aria-hidden /> Practice
+    </button>
+  );
+}
+
+const segment = (on: boolean) =>
+  cn(
+    "flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-[background-color,color,box-shadow]",
+    on ? "bg-background text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-muted-foreground hover:text-foreground",
+  );
+
+// The ways to practise, once Practice is on. Nothing is covered until one is picked.
+export function PracticeBar({ className }: { className?: string }) {
+  const p = useContext(Ctx);
+  if (!p?.open) return null;
+  return (
+    <div className={cn("animate-rise flex flex-col gap-2", className)}>
+      <div className="flex items-center gap-1 rounded-xl bg-muted p-1">
+        <div role="radiogroup" aria-label="Practice" className="grid flex-1 grid-cols-3 gap-1">
+          {MODES.map(({ mode, label, name, Icon }) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-label={name}
+              aria-checked={p.mode === mode}
+              onClick={() => p.setMode(p.mode === mode ? "read" : mode)}
+              className={segment(p.mode === mode)}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{label}</span>
+            </button>
+          ))}
+        </div>
         <button
-          key={mode}
           type="button"
-          role="radio"
-          aria-checked={p.mode === mode}
-          onClick={() => p.setMode(mode)}
-          className={cn(
-            "flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 text-xs font-medium transition-[background-color,color,box-shadow] sm:text-sm",
-            p.mode === mode ? "bg-background text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-muted-foreground hover:text-foreground",
-          )}
+          onClick={() => p.setOpen(false)}
+          aria-label="Stop practising"
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-background hover:text-foreground"
         >
-          <Icon className="size-4 shrink-0" aria-hidden />
-          <span className="truncate">{label}</span>
+          <X className="size-4" aria-hidden />
         </button>
-      ))}
+      </div>
+      {p.mode === "words" && (
+        <div className="animate-rise flex items-center gap-1 rounded-xl bg-muted p-1">
+          <div role="radiogroup" aria-label="How much to cover" className="grid flex-1 grid-cols-3 gap-1">
+            {LEVELS.map(({ level, label }) => (
+              <button
+                key={level}
+                type="button"
+                role="radio"
+                aria-checked={p.level === level}
+                onClick={() => p.setLevel(level)}
+                className={segment(p.level === level)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={p.reshuffle}
+            aria-label={p.level === 3 ? "Cover them all again" : "Cover different words"}
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-background hover:text-foreground"
+          >
+            <Shuffle className="size-4" aria-hidden />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// A solid cover over a word or reference, fitted to the letters and keeping their place in the line.
-function Cover({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
+function Tappable({
+  onTap,
+  label,
+  className,
+  style,
+  children,
+}: {
+  onTap: () => void;
+  label: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
   return (
     <span
       role="button"
       tabIndex={0}
       aria-label={label}
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onTap();
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick();
+          onTap();
         }
       }}
-      className="cursor-pointer rounded-[0.2em] bg-current box-decoration-clone opacity-85 transition-opacity select-none hover:opacity-70"
+      className={cn("cursor-pointer", className)}
+      style={style}
+    >
+      {children}
+    </span>
+  );
+}
+
+// A solid cover over a word or reference, fitted to the letters and keeping their place in the
+// line. `delay` staggers covers as they're laid down.
+function Cover({ children, onTap, label, delay = 0 }: { children: React.ReactNode; onTap: () => void; label: string; delay?: number }) {
+  return (
+    <Tappable
+      onTap={onTap}
+      label={label}
+      className="animate-cover rounded-[0.2em] bg-current box-decoration-clone select-none hover:opacity-75"
+      style={{ animationDelay: `${delay}ms` }}
     >
       <span className="invisible">{children}</span>
-    </span>
+    </Tappable>
   );
 }
 
-// A word or reference uncovered: tap to cover it again.
-function Uncovered({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
-  return (
-    <span
-      role="button"
-      tabIndex={0}
-      aria-label={label}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className="animate-fade-in cursor-pointer"
-    >
-      {children}
-    </span>
-  );
-}
-
-// In Flip, the whole verse turns over sideways when tapped: its back shows only the reference.
-export function PracticeCard({ children }: { children: React.ReactNode }) {
-  const p = useContext(Ctx);
-  if (!p || p.mode !== "flip") return <>{children}</>;
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={p.shown ? "Turn the verse face down" : "Turn the verse over"}
-      onClick={p.flip}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          p.flip();
-        }
-      }}
-      className={cn("cursor-pointer select-none", p.turning && "animate-flip-y")}
-    >
-      {children}
-    </div>
-  );
-}
-
-// The verse's text, as the practice mode shows it.
+// The verse's text, with words covered in Cover words.
 export function PracticeText({ text }: { text: string }) {
   const p = useContext(Ctx);
-  if (!p || p.mode === "read" || p.mode === "reference") return <>{text}</>;
+  if (p?.mode !== "words") return <>{text}</>;
 
-  // Face down: the text keeps its space, so the card doesn't change size as it turns.
-  if (p.mode === "flip")
-    return p.shown ? (
-      <>{text}</>
-    ) : (
-      <span className="relative block">
-        <span className="invisible">{text}</span>
-        <span className="absolute inset-0 flex items-center justify-center opacity-35">
-          <RotateCcw className="size-8 -scale-x-100" aria-hidden />
-        </span>
-      </span>
-    );
+  const tokens = tokenize(text);
+  const order = shuffle(
+    tokens.map((_, i) => i),
+    seededRandom(`${p.seed}`),
+  );
+  const count = p.level === 3 ? tokens.length : Math.ceil((tokens.length * p.level) / 3);
+  const covered = new Set(order.slice(0, count));
+  let n = 0;
 
   return (
     <>
-      {tokenize(text).map((t, i) => (
+      {tokens.map((t, i) => (
         <span key={i}>
           {t.pre}
-          {p.peeked.has(i) ? (
-            <Uncovered onClick={() => p.peek(i)} label={`${t.word}, tap to cover`}>
-              {t.word}
-            </Uncovered>
-          ) : (
-            <Cover onClick={() => p.peek(i)} label="Covered word, tap to show">
+          {covered.has(i) && !p.peeked.has(i) ? (
+            <Cover key={`${p.seed}-${p.level}`} onTap={() => p.peek(i)} label="Covered word, tap to show" delay={Math.min(n++, 40) * 12}>
               {t.word}
             </Cover>
+          ) : covered.has(i) ? (
+            <Tappable
+              onTap={() => p.peek(i)}
+              label={`${t.word}, tap to cover`}
+              className="animate-fade-in underline decoration-current/30 decoration-2 underline-offset-4"
+            >
+              {t.word}
+            </Tappable>
+          ) : (
+            t.word
           )}
           {t.post}
         </span>
@@ -218,19 +278,67 @@ export function PracticeText({ text }: { text: string }) {
   );
 }
 
-// The verse's reference, hidden in "Hide ref" until tapped.
+// The verse's reference, covered in Cover ref until tapped.
 export function PracticeReference({ text }: { text: string }) {
   const p = useContext(Ctx);
-  if (!p || p.mode !== "reference") return <>{text}</>;
-  if (p.shown)
+  if (p?.mode !== "reference") return <>{text}</>;
+  if (p.refShown)
     return (
-      <Uncovered onClick={() => p.setShown(false)} label={`${text}, tap to cover`}>
+      <Tappable onTap={() => p.setRefShown(false)} label={`${text}, tap to cover`} className="animate-fade-in">
         {text}
-      </Uncovered>
+      </Tappable>
     );
   return (
-    <Cover onClick={() => p.setShown(true)} label="Covered reference, tap to show">
+    <Cover onTap={() => p.setRefShown(true)} label="Covered reference, tap to show">
       {text}
     </Cover>
+  );
+}
+
+// The verse as a card with two sides: in Flip it turns over as one piece to `back` (the reference
+// alone), and back again on a tap. `plain` gives a verse without a card a card's surface while
+// flipping, so there's something to turn.
+export function PracticeCard({ back, plain, children }: { back: React.ReactNode; plain?: boolean; children: React.ReactNode }) {
+  const p = useContext(Ctx);
+  const flipping = p?.mode === "flip";
+  const faceDown = Boolean(flipping && p?.faceDown);
+  const turn = () => p?.turn();
+  return (
+    <div className="[perspective:1600px]">
+      <div
+        role={flipping ? "button" : undefined}
+        tabIndex={flipping ? 0 : undefined}
+        aria-label={flipping ? (faceDown ? "Turn the verse over" : "Turn it back to the reference") : undefined}
+        onClick={flipping ? turn : undefined}
+        onKeyDown={(e) => {
+          if (flipping && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            turn();
+          }
+        }}
+        className={cn(
+          "relative transition-transform duration-700 ease-[cubic-bezier(0.3,0.7,0.2,1)] [transform-style:preserve-3d] motion-reduce:duration-0",
+          flipping && "cursor-pointer select-none",
+        )}
+        style={{ transform: faceDown ? "rotateY(180deg)" : "rotateY(0deg)" }}
+      >
+        <div
+          aria-hidden={faceDown || undefined}
+          className={cn(
+            "[-webkit-backface-visibility:hidden] [backface-visibility:hidden]",
+            plain && "rounded-2xl border border-transparent transition-[background-color,border-color,padding] duration-300",
+            plain && flipping && "border-border bg-card p-5",
+          )}
+        >
+          {children}
+        </div>
+        <div
+          aria-hidden={!faceDown || undefined}
+          className="absolute inset-0 [-webkit-backface-visibility:hidden] [backface-visibility:hidden] [transform:rotateY(180deg)]"
+        >
+          {back}
+        </div>
+      </div>
+    </div>
   );
 }

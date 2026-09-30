@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.24.2 — Practice when you want to
+
+- A verse opens as it is. Tap Practice beside Share to cover its words, flip it, or cover the reference.
+- Cover words covers some, more or all of the words, and the shuffle button picks different ones. Tap a covered word to peek.
+- Flip turns the whole card over smoothly, with the reference alone on its back.
+
 ## 0.24.1 — Practice, tidier
 
 - Flip turns the whole verse over sideways, like a card: tap it to turn it back.
