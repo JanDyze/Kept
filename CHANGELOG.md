@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.24.4 — Keep practising as you swipe
+
+- Swiping to the next verse keeps practising the same way: covered words (at the same amount), flipped, or reference covered.
+- A verse's actions sit above it now, and a Discover card's author and likes sit above the card, so only the verse or card moves when you swipe; the next one slides in on its own.
+
 ## 0.24.3 — Swipe the card, not the page
 
 - On a verse or a card from Discover, swipe from anywhere on the page: only the verse or card follows your finger.

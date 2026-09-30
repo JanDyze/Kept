@@ -8,9 +8,15 @@ import { cn } from "@/lib/utils";
 const THRESHOLD = 60; // px of travel that counts as a swipe
 
 // Swipe anywhere on the page sideways for the next or previous one in the list it came from (arrow
-// keys and the side buttons too). Only the verse or card (SwipeTarget) follows the finger, then the
-// next page slides in. Pages replace
-// each other, so Back still returns to the list. A drag that starts in a text field is left alone.
+// keys and the side buttons too). Only the verse or card (SwipeTarget) moves: it follows the finger
+// and leaves, and the next one slides in where it was while the rest of the page stays put. Pages
+// replace each other, so Back still returns to the list. A drag that starts in a text field is left
+// alone. SWIPED_EVENT tells the page it's being swiped away (practice carries over on it).
+export const SWIPED_EVENT = "kept-swiped";
+
+// Which side the next page's card comes in from; read once by its SwipeTarget as it mounts.
+let incoming: "next" | "prev" | null = null;
+
 export function CardSwiper({
   prevHref,
   nextHref,
@@ -29,7 +35,10 @@ export function CardSwiper({
 
   const go = (href: string | null, dir: "next" | "prev") => {
     if (!href) return;
-    router.replace(href, { scroll: false, transitionTypes: [dir === "next" ? "nav-forward" : "nav-back"] });
+    incoming = dir;
+    window.dispatchEvent(new Event(SWIPED_EVENT));
+    // "swipe" isn't a page slide (components/page-transition.tsx), so only the card moves.
+    router.replace(href, { scroll: false, transitionTypes: ["swipe"] });
   };
 
   useEffect(() => {
@@ -134,9 +143,13 @@ const Swipe = createContext<{ dx: number; dragging: boolean } | null>(null);
 export function SwipeTarget({ className, children }: { className?: string; children: React.ReactNode }) {
   const s = useContext(Swipe);
   const dx = s?.dx ?? 0;
+  const [from] = useState(() => incoming);
+  useEffect(() => {
+    incoming = null;
+  }, []);
   return (
     <div
-      className={className}
+      className={cn(from === "next" && "animate-swipe-in-next", from === "prev" && "animate-swipe-in-prev", className)}
       style={{
         transform: dx ? `translateX(${dx}px) rotate(${(dx / 40).toFixed(2)}deg)` : undefined,
         opacity: dx ? Math.max(0.35, 1 - Math.abs(dx) / 600) : undefined,

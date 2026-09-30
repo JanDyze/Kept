@@ -37,6 +37,22 @@ Next:
 - Missing Word could hint with a word that fits when a guess is far off.
 - Better Tagalog: XLM-RoBERTa guesses whole words less often than DistilBERT does in English.
 
+## Reminders and connections
+
+- **Push notifications** (planned): the installed app (PWA) reminds you when verses are due for
+  review, when the day's games are ready, and when a friend sends a request or likes a card. Uses
+  Web Push from the service worker (VAPID keys, a `push_subscriptions` table per device), sent from
+  a cron at each person's own time of day, so their time zone needs saving on the account (today
+  it's only a cookie, lib/day.ts). iPhone needs Kept added to the
+  Home Screen first (iOS 16.4+). Each kind can be turned off in Settings.
+- **Email notifications** (planned): the same reminders by email for people who don't install the
+  app, plus a weekly summary (verses kept, streak, what's due). Sent through a provider such as
+  Resend or Postmark, with a one-tap unsubscribe per kind and a quiet default (weekly, not daily).
+- **MCP** (planned): `/api/mcp` so Claude and other AI assistants can read and update your verses
+  (keep a verse, see what's due, add a note, quiz you). The route and its `MCP_TOKEN` bearer check
+  are already reserved (lib/supabase/proxy.ts); next is per-user tokens (Settings → Connections)
+  instead of one shared token, then OAuth so an assistant can connect without copying a token.
+
 ## Support and Premium
 
 - **Support Kept**: built (0.18.3). Settings → Support Kept: a Give link (`SUPPORT_URL`, e.g.

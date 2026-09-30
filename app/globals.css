@@ -357,6 +357,10 @@
 .animate-shake { animation: shake 420ms ease-in-out; }
 .animate-pop { animation: pop 180ms ease-out; }
 .animate-flip { animation: flip-in 480ms ease-in-out both; }
+/* The next verse or card coming in where the swiped one left (components/card-swiper.tsx). */
+.animate-swipe-in-next { animation: swipe-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; --swipe-from: 70%; --swipe-tilt: 5deg; }
+.animate-swipe-in-prev { animation: swipe-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; --swipe-from: -70%; --swipe-tilt: -5deg; }
+@keyframes swipe-in { from { opacity: 0; transform: translateX(var(--swipe-from)) rotate(var(--swipe-tilt)); } to { opacity: 1; transform: none; } }
 /* A cover laid over a word when practising (components/verse-practice.tsx). */
 .animate-cover { animation: cover-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes cover-in { from { opacity: 0; } to { opacity: 1; } }
@@ -372,7 +376,7 @@
   ::view-transition-new(*) {
     animation: none !important;
   }
-  .animate-shake, .animate-pop, .animate-flip, .animate-cover, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
+  .animate-shake, .animate-pop, .animate-flip, .animate-cover, .animate-swipe-in-next, .animate-swipe-in-prev, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
 }
 
 /* ---------- Feel like an app, not a web page ---------- */

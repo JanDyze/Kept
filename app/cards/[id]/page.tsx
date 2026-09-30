@@ -40,18 +40,8 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
   return (
     <Screen back={back} className="pb-0">
       <CardSwiper key={id} className="flex flex-1 flex-col" prevHref={href(around?.prev)} nextHref={href(around?.next)}>
-        <SwipeTarget>
-          <MemoryCard
-            style={style}
-            reference={reference}
-            translation={row.translation}
-            text={row.text}
-            morphId={row.id}
-            className={cn("mx-auto", style.shape === "landscape" ? "max-w-xl" : style.shape === "square" ? "max-w-md" : "max-w-sm")}
-          />
-        </SwipeTarget>
-
-      <div className="mt-5 flex items-center gap-2">
+      {/* Above the card, so it stays put while the card is swiped to the next one. */}
+      <div className="mb-4 flex items-center gap-2">
         <Link
           href={`/u/${author.username}`}
           transitionTypes={["nav-forward"]}
@@ -73,6 +63,17 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
           <LikeButton target={{ card: id }} likes={like.count} liked={like.liked} className="border" />
         )}
       </div>
+
+        <SwipeTarget>
+          <MemoryCard
+            style={style}
+            reference={reference}
+            translation={row.translation}
+            text={row.text}
+            morphId={row.id}
+            className={cn("mx-auto", style.shape === "landscape" ? "max-w-xl" : style.shape === "square" ? "max-w-md" : "max-w-sm")}
+          />
+        </SwipeTarget>
 
       {around && around.total > 1 && (
         <p className="mt-3 text-center text-xs text-muted-foreground tabular-nums" aria-live="polite">

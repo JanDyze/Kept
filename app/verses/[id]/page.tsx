@@ -73,6 +73,27 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       <VerseSwiper id={verse.id}>
       <PracticeProvider>
       <article>
+        {/* Above the verse, so they stay put while it's swiped to the next one. */}
+        {!archived && (
+          <div className="mb-4 grid grid-cols-4 gap-1">
+            <Link href={`/verses/${verse.id}/card`} transitionTypes={["nav-forward"]} className={verseAction()}>
+              <Palette className="size-5" aria-hidden /> {card ? "Edit card" : "Card"}
+            </Link>
+            <CardShare
+              verseId={verse.id}
+              reference={localRef ?? verse.reference}
+              translation={verse.translation}
+              text={verse.text}
+              card={card}
+              initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
+              initialVisibility={verse.visibility}
+            />
+            <AddNoteButton className={verseAction()} />
+            <PracticeButton />
+            <PracticeBar />
+          </div>
+        )}
+
         {card ? (
           <>
             <h1 className="sr-only">{verse.reference}</h1>
@@ -124,25 +145,6 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
           </SwipeTarget>
         )}
 
-        {!archived && (
-          <div className="mt-4 grid grid-cols-4 gap-1">
-            <Link href={`/verses/${verse.id}/card`} transitionTypes={["nav-forward"]} className={verseAction()}>
-              <Palette className="size-5" aria-hidden /> {card ? "Edit card" : "Card"}
-            </Link>
-            <CardShare
-              verseId={verse.id}
-              reference={localRef ?? verse.reference}
-              translation={verse.translation}
-              text={verse.text}
-              card={card}
-              initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
-              initialVisibility={verse.visibility}
-            />
-            <AddNoteButton className={verseAction()} />
-            <PracticeButton />
-            <PracticeBar />
-          </div>
-        )}
 
         {verse.tags.length > 0 && (
           <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Tags">

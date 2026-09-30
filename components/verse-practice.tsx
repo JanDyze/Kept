@@ -1,15 +1,17 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { BookText, Brain, EyeOff, RotateCcw, Shuffle, X } from "lucide-react";
 import { seededRandom, shuffle } from "@/lib/games/random";
 import { tokenize } from "@/lib/games/words";
+import { SWIPED_EVENT } from "@/components/card-swiper";
 import { verseAction, verseActionPanel } from "@/components/verse-action";
 import { cn } from "@/lib/utils";
 
 // Practising on a verse's page, only once asked for (Practice): cover its words, a few or all
 // (tap one to peek), flip it over like a card so only the reference shows, or cover the reference
-// to recall where it's from. Every verse opens plain.
+// to recall where it's from. A verse opened from a list starts plain; swiping to the next one keeps
+// practising the same way.
 export type PracticeMode = "read" | "words" | "flip" | "reference";
 type Level = 1 | 2 | 3; // a third, two thirds or all of the words covered
 
@@ -25,6 +27,7 @@ const LEVELS: { level: Level; label: string }[] = [
 ];
 
 type Practice = {
+  carried: boolean; // picked up from the verse swiped away: already on screen, so no entrance
   open: boolean;
   setOpen: (v: boolean) => void;
   mode: PracticeMode;
@@ -43,14 +46,32 @@ type Practice = {
 
 const Ctx = createContext<Practice | null>(null);
 
+// How the verse being swiped away was practised, for the next one to pick up as it mounts.
+type Carry = { open: boolean; mode: PracticeMode; level: Level };
+let carry: Carry | null = null;
+
 export function PracticeProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpenState] = useState(false);
-  const [mode, setModeState] = useState<PracticeMode>("read");
-  const [faceDown, setFaceDown] = useState(false);
+  const [start] = useState(() => carry);
+  const [open, setOpenState] = useState(start?.open ?? false);
+  const [mode, setModeState] = useState<PracticeMode>(start?.mode ?? "read");
+  const [faceDown, setFaceDown] = useState(start?.mode === "flip");
   const [refShown, setRefShown] = useState(false);
-  const [level, setLevelState] = useState<Level>(1);
-  const [seed, setSeed] = useState(0);
+  const [level, setLevelState] = useState<Level>(start?.level ?? 1);
+  const [seed, setSeed] = useState(() => (start?.mode === "words" ? Math.random() : 0));
   const [peeked, setPeeked] = useState<Set<number>>(() => new Set());
+
+  const now = useRef<Carry>({ open, mode, level });
+  useEffect(() => {
+    now.current = { open, mode, level };
+  });
+  useEffect(() => {
+    carry = null;
+    const onSwiped = () => {
+      carry = now.current;
+    };
+    window.addEventListener(SWIPED_EVENT, onSwiped);
+    return () => window.removeEventListener(SWIPED_EVENT, onSwiped);
+  }, []);
 
   const setMode = (m: PracticeMode) => {
     setPeeked(new Set());
@@ -82,6 +103,7 @@ export function PracticeProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx
       value={{
+        carried: start !== null,
         open,
         setOpen,
         mode,
@@ -126,7 +148,7 @@ export function PracticeBar() {
   const p = useContext(Ctx);
   if (!p?.open) return null;
   return (
-    <div className={cn("animate-rise flex flex-col gap-2", verseActionPanel)}>
+    <div className={cn(!p.carried && "animate-rise", "flex flex-col gap-2", verseActionPanel)}>
       <div className="flex items-center gap-1 rounded-xl bg-muted p-1">
         <div role="radiogroup" aria-label="Practice" className="grid flex-1 grid-cols-3 gap-1">
           {MODES.map(({ mode, label, name, Icon }) => (
@@ -154,7 +176,7 @@ export function PracticeBar() {
         </button>
       </div>
       {p.mode === "words" && (
-        <div className="animate-rise flex items-center gap-1 rounded-xl bg-muted p-1">
+        <div className={cn(!p.carried && "animate-rise", "flex items-center gap-1 rounded-xl bg-muted p-1")}>
           <div role="radiogroup" aria-label="How much to cover" className="grid flex-1 grid-cols-3 gap-1">
             {LEVELS.map(({ level, label }) => (
               <button
