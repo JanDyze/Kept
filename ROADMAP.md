@@ -18,9 +18,36 @@ search by topic, feeling or wording). It already shows what the community keeps:
 - Friends: built (usernames, requests, profiles at `/u/name`, friends-only cards).
 - **Leaderboards** (soon): weekly and all-time boards among friends, then everyone — streaks,
   games won, verses mastered. Only people who opt in appear on the public board.
-- **Multiplayer games** (soon): head-to-head and challenge modes — two friends play the same
-  puzzle (same seed) and compare, or race live on one verse. The daily puzzle builders already take
-  a seed, so a shared "puzzle of the day" can reuse them.
+- **Multiplayer games** (soon): the daily puzzle builders already take a seed, so friends can
+  play the very same puzzle. Ideas, roughly in the order to build them:
+  - **Challenge a friend** (first): play today's puzzle, then send it; they play the same seed
+    whenever they like and you compare time, mistakes and stars. No live connection needed.
+  - **Weekly friend league**: everyone plays the same daily puzzles; a weekly board ranks friends
+    by stars (with Leaderboards above).
+  - **Verse Race** (live): both get the same Unscramble or Fill the Blanks; first to finish wins,
+    with the other's progress showing as they go.
+  - **Reference Duel** (live): a verse's text appears; race to name the book and chapter.
+    Reference Wordle's guessing, about 10 quick rounds.
+  - **Spot It First** (live): the same Spot the Change verse for both; first to tap the changed
+    word takes the point.
+  - **Pass the verse** (turns): take turns saying the next word or phrase from memory, First
+    Letters as the hint; a wrong word ends your turn.
+  - **Co-op Recite**: two people split a passage (odd and even verses) and score as a team on
+    how far they get together.
+  - **Group memory goal**: a small group or church group picks a verse for the week, and
+    everyone's practice fills one shared bar. Less competition, more encouragement.
+  - **Two Tongues Showdown**: English against Tagalog, matching the two versions of a verse; for
+    friends and families who read both.
+  - **Who Kept This?**: a friend's card or note without the name; guess which friend kept it.
+  - **Draw the Verse** (just for fun): one player gets a verse or passage (the Good Samaritan,
+    Jonah and the fish, Psalm 23) and draws hints on a shared canvas, no letters or numbers; the
+    others guess the reference or the story, with points for guessing fast and to the drawer when
+    someone gets it. Rounds pass around the group. Needs a live room (Supabase Realtime can carry
+    the strokes and guesses), a drawing canvas with a few colors and an eraser, and a list of
+    drawable passages by difficulty (easy stories to hard single verses). Could run as a party
+    game on one phone passed around, too.
+  Live ones need rooms and presence (Supabase Realtime); the turn-based ones can start on
+  ordinary saved rows.
 - In place: sign-ups (email and Google), usernames, friends, and per-card visibility (only me / friends / everyone).
 
 ## Smarter games with AI
