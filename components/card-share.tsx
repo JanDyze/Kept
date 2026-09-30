@@ -8,6 +8,7 @@ import { setVisibility } from "@/app/cards/actions";
 import { shareCard, unshareCard } from "@/app/verses/[id]/share-actions";
 import type { CardStyle } from "@/lib/cards/style";
 import { cardStory, shareImage, verseStory } from "@/lib/share/story";
+import { verseAction, verseActionPanel } from "@/components/verse-action";
 import { cn } from "@/lib/utils";
 
 const noSubscription = () => () => {};
@@ -141,16 +142,21 @@ export function CardShare({
         aria-expanded={open}
         aria-controls="card-share"
         onClick={() => setOpen((o) => !o)}
-        className={cn(
-          "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors",
-          open ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-        )}
+        className={verseAction(open)}
       >
-        <Share className="size-4" aria-hidden /> Share
-        {!open && visibility !== "private" && (
-          <span className="text-xs font-normal opacity-80">· {visibility === "friends" ? "Friends" : "Everyone"}</span>
+        <span className="relative">
+          <Share className="size-5" aria-hidden />
+          {/* Seen by friends or everyone, or on a public link: a dot on the icon. */}
+          {(visibility !== "private" || path) && (
+            <span className="absolute -top-0.5 -right-1 size-2 rounded-full bg-primary ring-2 ring-background" aria-hidden />
+          )}
+        </span>
+        Share
+        {(visibility !== "private" || path) && (
+          <span className="sr-only">
+            , {visibility === "friends" ? "friends can see it" : visibility === "everyone" ? "everyone can see it" : "shared by link"}
+          </span>
         )}
-        {path && !open && <span className="size-1.5 rounded-full bg-primary" aria-label="Shared publicly" />}
       </button>
 
       {open && card && (
@@ -159,7 +165,7 @@ export function CardShare({
         </div>
       )}
       {open && (
-        <div id="card-share" className="animate-rise w-full rounded-2xl border bg-card p-1.5">
+        <div id="card-share" className={cn("animate-rise w-full rounded-2xl border bg-card p-1.5", verseActionPanel)}>
           {hasCard && (
             <div className="p-1.5">
               <p id="card-audience" className="px-1.5 pb-1.5 text-xs text-muted-foreground">

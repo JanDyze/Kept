@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const THRESHOLD = 60; // px of travel that counts as a swipe
 
-// Swipe the page sideways for the next or previous one in the list it came from (arrow keys and
-// the side buttons too). The page follows the finger, then the next one slides in. Pages replace
+// Swipe anywhere on the page sideways for the next or previous one in the list it came from (arrow
+// keys and the side buttons too). Only the verse or card (SwipeTarget) follows the finger, then the
+// next page slides in. Pages replace
 // each other, so Back still returns to the list. A drag that starts in a text field is left alone.
 export function CardSwiper({
   prevHref,
@@ -49,14 +50,12 @@ export function CardSwiper({
   return (
     <div className={cn("relative", className)}>
       <div
-        className={cn("touch-pan-y", className)}
-        style={{
-          transform: dx ? `translateX(${dx}px)` : undefined,
-          transition: dragging ? "none" : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)",
-        }}
+        // Reaches into the page's side gutters, so a swipe can start anywhere.
+        className={cn("-mx-4 touch-pan-y px-4", className)}
         onPointerDown={(e) => {
           if (e.pointerType === "mouse" && e.button !== 0) return;
-          if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
+          // Fields, and rows that scroll sideways themselves, keep their own drags.
+          if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable='true'], [data-no-swipe]")) return;
           start.current = { x: e.clientX, y: e.clientY, id: e.pointerId, axis: null };
         }}
         onPointerMove={(e) => {
@@ -102,7 +101,7 @@ export function CardSwiper({
           if (Math.abs(dx) > 8) e.preventDefault();
         }}
       >
-        {children}
+        <Swipe value={{ dx, dragging }}>{children}</Swipe>
       </div>
       <SideButton dir="prev" disabled={!prevHref} onClick={() => go(prevHref, "prev")} />
       <SideButton dir="next" disabled={!nextHref} onClick={() => go(nextHref, "next")} />
@@ -126,5 +125,25 @@ function SideButton({ dir, disabled, onClick }: { dir: "prev" | "next"; disabled
     >
       <Icon className="size-5" aria-hidden />
     </button>
+  );
+}
+
+const Swipe = createContext<{ dx: number; dragging: boolean } | null>(null);
+
+// The part of a swipeable page that moves with the finger: the verse or card, not the page around it.
+export function SwipeTarget({ className, children }: { className?: string; children: React.ReactNode }) {
+  const s = useContext(Swipe);
+  const dx = s?.dx ?? 0;
+  return (
+    <div
+      className={className}
+      style={{
+        transform: dx ? `translateX(${dx}px) rotate(${(dx / 40).toFixed(2)}deg)` : undefined,
+        opacity: dx ? Math.max(0.35, 1 - Math.abs(dx) / 600) : undefined,
+        transition: s?.dragging ? "none" : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 250ms",
+      }}
+    >
+      {children}
+    </div>
   );
 }

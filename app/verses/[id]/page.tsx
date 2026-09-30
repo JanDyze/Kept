@@ -11,6 +11,8 @@ import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
 import { VerseMore } from "@/components/verse-more";
 import { PracticeBar, PracticeButton, PracticeCard, PracticeProvider, PracticeReference, PracticeText } from "@/components/verse-practice";
+import { SwipeTarget } from "@/components/card-swiper";
+import { verseAction } from "@/components/verse-action";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
@@ -22,7 +24,6 @@ import { getTimeZone } from "@/lib/day";
 import { listNotes } from "@/lib/verses/notes";
 import { mastery } from "@/lib/verses/mastery";
 import { getVerse } from "@/lib/verses/queries";
-import { cn } from "@/lib/utils";
 import { StarButton } from "@/components/star-button";
 import { setArchived, setStarred } from "../actions";
 
@@ -77,6 +78,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             <h1 className="sr-only">{verse.reference}</h1>
             {archived && <Badge variant="outline" className="mb-3">Archived</Badge>}
             {/* The verse as it looks in My verses, whole: the full card is in the card editor and when shared. */}
+            <SwipeTarget>
             <PracticeCard back={back}>
               <TextCard
                 full
@@ -93,8 +95,10 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
                 }}
               />
             </PracticeCard>
+            </SwipeTarget>
           </>
         ) : (
+          <SwipeTarget>
           <PracticeCard back={back} plain>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{verse.translation}</Badge>
@@ -117,21 +121,13 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               </p>
             </Morph>
           </PracticeCard>
+          </SwipeTarget>
         )}
 
-        <PracticeBar className="mt-4" />
-
         {!archived && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Link
-              href={`/verses/${verse.id}/card`}
-              transitionTypes={["nav-forward"]}
-              className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
-                "transition-colors hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <Palette className="size-4" aria-hidden /> {card ? "Edit card" : "Make it a card"}
+          <div className="mt-4 grid grid-cols-4 gap-1">
+            <Link href={`/verses/${verse.id}/card`} transitionTypes={["nav-forward"]} className={verseAction()}>
+              <Palette className="size-5" aria-hidden /> {card ? "Edit card" : "Card"}
             </Link>
             <CardShare
               verseId={verse.id}
@@ -142,18 +138,9 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
               initialVisibility={verse.visibility}
             />
-            <AddNoteButton
-              className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
-                "transition-colors hover:bg-muted hover:text-foreground",
-              )}
-            />
-            <PracticeButton
-              className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium text-muted-foreground",
-                "transition-colors hover:bg-muted hover:text-foreground",
-              )}
-            />
+            <AddNoteButton className={verseAction()} />
+            <PracticeButton />
+            <PracticeBar />
           </div>
         )}
 

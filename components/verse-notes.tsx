@@ -14,7 +14,7 @@ const OPEN_EVENT = "kept:add-note";
 export function AddNoteButton({ className }: { className?: string }) {
   return (
     <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={className}>
-      <NotebookPen className="size-4" aria-hidden /> Note
+      <NotebookPen className="size-5" aria-hidden /> Note
     </button>
   );
 }

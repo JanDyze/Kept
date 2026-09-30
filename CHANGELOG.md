@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.24.3 — Swipe the card, not the page
+
+- On a verse or a card from Discover, swipe from anywhere on the page: only the verse or card follows your finger.
+- A verse's actions (card, share, note, practice) are a single row of small icons that stays in place; share and practice open underneath it.
+
 ## 0.24.2 — Practice when you want to
 
 - A verse opens as it is. Tap Practice beside Share to cover its words, flip it, or cover the reference.

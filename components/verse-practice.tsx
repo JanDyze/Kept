@@ -4,6 +4,7 @@ import { createContext, useContext, useState } from "react";
 import { BookText, Brain, EyeOff, RotateCcw, Shuffle, X } from "lucide-react";
 import { seededRandom, shuffle } from "@/lib/games/random";
 import { tokenize } from "@/lib/games/words";
+import { verseAction, verseActionPanel } from "@/components/verse-action";
 import { cn } from "@/lib/utils";
 
 // Practising on a verse's page, only once asked for (Practice): cover its words, a few or all
@@ -102,18 +103,13 @@ export function PracticeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The Practice pill beside Make it a card, Share and Add note.
-export function PracticeButton({ className }: { className?: string }) {
+// Practice, in the verse page's row of actions.
+export function PracticeButton() {
   const p = useContext(Ctx);
   if (!p) return null;
   return (
-    <button
-      type="button"
-      aria-expanded={p.open}
-      onClick={() => p.setOpen(!p.open)}
-      className={cn(className, p.open && "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground")}
-    >
-      <Brain className="size-4" aria-hidden /> Practice
+    <button type="button" aria-expanded={p.open} onClick={() => p.setOpen(!p.open)} className={verseAction(p.open)}>
+      <Brain className="size-5" aria-hidden /> Practice
     </button>
   );
 }
@@ -124,12 +120,13 @@ const segment = (on: boolean) =>
     on ? "bg-background text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-muted-foreground hover:text-foreground",
   );
 
-// The ways to practise, once Practice is on. Nothing is covered until one is picked.
-export function PracticeBar({ className }: { className?: string }) {
+// The ways to practise, once Practice is on, under the row of actions. Nothing is covered until
+// one is picked.
+export function PracticeBar() {
   const p = useContext(Ctx);
   if (!p?.open) return null;
   return (
-    <div className={cn("animate-rise flex flex-col gap-2", className)}>
+    <div className={cn("animate-rise flex flex-col gap-2", verseActionPanel)}>
       <div className="flex items-center gap-1 rounded-xl bg-muted p-1">
         <div role="radiogroup" aria-label="Practice" className="grid flex-1 grid-cols-3 gap-1">
           {MODES.map(({ mode, label, name, Icon }) => (

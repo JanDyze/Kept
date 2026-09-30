@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { Avatar } from "@/components/avatar";
-import { CardSwiper } from "@/components/card-swiper";
+import { CardSwiper, SwipeTarget } from "@/components/card-swiper";
 import { KeepCardButton } from "@/components/keep-card-button";
 import { LikeButton } from "@/components/like-button";
 import { MemoryCard } from "@/components/memory-card";
@@ -40,14 +40,16 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
   return (
     <Screen back={back} className="pb-0">
       <CardSwiper key={id} className="flex flex-1 flex-col" prevHref={href(around?.prev)} nextHref={href(around?.next)}>
-        <MemoryCard
-          style={style}
-          reference={reference}
-          translation={row.translation}
-          text={row.text}
-          morphId={row.id}
-          className={cn("mx-auto", style.shape === "landscape" ? "max-w-xl" : style.shape === "square" ? "max-w-md" : "max-w-sm")}
-        />
+        <SwipeTarget>
+          <MemoryCard
+            style={style}
+            reference={reference}
+            translation={row.translation}
+            text={row.text}
+            morphId={row.id}
+            className={cn("mx-auto", style.shape === "landscape" ? "max-w-xl" : style.shape === "square" ? "max-w-md" : "max-w-sm")}
+          />
+        </SwipeTarget>
 
       <div className="mt-5 flex items-center gap-2">
         <Link
