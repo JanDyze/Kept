@@ -6,6 +6,7 @@ import { KeepButton, KeptNotice } from "@/components/keep-button";
 import { LikeButton } from "@/components/like-button";
 import { TagChip } from "@/components/tag-chip";
 import { Screen } from "@/components/screen";
+import { Tour } from "@/components/tour";
 import { SearchBox } from "@/components/search-box";
 import { readTranslation, TranslationToggle } from "@/components/translation-toggle";
 import { requireUser } from "@/lib/auth";
@@ -67,6 +68,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
           )}
           <Link
             href="/friends"
+            data-tour="discover-friends"
             transitionTypes={["nav-forward"]}
             aria-label={requests ? `Friends, ${requests} waiting` : "Friends"}
             className="relative flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -81,10 +83,12 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         </div>
       }
     >
-      <SearchBox defaultValue={q} translation={t} />
+      <div data-tour="discover-search">
+        <SearchBox defaultValue={q} translation={t} />
+      </div>
 
       {!result && (
-        <div role="tablist" aria-label="Browse" className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+        <div role="tablist" aria-label="Browse" data-tour="discover-tabs" className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
           {(["cards", "verses"] as const).map((v) => (
             <Link
               key={v}
@@ -221,6 +225,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         (CC BY). Always read a verse in its context.
       </p>
       <KeptNotice />
+      <Tour id="discover" />
     </Screen>
   );
 }

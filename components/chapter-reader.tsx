@@ -39,7 +39,7 @@ export function ChapterReader({
   return (
     <>
       {/* A quiet page under the text, so a theme's texture or scenery doesn't run through it. */}
-      <div className="-mx-1 rounded-2xl border border-border/50 bg-card/85 px-4 py-5 font-serif text-[1.2rem] leading-[1.9] text-card-foreground shadow-[0_1px_2px_rgb(0_0_0/0.04)] backdrop-blur-sm">
+      <div data-tour="bible-verse" className="-mx-1 rounded-2xl border border-border/50 bg-card/85 px-4 py-5 font-serif text-[1.2rem] leading-[1.9] text-card-foreground shadow-[0_1px_2px_rgb(0_0_0/0.04)] backdrop-blur-sm">
         {rows.map((row) => (
           <span
             key={row.verse}

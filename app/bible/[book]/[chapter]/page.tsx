@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ChapterReader } from "@/components/chapter-reader";
+import { Tour } from "@/components/tour";
 import { Screen } from "@/components/screen";
 import { readTranslation, TranslationToggle } from "@/components/translation-toggle";
 import { requireUser } from "@/lib/auth";
@@ -74,6 +75,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps<"/
           </Link>
         )}
       </nav>
+      <Tour id="bible" />
     </Screen>
   );
 }

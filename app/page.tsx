@@ -8,6 +8,7 @@ import { GuestSave } from "@/components/guest-save";
 import { HomeBackGuard } from "@/components/home-back-guard";
 import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
+import { Tour } from "@/components/tour";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
@@ -116,6 +117,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <div className="flex flex-col gap-3">
         <Link
           href={youHref}
+          data-tour="home-you"
           transitionTypes={["nav-forward"]}
           aria-label={addFirst ? "Add your first verse" : `${status}. Your profile`}
           className={cn(
@@ -172,7 +174,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         )}
         {user.guest && <GuestSave compact className="animate-rise" />}
 
-        <nav className="grid grid-cols-2 gap-3" aria-label="Sections">
+        <nav data-tour="home-sections" className="grid grid-cols-2 gap-3" aria-label="Sections">
           {cards.map(({ href, title, detail, Icon, badge = 0 }, i) => (
             <Link
               key={href}
@@ -202,6 +204,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         {/* Adding a verse is the main thing to do; a "+" tucked into My verses was easy to miss. */}
         <Link
           href="/verses/new"
+          data-tour="home-add"
           transitionTypes={["nav-forward"]}
           style={{ animationDelay: "260ms" }}
           className={cn(
@@ -251,6 +254,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       )}
       <AppBadge count={requests + left} />
       <HomeBackGuard />
+      <Tour id="home" />
     </Screen>
   );
 }

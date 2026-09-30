@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { Avatar } from "@/components/avatar";
 import { CardSwiper, SwipeTarget } from "@/components/card-swiper";
+import { Tour } from "@/components/tour";
 import { KeepCardButton } from "@/components/keep-card-button";
 import { LikeButton } from "@/components/like-button";
 import { MemoryCard } from "@/components/memory-card";
@@ -60,11 +61,13 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
             </span>
           )
         ) : (
-          <LikeButton target={{ card: id }} likes={like.count} liked={like.liked} className="border" />
+          <span data-tour="card-like">
+            <LikeButton target={{ card: id }} likes={like.count} liked={like.liked} className="border" />
+          </span>
         )}
       </div>
 
-        <SwipeTarget>
+        <SwipeTarget tour="card-card">
           <MemoryCard
             style={style}
             reference={reference}
@@ -91,10 +94,13 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
             Your verse
           </Link>
         ) : (
-          <KeepCardButton verseId={row.id} />
+          <div data-tour="card-keep">
+            <KeepCardButton verseId={row.id} />
+          </div>
         )}
       </div>
       </CardSwiper>
+      <Tour id="card" />
     </Screen>
   );
 }

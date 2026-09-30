@@ -6,6 +6,7 @@ import { ChartColumn, ChevronRight, LogOut, Palette, Sparkles } from "lucide-rea
 import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
 import { SubmitButton } from "@/components/submit-button";
+import { TipsSettings } from "@/components/tips-settings";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdmin } from "@/lib/admin";
 import { requireUser } from "@/lib/auth";
@@ -58,6 +59,8 @@ export default async function SettingsPage() {
           </Link>
         ))}
       </nav>
+
+      <TipsSettings />
 
       <section className="mt-6 divide-y rounded-2xl border bg-card">
         <Row label="Signed in as" value={user.guest ? "Guest" : (user.email ?? "—")} />

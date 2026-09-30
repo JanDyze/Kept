@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const THRESHOLD = 60; // px of travel that counts as a swipe
+const LOCK = 6; // px before a drag counts as sideways (or as a scroll)
 
 // Swipe anywhere on the page sideways for the next or previous one in the list it came from (arrow
 // keys and the side buttons too). Only the verse or card (SwipeTarget) moves: it follows the finger
@@ -32,6 +33,19 @@ export function CardSwiper({
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const start = useRef<{ x: number; y: number; id: number; axis: "x" | "y" | null } | null>(null);
+  const area = useRef<HTMLDivElement>(null);
+
+  // iOS can still hand a sideways drag to the browser (back gesture, scrolling) unless the touch is
+  // claimed once it's known to be sideways; React's touch listeners are passive, so this is native.
+  useEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (start.current?.axis === "x" && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", onTouchMove);
+  }, []);
 
   const go = (href: string | null, dir: "next" | "prev") => {
     if (!href) return;
@@ -59,6 +73,7 @@ export function CardSwiper({
   return (
     <div className={cn("relative", className)}>
       <div
+        ref={area}
         // Reaches into the page's side gutters, so a swipe can start anywhere.
         className={cn("-mx-4 touch-pan-y px-4", className)}
         onPointerDown={(e) => {
@@ -72,7 +87,7 @@ export function CardSwiper({
           if (!s || s.id !== e.pointerId) return;
           const mx = e.clientX - s.x;
           const my = e.clientY - s.y;
-          if (!s.axis && Math.hypot(mx, my) > 8) {
+          if (!s.axis && Math.hypot(mx, my) > LOCK) {
             s.axis = Math.abs(mx) > Math.abs(my) ? "x" : "y";
             if (s.axis === "x") {
               try {
@@ -140,7 +155,7 @@ function SideButton({ dir, disabled, onClick }: { dir: "prev" | "next"; disabled
 const Swipe = createContext<{ dx: number; dragging: boolean } | null>(null);
 
 // The part of a swipeable page that moves with the finger: the verse or card, not the page around it.
-export function SwipeTarget({ className, children }: { className?: string; children: React.ReactNode }) {
+export function SwipeTarget({ className, tour, children }: { className?: string; tour?: string; children: React.ReactNode }) {
   const s = useContext(Swipe);
   const dx = s?.dx ?? 0;
   const [from] = useState(() => incoming);
@@ -149,11 +164,14 @@ export function SwipeTarget({ className, children }: { className?: string; child
   }, []);
   return (
     <div
+      data-tour={tour}
       className={cn(from === "next" && "animate-swipe-in-next", from === "prev" && "animate-swipe-in-prev", className)}
       style={{
-        transform: dx ? `translateX(${dx}px) rotate(${(dx / 40).toFixed(2)}deg)` : undefined,
+        // Held: shrinks a touch so it reads as picked up, then follows the finger.
+        transform: dx || s?.dragging ? `translateX(${dx}px) rotate(${(dx / 40).toFixed(2)}deg) scale(${s?.dragging ? 0.97 : 1})` : undefined,
         opacity: dx ? Math.max(0.35, 1 - Math.abs(dx) / 600) : undefined,
         transition: s?.dragging ? "none" : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 250ms",
+        willChange: s?.dragging ? "transform" : undefined,
       }}
     >
       {children}

@@ -7,6 +7,7 @@ import { VerseLibrary, type LibraryItem } from "@/components/verse-library";
 import { requireUser } from "@/lib/auth";
 import { bookByName } from "@/lib/bible/books";
 import { readCardStyle } from "@/lib/cards/style";
+import { Tour } from "@/components/tour";
 import { mastery } from "@/lib/verses/mastery";
 import { listVerses, verseCounts } from "@/lib/verses/queries";
 import { SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
@@ -54,6 +55,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
         !archived && (
           <Link
             href="/verses/new"
+            data-tour="verses-add"
             transitionTypes={["nav-forward"]}
             className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-primary pr-4 pl-3 text-sm font-semibold text-primary-foreground transition-transform active:scale-95"
           >
@@ -63,6 +65,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       }
     >
       <VerseLibrary items={items} archived={archived} initialSort={sort} initialTag={tag} />
+      {!archived && <Tour id="verses" />}
 
       {!archived && counts.archived > 0 && (
         <footer className="mt-10 text-center text-sm text-muted-foreground">

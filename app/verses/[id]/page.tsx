@@ -13,6 +13,7 @@ import { VerseMore } from "@/components/verse-more";
 import { PracticeBar, PracticeButton, PracticeCard, PracticeProvider, PracticeReference, PracticeText } from "@/components/verse-practice";
 import { SwipeTarget } from "@/components/card-swiper";
 import { verseAction } from "@/components/verse-action";
+import { Tour } from "@/components/tour";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
@@ -58,7 +59,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       back={archived ? { href: "/verses?view=archived", label: "Archived" } : { href: "/verses", label: "My verses" }}
       action={
         // Editing, archiving and the verse's dates wait behind "⋯", out of the way until wanted.
-        <div className="flex items-center gap-1">
+        <div data-tour="verse-more" className="flex items-center gap-1">
           {!archived && <StarButton starred={verse.starredAt !== null} action={setStarred.bind(null, verse.id)} />}
           <VerseMore
             reference={localRef ?? verse.reference}
@@ -75,7 +76,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       <article>
         {/* Above the verse, so they stay put while it's swiped to the next one. */}
         {!archived && (
-          <div className="mb-4 grid grid-cols-4 gap-1">
+          <div data-tour="verse-actions" className="mb-4 grid grid-cols-4 gap-1">
             <Link href={`/verses/${verse.id}/card`} transitionTypes={["nav-forward"]} className={verseAction()}>
               <Palette className="size-5" aria-hidden /> {card ? "Edit card" : "Card"}
             </Link>
@@ -99,7 +100,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             <h1 className="sr-only">{verse.reference}</h1>
             {archived && <Badge variant="outline" className="mb-3">Archived</Badge>}
             {/* The verse as it looks in My verses, whole: the full card is in the card editor and when shared. */}
-            <SwipeTarget>
+            <SwipeTarget tour="verse-card">
             <PracticeCard back={back}>
               <TextCard
                 full
@@ -119,7 +120,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             </SwipeTarget>
           </>
         ) : (
-          <SwipeTarget>
+          <SwipeTarget tour="verse-card">
           <PracticeCard back={back} plain>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{verse.translation}</Badge>
@@ -159,6 +160,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
         <VerseNotes verseId={verse.id} initial={notes} readOnly={archived} />
       </article>
       </PracticeProvider>
+      {!archived && <Tour id="verse" />}
 
       </VerseSwiper>
     </Screen>

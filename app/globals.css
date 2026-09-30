@@ -357,9 +357,11 @@
 .animate-shake { animation: shake 420ms ease-in-out; }
 .animate-pop { animation: pop 180ms ease-out; }
 .animate-flip { animation: flip-in 480ms ease-in-out both; }
-/* The next verse or card coming in where the swiped one left (components/card-swiper.tsx). */
-.animate-swipe-in-next { animation: swipe-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; --swipe-from: 70%; --swipe-tilt: 5deg; }
-.animate-swipe-in-prev { animation: swipe-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; --swipe-from: -70%; --swipe-tilt: -5deg; }
+/* The next verse or card coming in where the swiped one left (components/card-swiper.tsx).
+   `backwards`, not `both`: a finished animation that kept its end state would override the inline
+   transform, and the card would stop following the finger. */
+.animate-swipe-in-next { animation: swipe-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; --swipe-from: 70%; --swipe-tilt: 5deg; }
+.animate-swipe-in-prev { animation: swipe-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; --swipe-from: -70%; --swipe-tilt: -5deg; }
 @keyframes swipe-in { from { opacity: 0; transform: translateX(var(--swipe-from)) rotate(var(--swipe-tilt)); } to { opacity: 1; transform: none; } }
 /* A cover laid over a word when practising (components/verse-practice.tsx). */
 .animate-cover { animation: cover-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }

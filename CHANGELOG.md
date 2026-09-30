@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.25.0 — Tips, and a swipe that follows you
+
+- Short tips the first time you open Home, My verses, a verse, a Bible chapter, Discover and a shared card: one thing at a time, with Next, Skip or Got it.
+- Settings → Tips shows any of them again.
+- Swiping a verse or card follows your finger from the first touch, every time. After a swipe or two, the next one used to stay put until you let go.
+
 ## 0.24.4 — Keep practising as you swipe
 
 - Swiping to the next verse keeps practising the same way: covered words (at the same amount), flipped, or reference covered.

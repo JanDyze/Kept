@@ -152,7 +152,7 @@ export function VerseLibrary({
     <>
       {items.length > 0 && (
         <div className="sticky top-(--header-offset) z-20 -mx-4 -mt-2 flex flex-col gap-3 bg-background/85 px-4 pb-3 pt-3 backdrop-blur-md transition-[top] duration-300 ease-out">
-          <div className="flex items-center gap-2">
+          <div data-tour="verses-find" className="flex items-center gap-2">
             <label className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <input
@@ -219,7 +219,7 @@ export function VerseLibrary({
           )}
         </div>
       ) : (
-        <div className="mt-1 flex flex-col gap-6">
+        <div data-tour="verses-list" className="mt-1 flex flex-col gap-6">
           {groups.map((g) => (
             <section key={g.book || "all"} aria-label={g.book || undefined}>
               {g.book && (

@@ -130,7 +130,7 @@ export function PracticeButton() {
   const p = useContext(Ctx);
   if (!p) return null;
   return (
-    <button type="button" aria-expanded={p.open} onClick={() => p.setOpen(!p.open)} className={verseAction(p.open)}>
+    <button type="button" data-tour="verse-practice" aria-expanded={p.open} onClick={() => p.setOpen(!p.open)} className={verseAction(p.open)}>
       <Brain className="size-5" aria-hidden /> Practice
     </button>
   );
