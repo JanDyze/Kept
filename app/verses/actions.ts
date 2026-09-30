@@ -24,7 +24,7 @@ export type VerseFormState = {
 
 const idSchema = z.uuid();
 
-const GUEST_FULL = `Guests can keep ${GUEST_VERSE_LIMIT} verses. Save with Google to keep more.`;
+const GUEST_FULL = `Guests can keep ${GUEST_VERSE_LIMIT} verses. Save your account to keep more.`;
 
 // Guests keep a few verses (archived ones count too, so archiving isn't a way round it).
 async function guestIsFull(user: SessionUser) {

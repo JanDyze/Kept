@@ -4,38 +4,40 @@ import { Avatar } from "@/components/avatar";
 import { getProfileByUsername } from "@/lib/social/profiles";
 import { LoginForm } from "./login-form";
 
-// Why Google sign-in (or an old email link) brought someone back here.
+// Why Google or Apple sign-in (or an old email link) brought someone back here.
 const LINK_MESSAGES = {
   expired: "That sign-in link has expired or was already used. Try again.",
   google: "Google sign-in isn't available right now. Try again in a moment.",
-  cancelled: "Google sign-in was cancelled.",
-  guest: "Guest mode isn't available right now. Continue with Google instead.",
+  apple: "Apple sign-in isn't available right now. Try again in a moment.",
+  cancelled: "Sign-in was cancelled.",
+  guest: "Guest mode isn't available right now. Sign in with Google or Apple instead.",
 };
 
 export const metadata: Metadata = { title: "Sign in" };
 
-// Continue as guest shows only while anonymous sign-ins are on in Supabase (checked every 5 min).
-async function guestsAllowed() {
+// Continue as guest and Continue with Apple show only while they're on in Supabase (checked every
+// 5 min), so neither is offered before it works.
+async function providers() {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
       headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY! },
       next: { revalidate: 300 },
     });
-    const settings = (await res.json()) as { external?: { anonymous_users?: boolean } };
-    return settings.external?.anonymous_users === true;
+    const settings = (await res.json()) as { external?: { anonymous_users?: boolean; apple?: boolean } };
+    return { guests: settings.external?.anonymous_users === true, apple: settings.external?.apple === true };
   } catch {
-    return false;
+    return { guests: false, apple: false };
   }
 }
 
-// One way in: Continue with Google, which also makes the account the first time.
+// One way in: Continue with Google or Apple, which also makes the account the first time.
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next, link } = await searchParams;
   // Arriving from someone's profile link (/u/name): show whose, so the link feels like theirs.
   const inviter = typeof next === "string" ? /^\/u\/([^/?#]+)/.exec(next)?.[1] : undefined;
-  const [person, guests] = await Promise.all([
+  const [person, { guests, apple }] = await Promise.all([
     inviter ? getProfileByUsername(decodeURIComponent(inviter)).catch(() => null) : null,
-    guestsAllowed(),
+    providers(),
   ]);
 
   return (
@@ -65,7 +67,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           {LINK_MESSAGES[link as keyof typeof LINK_MESSAGES]}
         </p>
       )}
-      <LoginForm next={typeof next === "string" ? next : undefined} guests={guests} />
+      <LoginForm next={typeof next === "string" ? next : undefined} guests={guests} apple={apple} />
     </main>
   );
 }

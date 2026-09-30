@@ -17,7 +17,7 @@ export default async function FriendsPage() {
     const me = await getOrCreateProfile(user);
     return (
       <Screen back={{ href: `/u/${me.username}`, label: "You" }} title="Friends">
-        <GuestSave title="Friends need an account" detail="Save with Google to add friends, see their cards and share yours. Your verses and games come with you." next="/friends" />
+        <GuestSave title="Friends need an account" detail="Save your account to add friends, see their cards and share yours. Your verses and games come with you." next="/friends" />
       </Screen>
     );
   }

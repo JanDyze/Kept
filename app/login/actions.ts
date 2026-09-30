@@ -6,7 +6,11 @@ import { NEXT_COOKIE } from "@/lib/next-path";
 import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
-// Kept signs in with Google only (email and password sign-in and sign-up were removed in 0.14.0).
+// Kept signs in with Google or Apple (email and password sign-in and sign-up were removed in
+// 0.14.0). Apple needs its provider set up in Supabase; its buttons show once it is.
+
+type Provider = "google" | "apple";
+const providerOf = (value: FormDataEntryValue | null): Provider => (value === "apple" ? "apple" : "google");
 
 // Only allow redirects back into this app, never to another site.
 function safeNext(value: FormDataEntryValue | null) {
@@ -14,23 +18,24 @@ function safeNext(value: FormDataEntryValue | null) {
   return next.startsWith("/") && !next.startsWith("//") ? next : "/";
 }
 
-// Remembers `next` for /auth/confirm, in case Google comes back without it.
+// Remembers `next` for /auth/confirm, in case Google or Apple comes back without it.
 async function rememberNext(next: string) {
   if (next !== "/") (await cookies()).set(NEXT_COOKIE, next, { path: "/", maxAge: 60 * 60 * 24, sameSite: "lax", httpOnly: true });
 }
 
-// Continue with Google: off to Google's sign-in, which returns through /auth/confirm and on to
-// `next`. A new Google user gets an account on the way.
-export async function signInWithGoogle(formData: FormData) {
+// Continue with Google or Apple (the form's `provider`): off to their sign-in, which returns
+// through /auth/confirm and on to `next`. Someone new gets an account on the way.
+export async function signIn(formData: FormData) {
+  const provider = providerOf(formData.get("provider"));
   const next = safeNext(formData.get("next"));
   const origin = await siteOrigin();
   await rememberNext(next);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider,
     options: { redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}` },
   });
-  if (error || !data.url) redirect("/login?link=google");
+  if (error || !data.url) redirect(`/login?link=${provider}`);
   redirect(data.url);
 }
 
@@ -50,14 +55,15 @@ export async function continueAsGuest(formData: FormData) {
   redirect(next, RedirectType.replace);
 }
 
-// A guest keeping their account: Google is linked to the same user, so their verses, cards and
-// games stay. Needs manual linking turned on in Supabase. Comes back through /auth/confirm.
-export async function saveWithGoogle(formData: FormData) {
+// A guest keeping their account: Google or Apple is linked to the same user, so their verses,
+// cards and games stay. Needs manual linking turned on in Supabase. Comes back through /auth/confirm.
+export async function saveAccount(formData: FormData) {
+  const provider = providerOf(formData.get("provider"));
   const next = safeNext(formData.get("next"));
   const origin = await siteOrigin();
   const supabase = await createClient();
   const { data, error } = await supabase.auth.linkIdentity({
-    provider: "google",
+    provider,
     options: { redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}` },
   });
   if (error || !data.url) redirect(`${next}${next.includes("?") ? "&" : "?"}saved=failed`);

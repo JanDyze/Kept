@@ -30,11 +30,11 @@ function greeting(tz: string) {
   return "Good evening";
 }
 
-// Coming back from Save with Google without it working (see /auth/confirm).
+// Coming back from Save with Google or Apple without it working (see /auth/confirm).
 const SAVE_MESSAGES = {
-  taken: "That Google account already has Kept. You're still a guest here; sign out of guest to use that account instead.",
-  cancelled: "Saving with Google was cancelled. You're still a guest.",
-  failed: "Saving with Google isn't available right now. Try again in a moment.",
+  taken: "That account already has Kept. You're still a guest here; sign out of guest to use that account instead.",
+  cancelled: "Saving your account was cancelled. You're still a guest.",
+  failed: "Saving your account isn't available right now. Try again in a moment.",
 };
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {

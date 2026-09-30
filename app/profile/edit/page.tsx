@@ -14,7 +14,7 @@ export default async function EditProfilePage() {
   if (user.guest) {
     return (
       <Screen back={{ href: `/u/${profile.username}`, label: "You" }} title="Edit profile">
-        <GuestSave title="Make it yours" detail="Save with Google to pick a name, a username and a photo. Your verses and games come with you." next="/profile/edit" />
+        <GuestSave title="Make it yours" detail="Save your account to pick a name, a username and a photo. Your verses and games come with you." next="/profile/edit" />
       </Screen>
     );
   }
