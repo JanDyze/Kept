@@ -10,7 +10,7 @@ import { AddNoteButton, VerseNotes } from "@/components/verse-notes";
 import { Morph, morphName } from "@/components/verse-morph";
 import { Screen } from "@/components/screen";
 import { VerseMore } from "@/components/verse-more";
-import { PracticeProvider, PracticeReference, PracticeText, PracticeToggle } from "@/components/verse-practice";
+import { PracticeCard, PracticeProvider, PracticeReference, PracticeText, PracticeToggle } from "@/components/verse-practice";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
@@ -70,6 +70,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
       <VerseSwiper id={verse.id}>
       <PracticeProvider>
       <article>
+        <PracticeCard>
         {card ? (
           <>
             <h1 className="sr-only">{verse.reference}</h1>
@@ -114,6 +115,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             </Morph>
           </>
         )}
+        </PracticeCard>
 
         <PracticeToggle className="mt-4" />
 

@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.24.1 — Practice, tidier
+
+- Flip turns the whole verse over sideways, like a card: tap it to turn it back.
+- Blanks covers each word with a solid cover instead of a faint bar.
+- The practice switch no longer shows hints underneath.
+
 ## 0.24.0 — Practice on a verse
 
 - A verse's page has a practice switch under it: Blanks hides the words (tap one to peek), Flip shows only the reference until you tap to check, and Hide ref hides the reference so you can recall where it's from.

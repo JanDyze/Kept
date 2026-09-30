@@ -1,12 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useRef, useState, useSyncExternalStore } from "react";
 import { BookText, Eye, EyeOff, RotateCcw } from "lucide-react";
 import { tokenize } from "@/lib/games/words";
 import { cn } from "@/lib/utils";
 
-// Practising on a verse's page: read it, hide its words (tap one to peek), flip it so only the
-// reference shows (tap to check), or hide the reference to recall where it's from. The mode sticks
+// Practising on a verse's page: read it, cover its words (tap one to peek), flip it so only the
+// reference shows (tap to turn it over), or hide the reference to recall where it's from. The mode sticks
 // for the session, so swiping through My verses keeps practising the same way.
 export type PracticeMode = "read" | "words" | "flip" | "reference";
 
@@ -44,11 +44,15 @@ function subscribe(onChange: () => void) {
 type Practice = {
   mode: PracticeMode;
   setMode: (m: PracticeMode) => void;
-  shown: boolean; // the flipped text, or the hidden reference, turned over
+  shown: boolean; // the flipped card, or the hidden reference, turned over
   setShown: (v: boolean) => void;
+  turning: boolean; // mid-flip
+  flip: () => void;
   peeked: Set<number>; // hidden words tapped open
   peek: (i: number) => void;
 };
+
+const FLIP_MS = 520;
 
 const Ctx = createContext<Practice | null>(null);
 
@@ -56,7 +60,20 @@ export function PracticeProvider({ children }: { children: React.ReactNode }) {
   const mode = useSyncExternalStore(subscribe, readMode, () => "read" as const);
   const [shown, setShown] = useState(false);
   const [peeked, setPeeked] = useState<Set<number>>(() => new Set());
+  const [turning, setTurning] = useState(false);
+  const timers = useRef<number[]>([]);
+  // The card turns edge-on, swaps faces there, and turns back (FLIP_MS in globals.css' flip-y).
+  const flip = () => {
+    if (turning) return;
+    setTurning(true);
+    timers.current = [
+      window.setTimeout(() => setShown((v) => !v), FLIP_MS / 2),
+      window.setTimeout(() => setTurning(false), FLIP_MS),
+    ];
+  };
   const setMode = (m: PracticeMode) => {
+    timers.current.forEach(clearTimeout);
+    setTurning(false);
     setShown(false);
     setPeeked(new Set());
     saveMode(m);
@@ -68,7 +85,7 @@ export function PracticeProvider({ children }: { children: React.ReactNode }) {
       else next.add(i);
       return next;
     });
-  return <Ctx value={{ mode, setMode, shown, setShown, peeked, peek }}>{children}</Ctx>;
+  return <Ctx value={{ mode, setMode, shown, setShown, turning, flip, peeked, peek }}>{children}</Ctx>;
 }
 
 // The mode switch, under the verse.
@@ -93,28 +110,72 @@ export function PracticeToggle({ className }: { className?: string }) {
           <span className="truncate">{label}</span>
         </button>
       ))}
-      {p.mode !== "read" && (
-        <p className="col-span-4 px-2 pt-1 pb-0.5 text-center text-xs text-muted-foreground">
-          {p.mode === "words" && (p.peeked.size ? "Tap a word again to hide it." : "Say it through, tapping a word to peek.")}
-          {p.mode === "flip" && (p.shown ? "Tap the verse to flip it back." : "Say it from memory, then tap to check.")}
-          {p.mode === "reference" && (p.shown ? "Tap the reference to hide it again." : "Where is it from? Tap to check.")}
-        </p>
-      )}
     </div>
   );
 }
 
-// A bar over a word or reference, keeping its place in the line.
-function Blank({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
+// A solid cover over a word or reference, fitted to the letters and keeping their place in the line.
+function Cover({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <span
+      role="button"
+      tabIndex={0}
       aria-label={label}
-      className="inline rounded-[0.25em] bg-current/15 align-baseline transition-colors hover:bg-current/25"
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="cursor-pointer rounded-[0.2em] bg-current box-decoration-clone opacity-85 transition-opacity select-none hover:opacity-70"
     >
       <span className="invisible">{children}</span>
-    </button>
+    </span>
+  );
+}
+
+// A word or reference uncovered: tap to cover it again.
+function Uncovered({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="animate-fade-in cursor-pointer"
+    >
+      {children}
+    </span>
+  );
+}
+
+// In Flip, the whole verse turns over sideways when tapped: its back shows only the reference.
+export function PracticeCard({ children }: { children: React.ReactNode }) {
+  const p = useContext(Ctx);
+  if (!p || p.mode !== "flip") return <>{children}</>;
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={p.shown ? "Turn the verse face down" : "Turn the verse over"}
+      onClick={p.flip}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          p.flip();
+        }
+      }}
+      className={cn("cursor-pointer select-none", p.turning && "animate-flip-y")}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -123,23 +184,17 @@ export function PracticeText({ text }: { text: string }) {
   const p = useContext(Ctx);
   if (!p || p.mode === "read" || p.mode === "reference") return <>{text}</>;
 
+  // Face down: the text keeps its space, so the card doesn't change size as it turns.
   if (p.mode === "flip")
-    return (
-      <button
-        type="button"
-        onClick={() => p.setShown(!p.shown)}
-        aria-label={p.shown ? "Hide the verse" : "Show the verse"}
-        className="relative block w-full text-left [font:inherit] [text-align:inherit]"
-      >
-        <span key={String(p.shown)} className={cn("block animate-flip", !p.shown && "invisible")}>
-          {text}
+    return p.shown ? (
+      <>{text}</>
+    ) : (
+      <span className="relative block">
+        <span className="invisible">{text}</span>
+        <span className="absolute inset-0 flex items-center justify-center opacity-35">
+          <RotateCcw className="size-8 -scale-x-100" aria-hidden />
         </span>
-        {!p.shown && (
-          <span className="absolute inset-0 flex items-center justify-center rounded-xl border-2 border-dashed border-current/25 font-sans text-sm font-medium opacity-70">
-            Tap to flip
-          </span>
-        )}
-      </button>
+      </span>
     );
 
   return (
@@ -148,13 +203,13 @@ export function PracticeText({ text }: { text: string }) {
         <span key={i}>
           {t.pre}
           {p.peeked.has(i) ? (
-            <button type="button" onClick={() => p.peek(i)} className="inline rounded-[0.25em] bg-current/10 [font:inherit]">
+            <Uncovered onClick={() => p.peek(i)} label={`${t.word}, tap to cover`}>
               {t.word}
-            </button>
+            </Uncovered>
           ) : (
-            <Blank onClick={() => p.peek(i)} label="Hidden word, tap to show">
+            <Cover onClick={() => p.peek(i)} label="Covered word, tap to show">
               {t.word}
-            </Blank>
+            </Cover>
           )}
           {t.post}
         </span>
@@ -169,13 +224,13 @@ export function PracticeReference({ text }: { text: string }) {
   if (!p || p.mode !== "reference") return <>{text}</>;
   if (p.shown)
     return (
-      <button type="button" onClick={() => p.setShown(false)} className="animate-flip inline [font:inherit] [text-align:inherit]">
+      <Uncovered onClick={() => p.setShown(false)} label={`${text}, tap to cover`}>
         {text}
-      </button>
+      </Uncovered>
     );
   return (
-    <Blank onClick={() => p.setShown(true)} label="Hidden reference, tap to show">
+    <Cover onClick={() => p.setShown(true)} label="Covered reference, tap to show">
       {text}
-    </Blank>
+    </Cover>
   );
 }
