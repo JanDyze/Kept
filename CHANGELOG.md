@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.25.2 — A Friends icon of its own
+
+- Discover's Friends button has its own two-tone icon, drawn like the ones on Home. The friend behind leans in when you hover it.
+
 ## 0.25.1 — Kept's own questions
 
 - "Are you sure?" questions (deleting a note or photo, removing a friend, stopping a share link, giving up a game, leaving guest mode) are Kept's own, not the browser's.

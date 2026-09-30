@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Check, Users, X } from "lucide-react";
+import { BookOpen, Check, X } from "lucide-react";
 import { CardGallery } from "@/components/card-gallery";
+import { FriendsIcon } from "@/components/home-icons";
 import { KeepButton, KeptNotice } from "@/components/keep-button";
 import { LikeButton } from "@/components/like-button";
 import { TagChip } from "@/components/tag-chip";
@@ -71,9 +72,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
             data-tour="discover-friends"
             transitionTypes={["nav-forward"]}
             aria-label={requests ? `Friends, ${requests} waiting` : "Friends"}
-            className="relative flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="group relative flex size-10 items-center justify-center rounded-xl"
           >
-            <Users className="size-5" aria-hidden />
+            <FriendsIcon className="size-6" />
             {requests > 0 && (
               <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.65rem] leading-4 font-semibold text-primary-foreground">
                 {requests}

@@ -139,3 +139,21 @@ export function DiscoverIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+// Friends, for Discover's top bar: two people side by side, the one behind in the accent and the
+// one in front in ink, cut from each other by a thin gap in the page color (it sits on the page,
+// not a tile). The friend behind leans in when the button is hovered or held.
+export function FriendsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 56 56" className={`${svg} ${className ?? ""}`} aria-hidden>
+      <g className={`${part} fill-icon-accent motion-safe:group-engaged:-translate-x-0.5 motion-safe:group-engaged:-rotate-6`}>
+        <circle cx="38" cy="16" r="8.5" />
+        <path d="M24 44V41Q24 28 38 28Q52 28 52 41V44Q52 46 50 46H26Q24 46 24 44Z" />
+      </g>
+      <g className="stroke-background" strokeWidth="5" strokeLinejoin="round" style={{ paintOrder: "stroke" }}>
+        <circle cx="20" cy="22" r="9.5" className="fill-icon-ink" />
+        <path d="M4 50V47Q4 33 20 33Q36 33 36 47V50Q36 52 34 52H6Q4 52 4 50Z" className="fill-icon-ink" />
+      </g>
+    </svg>
+  );
+}
