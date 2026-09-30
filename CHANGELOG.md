@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.25.1 — Kept's own questions
+
+- "Are you sure?" questions (deleting a note or photo, removing a friend, stopping a share link, giving up a game, leaving guest mode) are Kept's own, not the browser's.
+- Share opens as a sheet over the verse.
+- Tap Note again, or the ✕, to put the note box away. What you typed stays.
+
 ## 0.25.0 — Tips, and a swipe that follows you
 
 - Short tips the first time you open Home, My verses, a verse, a Bible chapter, Discover and a shared card: one thing at a time, with Next, Skip or Got it.

@@ -24,6 +24,7 @@ import {
   TEXT_COLORS,
   type TextColor,
 } from "@/lib/cards/style";
+import { ask } from "@/components/confirm";
 import { cn } from "@/lib/utils";
 
 type Tab = "background" | "text" | "frame";
@@ -120,7 +121,7 @@ export function CardEditor({
   }
 
   async function removeImage(id: string) {
-    if (!window.confirm("Delete this photo? Cards that use it go back to plain.")) return;
+    if (!(await ask({ title: "Delete this photo?", body: "Cards that use it go back to plain.", confirm: "Delete", danger: true }))) return;
     setError(null);
     const res = await fetch(`/api/card-images/${id}`, { method: "DELETE" });
     if (!res.ok && res.status !== 404) return setError("The photo wasn't deleted. Try again.");

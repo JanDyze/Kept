@@ -89,7 +89,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               initialPath={verse.shareToken ? sharePath(verse.shareToken) : null}
               initialVisibility={verse.visibility}
             />
-            <AddNoteButton className={verseAction()} />
+            <AddNoteButton />
             <PracticeButton />
             <PracticeBar />
           </div>

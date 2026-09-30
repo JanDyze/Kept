@@ -1,19 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ArrowUp, Loader2, NotebookPen } from "lucide-react";
+import { ArrowUp, Loader2, NotebookPen, X } from "lucide-react";
 import { addNote, deleteNote } from "@/app/verses/[id]/notes-actions";
 import type { NoteView } from "@/lib/verses/notes";
+import { ask } from "@/components/confirm";
+import { verseAction } from "@/components/verse-action";
 import { cn } from "@/lib/utils";
 
 type Note = NoteView & { sending?: boolean };
 
-const OPEN_EVENT = "kept:add-note";
+const TOGGLE_EVENT = "kept:add-note"; // the Note button: open the composer, or close it
+const STATE_EVENT = "kept:composing"; // the composer, telling the button whether it's open
 
-// The "Note" button in the verse page's action row: opens the composer below.
-export function AddNoteButton({ className }: { className?: string }) {
+// The "Note" button in the verse page's action row: opens the composer below, and closes it again.
+export function AddNoteButton() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const onState = (e: Event) => setOpen((e as CustomEvent<boolean>).detail);
+    window.addEventListener(STATE_EVENT, onState);
+    return () => window.removeEventListener(STATE_EVENT, onState);
+  }, []);
   return (
-    <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={className}>
+    <button type="button" aria-pressed={open} onClick={() => window.dispatchEvent(new Event(TOGGLE_EVENT))} className={verseAction(open)}>
       <NotebookPen className="size-5" aria-hidden /> Note
     </button>
   );
@@ -30,8 +39,15 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
   const [, startTransition] = useTransition();
   const field = useRef<HTMLTextAreaElement>(null);
 
+  const composingNow = useRef(composing);
   useEffect(() => {
-    const open = () => {
+    composingNow.current = composing;
+    window.dispatchEvent(new CustomEvent(STATE_EVENT, { detail: composing }));
+  }, [composing]);
+
+  useEffect(() => {
+    const toggle = () => {
+      if (composingNow.current) return setComposing(false);
       setComposing(true);
       // The user asked for it, so the keyboard coming up is expected.
       requestAnimationFrame(() => {
@@ -39,8 +55,8 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
         field.current?.scrollIntoView({ block: "center", behavior: "smooth" });
       });
     };
-    window.addEventListener(OPEN_EVENT, open);
-    return () => window.removeEventListener(OPEN_EVENT, open);
+    window.addEventListener(TOGGLE_EVENT, toggle);
+    return () => window.removeEventListener(TOGGLE_EVENT, toggle);
   }, []);
 
   if (notes.length === 0 && (readOnly || !composing)) return null;
@@ -64,8 +80,8 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
     });
   }
 
-  function remove(note: Note) {
-    if (!window.confirm("Delete this note?")) return;
+  async function remove(note: Note) {
+    if (!(await ask({ title: "Delete this note?", body: "It can't be brought back.", confirm: "Delete", danger: true }))) return;
     const at = notes.indexOf(note);
     setNotes((list) => list.filter((n) => n.id !== note.id));
     startTransition(async () => {
@@ -97,7 +113,7 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
                 {!readOnly && !n.sending && (
                   <>
                     <span aria-hidden>·</span>
-                    <button type="button" onClick={() => remove(n)} className="py-1 hover:text-destructive">
+                    <button type="button" onClick={() => void remove(n)} className="py-1 hover:text-destructive">
                       Delete
                     </button>
                   </>
@@ -125,6 +141,7 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
                 e.preventDefault();
                 send();
               }
+              if (e.key === "Escape") setComposing(false);
             }}
             rows={1}
             maxLength={2000}
@@ -132,6 +149,15 @@ export function VerseNotes({ verseId, initial, readOnly }: { verseId: string; in
             aria-label="Add a note"
             className="max-h-40 min-h-9 flex-1 resize-none bg-transparent py-2 text-base leading-snug outline-none [field-sizing:content] placeholder:text-muted-foreground"
           />
+          {/* Put it away again; what's typed stays for next time. */}
+          <button
+            type="button"
+            onClick={() => setComposing(false)}
+            aria-label="Close note"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
           <button
             type="submit"
             disabled={!draft.trim()}

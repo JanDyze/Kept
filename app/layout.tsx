@@ -3,6 +3,7 @@ import { Fraunces, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeScript } from "goodthemes/script";
 import { GuestPromptHost } from "@/components/guest-prompt";
+import { ConfirmHost } from "@/components/confirm";
 import { ActivityPing } from "@/components/activity-ping";
 import { AppFeel } from "@/components/app-feel";
 import { NavHistory } from "@/components/nav-history";
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <ServiceWorker />
           <InstallBanner />
           <GuestPromptHost />
+          <ConfirmHost />
           <Suspense fallback={null}>
             <NavigationOverlayWithVerses />
           </Suspense>

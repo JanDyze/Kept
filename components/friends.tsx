@@ -7,6 +7,7 @@ import { acceptFriendRequest, addFriend, removeFriendship, saveProfile, type Pro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Relation } from "@/lib/social/friends";
+import { ask } from "@/components/confirm";
 import { cn } from "@/lib/utils";
 
 const pill = "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors disabled:opacity-60";
@@ -75,8 +76,9 @@ export function FriendButton({
     <button
       type="button"
       disabled={pending}
-      onClick={() => {
-        if (window.confirm(`Remove @${username} from your friends?`)) run("none", () => removeFriendship(userId));
+      onClick={async () => {
+        if (await ask({ title: `Remove @${username}?`, body: "You'll stop seeing each other's friends-only cards.", confirm: "Remove", danger: true }))
+          run("none", () => removeFriendship(userId));
       }}
       className={cn(pill, "border text-muted-foreground hover:bg-muted")}
     >

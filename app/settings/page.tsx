@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { sql } from "drizzle-orm";
 import Image from "next/image";
-import { ChartColumn, ChevronRight, LogOut, Palette, Sparkles } from "lucide-react";
+import { ChartColumn, ChevronRight, Palette, Sparkles } from "lucide-react";
 import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
-import { SubmitButton } from "@/components/submit-button";
+import { SignOutForm } from "@/components/sign-out-form";
 import { TipsSettings } from "@/components/tips-settings";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdmin } from "@/lib/admin";
@@ -71,14 +71,7 @@ export default async function SettingsPage() {
         />
       </section>
 
-      <form action={signOut} className="mt-6">
-        <SubmitButton variant="outline" className="h-11 w-full gap-2 text-base">
-          <LogOut className="size-4" aria-hidden /> {user.guest ? "Leave guest mode" : "Sign out"}
-        </SubmitButton>
-        {user.guest && (
-          <p className="mt-2 text-center text-xs text-muted-foreground">Leaving without saving loses your verses and games.</p>
-        )}
-      </form>
+      <SignOutForm action={signOut} guest={Boolean(user.guest)} />
 
       {/* Support Kept isn't listed: the logo opens it, for whoever goes looking. */}
       <footer className="mt-10 flex justify-center">

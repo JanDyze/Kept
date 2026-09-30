@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BookOpenText, Check, ChevronRight, Loader2, PartyPopper, RotateCcw } from "lucide-react";
 import { BackNavLink } from "@/components/back-link";
 import { buttonVariants } from "@/components/ui/button";
+import { ask } from "@/components/confirm";
 import { cn } from "@/lib/utils";
 import type { GameScore } from "@/lib/games/summary";
 import { ResultMark } from "./result-mark";
@@ -38,9 +39,14 @@ export function GiveUp({ onConfirm, disabled, className }: { onConfirm: () => vo
     <button
       type="button"
       disabled={disabled}
-      onClick={() => {
-        const question = practice ? "Give up and see the answer?" : "Give up and see the answer? This counts as today's result.";
-        if (window.confirm(question)) onConfirm();
+      onClick={async () => {
+        const yes = await ask({
+          title: "Give up?",
+          body: practice ? "You'll see the answer." : "You'll see the answer, and this counts as today's result.",
+          confirm: "Give up",
+          cancel: "Keep playing",
+        });
+        if (yes) onConfirm();
       }}
       className={cn(
         "mt-8 self-center py-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-40",

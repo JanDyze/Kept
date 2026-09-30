@@ -8,7 +8,9 @@ import { setVisibility } from "@/app/cards/actions";
 import { shareCard, unshareCard } from "@/app/verses/[id]/share-actions";
 import type { CardStyle } from "@/lib/cards/style";
 import { cardStory, shareImage, verseStory } from "@/lib/share/story";
-import { verseAction, verseActionPanel } from "@/components/verse-action";
+import { Sheet } from "@/components/sheet";
+import { verseAction } from "@/components/verse-action";
+import { ask } from "@/components/confirm";
 import { cn } from "@/lib/utils";
 
 const noSubscription = () => () => {};
@@ -111,8 +113,8 @@ export function CardShare({
     });
   }
 
-  function stopLink() {
-    if (!window.confirm("Stop sharing? The link will stop working.")) return;
+  async function stopLink() {
+    if (!(await ask({ title: "Stop sharing the link?", body: "Anyone who has it won't be able to open the card any more.", confirm: "Stop sharing", danger: true }))) return;
     const was = path;
     setPath(null);
     startTransition(async () => {
@@ -139,8 +141,7 @@ export function CardShare({
     <>
       <button
         type="button"
-        aria-expanded={open}
-        aria-controls="card-share"
+        aria-haspopup="dialog"
         onClick={() => setOpen((o) => !o)}
         className={verseAction(open)}
       >
@@ -164,8 +165,8 @@ export function CardShare({
           <MemoryCard style={card} reference={reference} translation={translation} text={text} />
         </div>
       )}
-      {open && (
-        <div id="card-share" className={cn("animate-rise w-full rounded-2xl border bg-card p-1.5", verseActionPanel)}>
+      <Sheet open={open} onClose={() => setOpen(false)} title="Share" description={`${reference} · ${translation}`}>
+        <div id="card-share">
           {hasCard && (
             <div className="p-1.5">
               <p id="card-audience" className="px-1.5 pb-1.5 text-xs text-muted-foreground">
@@ -260,7 +261,7 @@ export function CardShare({
                   </button>
                 )}
               </div>
-              <button type="button" onClick={stopLink} className="self-start px-1.5 py-1.5 text-sm text-muted-foreground hover:text-destructive">
+              <button type="button" onClick={() => void stopLink()} className="self-start px-1.5 py-1.5 text-sm text-muted-foreground hover:text-destructive">
                 Stop sharing
               </button>
             </div>
@@ -277,7 +278,7 @@ export function CardShare({
             </p>
           )}
         </div>
-      )}
+      </Sheet>
     </>
   );
 }
