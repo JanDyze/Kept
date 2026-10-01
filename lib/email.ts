@@ -1,11 +1,20 @@
 import "server-only";
 
-// Email through Resend's API (https://resend.com). Needs RESEND_API_KEY. EMAIL_FROM is the sender:
+// Email, one of two ways:
+// - Gmail: GMAIL_USER (the address) and GMAIL_APP_PASSWORD (Google Account → Security → App
+//   passwords; needs 2-Step Verification). Sends from that Gmail to anyone, about 500 a day. Used
+//   first when set: the way to send before there's a domain of your own.
+// - Resend (https://resend.com): RESEND_API_KEY. EMAIL_FROM is the sender:
 // an address on a domain verified in Resend, like "Kept <hello@yourdomain.com>". Until there is
 // one, mail goes from onboarding@resend.dev, which Resend only delivers to the account owner's own
 // address; a Gmail-style EMAIL_FROM is used as the reply-to then. Without the key nothing is sent.
 
-export const emailReady = () => Boolean(process.env.RESEND_API_KEY);
+const gmail = () =>
+  process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+    ? { user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, "") }
+    : null;
+
+export const emailReady = () => Boolean(gmail() || process.env.RESEND_API_KEY);
 
 // Where links in emails point: SITE_URL, else the production address Vercel provides.
 export function publicOrigin() {
@@ -52,8 +61,11 @@ function render(message: { title: string; body: string; url?: string }) {
 
 // Sends one email per address (so no one sees anyone else's). Never throws.
 export async function sendEmails(to: string[], message: { title: string; body: string; url?: string }) {
+  if (to.length === 0) return 0;
+  const viaGmail = gmail();
+  if (viaGmail) return sendWithGmail(viaGmail, to, message);
   const key = process.env.RESEND_API_KEY;
-  if (!key || to.length === 0) return 0;
+  if (!key) return 0;
   const { from, replyTo } = senderFrom(process.env.EMAIL_FROM);
   const { html, text } = render(message);
   let sent = 0;
@@ -72,5 +84,24 @@ export async function sendEmails(to: string[], message: { title: string; body: s
       console.error("email failed", e);
     }
   }
+  return sent;
+}
+
+// Through Gmail's SMTP server with an app password, from the Gmail address itself.
+async function sendWithGmail(account: { user: string; pass: string }, to: string[], message: { title: string; body: string; url?: string }) {
+  const { createTransport } = await import("nodemailer");
+  const transport = createTransport({ service: "gmail", auth: account, pool: true, maxConnections: 2 });
+  const name = senderFrom(process.env.EMAIL_FROM).from.replace(/\s*<.*$/, "") || "Kept";
+  const { html, text } = render(message);
+  let sent = 0;
+  for (const address of to) {
+    try {
+      await transport.sendMail({ from: { name, address: account.user }, to: address, subject: message.title, html, text });
+      sent++;
+    } catch (e) {
+      console.error("email failed", e instanceof Error ? e.message : e);
+    }
+  }
+  transport.close();
   return sent;
 }

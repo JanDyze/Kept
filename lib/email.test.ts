@@ -17,3 +17,30 @@ describe("senderFrom", () => {
     expect(senderFrom(undefined)).toEqual({ from: "Kept <onboarding@resend.dev>", replyTo: undefined });
   });
 });
+
+const sent: { from: unknown; to: string; subject: string }[] = [];
+let auth: unknown;
+vi.mock("nodemailer", () => ({
+  createTransport: (opts: { auth: unknown }) => {
+    auth = opts.auth;
+    return { sendMail: async (m: { from: unknown; to: string; subject: string }) => void sent.push(m), close: () => {} };
+  },
+}));
+
+describe("sendEmails through Gmail", () => {
+  it("sends from the Gmail address, one per person, ahead of Resend", async () => {
+    vi.stubEnv("GMAIL_USER", "jdmalaluan2@gmail.com");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "abcd efgh ijkl mnop");
+    vi.stubEnv("RESEND_API_KEY", "re_x");
+    vi.stubEnv("EMAIL_FROM", "Kept jdmalaluan2@gmail.com");
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const { sendEmails, emailReady } = await import("./email");
+    expect(emailReady()).toBe(true);
+    expect(await sendEmails(["a@x.com", "b@x.com"], { title: "Good morning", body: "Hi" })).toBe(2);
+    expect(auth).toEqual({ user: "jdmalaluan2@gmail.com", pass: "abcdefghijklmnop" });
+    expect(sent.map((m) => m.to)).toEqual(["a@x.com", "b@x.com"]);
+    expect(sent[0].from).toEqual({ name: "Kept", address: "jdmalaluan2@gmail.com" });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+});

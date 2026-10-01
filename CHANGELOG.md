@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.29.2 — Email that reaches everyone
+
+- Reminder emails can be sent from Kept's Gmail, so they reach everyone, not just the developer.
+
 ## 0.29.1 — Email on from the start
 
 - Email reminders are on for everyone with an email address, without having to set anything up. Turn them off, or choose which kinds, in Settings → Notifications.
