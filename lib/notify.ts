@@ -1,13 +1,13 @@
 import "server-only";
-import { and, eq, exists, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, exists, isNull, lte, or, sql } from "drizzle-orm";
 import { APP_VERSION, compareVersions, getReleases } from "@/lib/changelog";
 import { db } from "@/lib/db";
 import { appState, notificationPrefs, pushSubscriptions, verses } from "@/lib/db/schema";
-import { sendPush } from "@/lib/push";
+import { deliver } from "@/lib/push";
 import { isReaction, REACTIONS } from "@/lib/reactions";
 import { getProfiles } from "@/lib/social/profiles";
 
-// What Kept tells people, and when (lib/push.ts sends it). Each respects that kind's setting.
+// What Kept tells people, and when (lib/push.ts delivers it, by push and email). Each respects that kind's setting.
 
 const name = (p: { displayName: string | null; username: string } | undefined) => (p ? (p.displayName ?? `@${p.username}`) : "Someone");
 
@@ -15,7 +15,7 @@ const name = (p: { displayName: string | null; username: string } | undefined) =
 export async function notifyCardReaction(ownerId: string, actorId: string, card: { id: string; reference: string }, reaction: string) {
   const actor = (await getProfiles([actorId])).get(actorId);
   const r = isReaction(reaction) ? REACTIONS[reaction] : REACTIONS.heart;
-  await sendPush([ownerId], "friends", {
+  await deliver([ownerId], "friends", {
     title: `${name(actor)} reacted ${r.label}`,
     body: `to your card, ${card.reference}`,
     url: `/cards/${card.id}`,
@@ -25,7 +25,7 @@ export async function notifyCardReaction(ownerId: string, actorId: string, card:
 
 export async function notifyFriendRequest(toId: string, fromId: string) {
   const from = (await getProfiles([fromId])).get(fromId);
-  await sendPush([toId], "friends", {
+  await deliver([toId], "friends", {
     title: `${name(from)} wants to be friends`,
     body: "Say yes to see each other's friends-only cards.",
     url: "/friends",
@@ -35,7 +35,7 @@ export async function notifyFriendRequest(toId: string, fromId: string) {
 
 export async function notifyFriendAccepted(toId: string, byId: string) {
   const by = (await getProfiles([byId])).get(byId);
-  await sendPush([toId], "friends", {
+  await deliver([toId], "friends", {
     title: `You and ${name(by)} are friends`,
     body: "Their friends-only cards now show in Discover.",
     url: "/search?who=friends",
@@ -51,7 +51,10 @@ export async function sendDailyReminders() {
     .where(
       and(
         eq(notificationPrefs.daily, true),
-        exists(db.select({ one: sql`1` }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, notificationPrefs.userId))),
+        or(
+          eq(notificationPrefs.email, true),
+          exists(db.select({ one: sql`1` }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, notificationPrefs.userId))),
+        ),
       ),
     );
   let sent = 0;
@@ -79,7 +82,7 @@ export async function sendDailyReminders() {
               : "Today's games are ready. A few minutes keeps your streak going.",
           url: "/",
         };
-    sent += await sendPush([userId], "daily", { ...message, tag: "daily" });
+    sent += await deliver([userId], "daily", { ...message, tag: "daily" });
   }
   return sent;
 }
@@ -91,7 +94,7 @@ export async function announceUpdate() {
   const release = (await getReleases())[0];
   const people = await db.select({ userId: notificationPrefs.userId }).from(notificationPrefs).where(eq(notificationPrefs.updates, true));
   const sent = release
-    ? await sendPush(
+    ? await deliver(
         people.map((p) => p.userId),
         "updates",
         { title: `New in Kept ${release.version}`, body: release.title || "See what's new.", url: "/whats-new", tag: "update" },

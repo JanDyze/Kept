@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { notificationPrefs, pushSubscriptions } from "@/lib/db/schema";
-import { sendPush } from "@/lib/push";
+import { deliver } from "@/lib/push";
 
 const subscription = z.object({
   endpoint: z.url().max(1000),
@@ -54,13 +54,13 @@ export async function setNotificationPref(kind: string, on: boolean): Promise<{ 
   return {};
 }
 
-// A test, to see that it works on this phone.
+// A test, to see that it works: to this person's devices, and by email if that's on.
 export async function sendTestPush(): Promise<{ sent: number }> {
   const user = await requireUser();
   for (const kind of ["daily", "friends", "updates"] as const) {
-    const sent = await sendPush([user.id], kind, {
+    const sent = await deliver([user.id], kind, {
       title: "Notifications are on",
-      body: "This is how Kept will remind you each morning.",
+      body: "This is how Kept will remind you each morning, with today's verse.",
       url: "/settings",
       tag: "test",
     });

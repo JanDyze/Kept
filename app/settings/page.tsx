@@ -14,6 +14,7 @@ import { requireUser } from "@/lib/auth";
 import { APP_VERSION } from "@/lib/changelog";
 import { getTimeZone } from "@/lib/day";
 import { db } from "@/lib/db";
+import { emailReady } from "@/lib/email";
 import { bibleVerses, notificationPrefs } from "@/lib/db/schema";
 import { signOut } from "../login/actions";
 
@@ -65,7 +66,7 @@ export default async function SettingsPage() {
         ))}
       </nav>
 
-      <NotificationSettings prefs={prefs ?? null} />
+      <NotificationSettings prefs={prefs ?? null} email={{ ready: emailReady(), address: user.guest ? null : user.email }} />
 
       <TipsSettings />
 

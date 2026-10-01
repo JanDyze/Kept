@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.29.0 — Email reminders
+
+- Turn on Email in Settings → Notifications to get the morning reminder, friends' reactions and what's new by email too, with or without notifications on your phone.
+
 ## 0.28.1 — Asked once, kindly
 
 - The first time you open Kept, it offers the morning reminder: Turn on, or Not now (it asks again in two weeks). Settings → Notifications is always there.

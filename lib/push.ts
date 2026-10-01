@@ -1,6 +1,8 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
+import { authUsers } from "drizzle-orm/supabase";
 import webpush from "web-push";
+import { emailReady, sendEmails } from "@/lib/email";
 import { db } from "@/lib/db";
 import { notificationPrefs, pushSubscriptions } from "@/lib/db/schema";
 
@@ -24,6 +26,28 @@ export function pushReady() {
   configured = Boolean(pub && priv);
   if (configured) webpush.setVapidDetails(process.env.VAPID_SUBJECT || process.env.SITE_URL || "mailto:hello@kept.app", pub!, priv!);
   return configured;
+}
+
+// Sends a message to these people however they asked for it: push to their devices, and email
+// to those with email on (lib/email.ts). Each only if they want this kind.
+export async function deliver(userIds: string[], kind: PushKind, message: PushMessage) {
+  const [pushed, emailed] = await Promise.all([sendPush(userIds, kind, message), emailPeople(userIds, kind, message)]);
+  return pushed + emailed;
+}
+
+async function emailPeople(userIds: string[], kind: PushKind, message: PushMessage) {
+  if (!emailReady() || userIds.length === 0) return 0;
+  try {
+    const rows = await db
+      .select({ email: authUsers.email })
+      .from(notificationPrefs)
+      .innerJoin(authUsers, eq(authUsers.id, notificationPrefs.userId))
+      .where(and(inArray(notificationPrefs.userId, userIds), eq(notificationPrefs.email, true), eq(notificationPrefs[kind], true)));
+    return await sendEmails(rows.flatMap((r) => (r.email ? [r.email] : [])), message);
+  } catch (e) {
+    console.error("email lookup failed", e);
+    return 0;
+  }
 }
 
 // Sends to every device of these people who want this kind; drops subscriptions that are gone.
