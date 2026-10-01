@@ -60,7 +60,8 @@ async function emailPeople(userIds: string[], kind: PushKind, message: PushMessa
 
 // Sends to every device of these people who want this kind; drops subscriptions that are gone.
 // Never throws: a failed notification mustn't fail what caused it.
-export async function sendPush(userIds: string[], kind: PushKind, message: PushMessage) {
+// `problems` collects what went wrong, for Settings' test send.
+export async function sendPush(userIds: string[], kind: PushKind, message: PushMessage, problems?: string[]) {
   if (!pushReady() || userIds.length === 0) return 0;
   try {
     const subs = await db
@@ -76,8 +77,9 @@ export async function sendPush(userIds: string[], kind: PushKind, message: PushM
         webpush
           .sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 60 * 60 * 12 })
           .then(() => sent++)
-          .catch((e: { statusCode?: number }) => {
+          .catch((e: { statusCode?: number; body?: string; message?: string }) => {
             if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.endpoint);
+            problems?.push(`Phone notification refused (${e.statusCode ?? "no answer"}): ${(e.body || e.message || "").slice(0, 160)}`);
           }),
       ),
     );

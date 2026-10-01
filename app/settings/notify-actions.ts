@@ -6,7 +6,8 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { notificationPrefs, pushSubscriptions } from "@/lib/db/schema";
-import { deliver } from "@/lib/push";
+import { emailReady, sendEmails } from "@/lib/email";
+import { pushReady, sendPush } from "@/lib/push";
 
 const subscription = z.object({
   endpoint: z.url().max(1000),
@@ -54,17 +55,49 @@ export async function setNotificationPref(kind: string, on: boolean): Promise<{ 
   return {};
 }
 
-// A test, to see that it works: to this person's devices, and by email if that's on.
-export async function sendTestPush(): Promise<{ sent: number }> {
+// A test, to see that it works: to this person's devices and their email, whatever the switches,
+// saying plainly what was sent and what's missing or went wrong.
+export async function sendTestPush(): Promise<{ sent: number; lines: string[] }> {
   const user = await requireUser();
-  for (const kind of ["daily", "friends", "updates"] as const) {
-    const sent = await deliver([user.id], kind, {
-      title: "Notifications are on",
-      body: "This is how Kept will remind you each morning, with today's verse.",
-      url: "/settings",
-      tag: "test",
-    });
-    if (sent) return { sent };
+  const message = {
+    title: "Notifications are on",
+    body: "This is how Kept will remind you each morning, with today's verse.",
+    url: "/settings",
+    tag: "test",
+  };
+  const lines: string[] = [];
+  let sent = 0;
+
+  // Phone notifications.
+  if (!pushReady()) lines.push("Phone notifications aren't set up on the server (the VAPID keys are missing).");
+  else {
+    const devices = await db.select({ e: pushSubscriptions.endpoint }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, user.id));
+    if (devices.length === 0) lines.push("No phone or browser of yours has notifications turned on.");
+    else {
+      const problems: string[] = [];
+      const n = await sendPushTo(user.id, message, problems);
+      sent += n;
+      lines.push(n ? `Sent to ${n} ${n === 1 ? "device" : "devices"}.` : "No device took it.", ...problems);
+    }
   }
-  return { sent: 0 };
+
+  // Email.
+  if (!emailReady()) lines.push("Email isn't set up on the server (GMAIL_USER and GMAIL_APP_PASSWORD, or RESEND_API_KEY, are missing).");
+  else if (!user.email) lines.push("Your account has no email address.");
+  else {
+    const problems: string[] = [];
+    const n = await sendEmails([user.email], message, problems);
+    sent += n;
+    lines.push(n ? `Emailed ${user.email}${process.env.GMAIL_USER ? " (through Gmail)" : " (through Resend)"}.` : `The email to ${user.email} wasn't sent.`, ...problems);
+  }
+  return { sent, lines };
+}
+
+// Every device of one person, whatever their switches (for the test).
+async function sendPushTo(userId: string, message: { title: string; body: string; url: string; tag: string }, problems: string[]) {
+  for (const kind of ["daily", "friends", "updates"] as const) {
+    const n = await sendPush([userId], kind, message, problems);
+    if (n) return n;
+  }
+  return 0;
 }

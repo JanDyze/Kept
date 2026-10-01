@@ -44,6 +44,7 @@ export function NotificationSettings({
   const [prefs, setPrefs] = useState<NotificationPrefs>(initial ?? { daily: true, friends: true, updates: true, email: true });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -81,8 +82,10 @@ export function NotificationSettings({
 
   async function test() {
     setNote(null);
-    const { sent } = await sendTestPush().catch(() => ({ sent: 0 }));
-    setNote(sent ? "Sent. It should show in a moment." : "Nothing was sent. Turn on at least one kind above.");
+    setTesting(true);
+    const { lines } = await sendTestPush().catch(() => ({ sent: 0, lines: ["The test couldn't reach the server. Check your connection."] }));
+    setTesting(false);
+    setNote(lines.join("\n"));
   }
 
   return (
@@ -139,13 +142,18 @@ export function NotificationSettings({
               </li>
             ))}
             <li className="px-4 py-3">
-              <button type="button" onClick={() => void test()} className="text-sm font-medium text-primary hover:underline">
-                Send a test notification
+              <button
+                type="button"
+                disabled={testing}
+                onClick={() => void test()}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline disabled:opacity-60"
+              >
+                {testing && <Loader2 className="size-4 animate-spin" aria-hidden />} Send a test notification
               </button>
             </li>
           </ul>
         )}
-        {note && <p className="border-t px-4 py-2.5 text-sm text-muted-foreground">{note}</p>}
+        {note && <p className="border-t px-4 py-2.5 text-sm whitespace-pre-line text-muted-foreground">{note}</p>}
       </div>
     </section>
   );

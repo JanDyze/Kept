@@ -60,10 +60,11 @@ function render(message: { title: string; body: string; url?: string }) {
 }
 
 // Sends one email per address (so no one sees anyone else's). Never throws.
-export async function sendEmails(to: string[], message: { title: string; body: string; url?: string }) {
+// `problems` collects what went wrong, for Settings' test send.
+export async function sendEmails(to: string[], message: { title: string; body: string; url?: string }, problems?: string[]) {
   if (to.length === 0) return 0;
   const viaGmail = gmail();
-  if (viaGmail) return sendWithGmail(viaGmail, to, message);
+  if (viaGmail) return sendWithGmail(viaGmail, to, message, problems);
   const key = process.env.RESEND_API_KEY;
   if (!key) return 0;
   const { from, replyTo } = senderFrom(process.env.EMAIL_FROM);
@@ -79,16 +80,26 @@ export async function sendEmails(to: string[], message: { title: string; body: s
         body: JSON.stringify(batch),
       });
       if (res.ok) sent += batch.length;
-      else console.error("email failed", res.status, await res.text().catch(() => ""));
+      else {
+        const detail = await res.text().catch(() => "");
+        console.error("email failed", res.status, detail);
+        problems?.push(`Resend refused it (${res.status}): ${detail.slice(0, 200)}`);
+      }
     } catch (e) {
       console.error("email failed", e);
+      problems?.push(`Resend couldn't be reached: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
   return sent;
 }
 
 // Through Gmail's SMTP server with an app password, from the Gmail address itself.
-async function sendWithGmail(account: { user: string; pass: string }, to: string[], message: { title: string; body: string; url?: string }) {
+async function sendWithGmail(
+  account: { user: string; pass: string },
+  to: string[],
+  message: { title: string; body: string; url?: string },
+  problems?: string[],
+) {
   const { createTransport } = await import("nodemailer");
   const transport = createTransport({ service: "gmail", auth: account, pool: true, maxConnections: 2 });
   const name = senderFrom(process.env.EMAIL_FROM).from.replace(/\s*<.*$/, "") || "Kept";
@@ -99,7 +110,9 @@ async function sendWithGmail(account: { user: string; pass: string }, to: string
       await transport.sendMail({ from: { name, address: account.user }, to: address, subject: message.title, html, text });
       sent++;
     } catch (e) {
-      console.error("email failed", e instanceof Error ? e.message : e);
+      const why = e instanceof Error ? e.message : String(e);
+      console.error("email failed", why);
+      problems?.push(`Gmail refused it: ${why.slice(0, 200)}`);
     }
   }
   transport.close();
