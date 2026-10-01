@@ -9,10 +9,20 @@ import "server-only";
 // one, mail goes from onboarding@resend.dev, which Resend only delivers to the account owner's own
 // address; a Gmail-style EMAIL_FROM is used as the reply-to then. Without the key nothing is sent.
 
+// Pasted values sometimes bring quotes or spaces along; Google's app passwords are shown in
+// groups of four with spaces between.
+const clean = (v: string) => v.trim().replace(/^["']+|["']+$/g, "").trim();
 const gmail = () =>
   process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
-    ? { user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, "") }
+    ? { user: clean(process.env.GMAIL_USER), pass: clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g, "") }
     : null;
+
+// For the test send: who Kept signs in to Gmail as, and how long the password is (an app
+// password is always 16 letters), so a typo or a normal password shows without showing it.
+export function gmailSetup() {
+  const g = gmail();
+  return g ? { user: g.user, length: g.pass.length } : null;
+}
 
 export const emailReady = () => Boolean(gmail() || process.env.RESEND_API_KEY);
 

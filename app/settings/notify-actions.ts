@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { notificationPrefs, pushSubscriptions } from "@/lib/db/schema";
-import { emailReady, sendEmails } from "@/lib/email";
+import { emailReady, gmailSetup, sendEmails } from "@/lib/email";
 import { pushReady, sendPush } from "@/lib/push";
 
 const subscription = z.object({
@@ -88,6 +88,12 @@ export async function sendTestPush(): Promise<{ sent: number; lines: string[] }>
     const problems: string[] = [];
     const n = await sendEmails([user.email], message, problems);
     sent += n;
+    const g = gmailSetup();
+    if (!n && g)
+      problems.push(
+        `Kept signs in to Gmail as "${g.user}" with a ${g.length}-character password.` +
+          (g.length !== 16 ? " A Gmail app password has exactly 16 letters, so this looks like a normal password or a typo." : " That's the right length, so check the address, and that the app password was made on that same account."),
+      );
     lines.push(n ? `Emailed ${user.email}${process.env.GMAIL_USER ? " (through Gmail)" : " (through Resend)"}.` : `The email to ${user.email} wasn't sent.`, ...problems);
   }
   return { sent, lines };

@@ -44,3 +44,13 @@ describe("sendEmails through Gmail", () => {
     vi.unstubAllEnvs();
   });
 });
+
+describe("gmailSetup", () => {
+  it("strips quotes and spaces before signing in", async () => {
+    vi.stubEnv("GMAIL_USER", ' "jdmalaluan2@gmail.com" ');
+    vi.stubEnv("GMAIL_APP_PASSWORD", "'abcd efgh ijkl mnop'");
+    const { gmailSetup } = await import("./email");
+    expect(gmailSetup()).toEqual({ user: "jdmalaluan2@gmail.com", length: 16 });
+    vi.unstubAllEnvs();
+  });
+});
