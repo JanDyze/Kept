@@ -92,7 +92,7 @@ and shows `public/offline.html` when there's no connection; pages with your data
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint |
 | `npm run db:generate` | Create a migration after editing `lib/db/schema.ts` |
-| `npm run db:migrate` | Apply migrations |
+| `npm run db:migrate` | Apply migrations (the build also runs them, so a deploy brings the database up to date first) |
 | `npm run db:studio` | Browse the database |
 | `npm run bible:import` | Load ESV and MBBTAG text for auto-fill |
 | `npm run topics:import` | Load the OpenBible topic data for search (re-run to refresh) |
