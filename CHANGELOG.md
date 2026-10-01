@@ -2,6 +2,12 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.27.0 — Twenty reactions from Scripture
+
+- Twenty reactions, each drawn for Kept from a picture in the Bible, with the verse it comes from: Love, Amen, Glory, Crown of life, Joy; Peace (the dove), Tears, Shepherd, Hope (the anchor), Promise (the rainbow), Living water; My rock, Faith (the shield), Cut to the heart (the sword), On fire, Light (the lamp); Mustard seed, Abide (the vine), Daily bread, and Wonder (the burning bush).
+- Hold a verse or card: the bar shows six, your recent ones first, and names each one with its verse as you slide across. ＋ opens them all, by theme.
+- A reaction lands with a little burst.
+
 ## 0.26.1 — Reactions, drawn for Kept
 
 - Reactions are Kept's own icons instead of emoji: a heart, praying hands (Amen), a burst of glory (Praise), a flame, a tear (Moved) and a mountain (Strength). They look the same on every phone, in light and dark.

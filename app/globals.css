@@ -366,6 +366,9 @@
 /* The verse a search or link landed on (components/chapter-reader.tsx): a warm pulse, then a ring. */
 .animate-found { animation: found 1.6s ease-out 2; }
 @keyframes found { 0%, 100% { background-color: transparent; } 30% { background-color: color-mix(in oklab, var(--primary) 22%, transparent); } }
+/* A reaction landing on a verse's corner (components/hold-react.tsx): a ring bursts out and fades. */
+.animate-burst { animation: burst 600ms ease-out both; }
+@keyframes burst { from { transform: scale(0.8); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }
 /* A cover laid over a word when practising (components/verse-practice.tsx). */
 .animate-cover { animation: cover-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes cover-in { from { opacity: 0; } to { opacity: 1; } }
@@ -381,7 +384,7 @@
   ::view-transition-new(*) {
     animation: none !important;
   }
-  .animate-shake, .animate-pop, .animate-flip, .animate-found, .animate-cover, .animate-swipe-in-next, .animate-swipe-in-prev, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
+  .animate-shake, .animate-pop, .animate-flip, .animate-burst, .animate-found, .animate-cover, .animate-swipe-in-next, .animate-swipe-in-prev, .animate-rise, .animate-fade-in, .animate-drift { animation: none; }
 }
 
 /* ---------- Feel like an app, not a web page ---------- */
