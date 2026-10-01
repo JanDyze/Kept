@@ -59,7 +59,7 @@ const ICONS: Record<Reaction, React.ReactNode> = {
         <path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7" />
       </g>
       <circle cx="12" cy="12" r="5.6" className="fill-amber-400 dark:fill-amber-300" />
-      <path d="M9.6 12.6a2.6 2.6 0 0 0 4.8 0" fill="none" strokeWidth="1.4" strokeLinecap="round" className="stroke-icon-ink" />
+      <path d="M9.6 12.6a2.6 2.6 0 0 0 4.8 0" fill="none" strokeWidth="1.4" strokeLinecap="round" className="stroke-amber-950" />
     </>
   ),
   // Crown of life: gold, three points, three jewels.
@@ -84,9 +84,9 @@ const ICONS: Record<Reaction, React.ReactNode> = {
   // Shepherd: a lamb, woolly.
   lamb: (
     <>
-      <path d="M7 20.5v-3M10 20.5v-3M14.5 20.5v-3M17.5 20.5v-3" strokeWidth="1.8" strokeLinecap="round" className="stroke-icon-ink" />
-      <path d="M6.5 17.8c-2 0-3.3-1.6-3-3.3-1-1-1-2.8.3-3.6.1-1.8 1.8-3 3.5-2.5 1-1.3 2.9-1.6 4.2-.7 1.4-1 3.4-.8 4.4.6 1.8-.3 3.4 1 3.3 2.8 1.2.8 1.3 2.6.2 3.5.1 1.8-1.4 3.2-3.2 3.2Z" className="fill-stone-100 stroke-icon-ink" strokeWidth="1.1" strokeLinejoin="round" />
-      <path d="M17 7.5c1.4-.9 3.3-.6 4.3.8.9 1.4.6 3.3-.8 4.2-1.4.8-3 .5-3.9-.6Z" className={ink} />
+      <path d="M7 20.5v-3M10 20.5v-3M14.5 20.5v-3M17.5 20.5v-3" strokeWidth="1.8" strokeLinecap="round" className="stroke-stone-800" />
+      <path d="M6.5 17.8c-2 0-3.3-1.6-3-3.3-1-1-1-2.8.3-3.6.1-1.8 1.8-3 3.5-2.5 1-1.3 2.9-1.6 4.2-.7 1.4-1 3.4-.8 4.4.6 1.8-.3 3.4 1 3.3 2.8 1.2.8 1.3 2.6.2 3.5.1 1.8-1.4 3.2-3.2 3.2Z" className="fill-stone-100 stroke-stone-800" strokeWidth="1.1" strokeLinejoin="round" />
+      <path d="M17 7.5c1.4-.9 3.3-.6 4.3.8.9 1.4.6 3.3-.8 4.2-1.4.8-3 .5-3.9-.6Z" className="fill-stone-800" />
       <circle cx="19.6" cy="9.7" r=".6" className="fill-white" />
     </>
   ),
@@ -183,12 +183,85 @@ const ICONS: Record<Reaction, React.ReactNode> = {
       <path d="M10.4 11.4c-.6-.6-.6-1.6 0-2.3.2.4.5.7.8.8.1-.9.5-1.6 1.2-2.1.1 1 .8 1.6.8 2.6 0 .9-.7 1.5-1.5 1.5a1.8 1.8 0 0 1-1.3-.5Z" className="fill-amber-200" />
     </>
   ),
+  // Haha: a laughing face, eyes squeezed shut, happy tears.
+  laugh: (
+    <>
+      <circle cx="12" cy="12" r="9.6" className="fill-amber-400 dark:fill-amber-300" />
+      <path d="M6.6 9.6c.8-1 2-1 2.8 0M14.6 9.6c.8-1 2-1 2.8 0" fill="none" strokeWidth="1.6" strokeLinecap="round" className="stroke-amber-950" />
+      <path d="M6.8 12.8h10.4c0 3-2.3 5.4-5.2 5.4s-5.2-2.4-5.2-5.4Z" className="fill-amber-950" />
+      <path d="M9.4 16.6c1.5-1.2 3.7-1.2 5.2 0-.7.9-1.6 1.5-2.6 1.5s-1.9-.6-2.6-1.5Z" className="fill-rose-400" />
+      <path d="M3.4 11.2c-.9 1-1.2 2.2-.6 2.8.6.6 1.6.2 2-.9.3-.8.1-1.6-.3-2.2Z M20.6 11.2c.9 1 1.2 2.2.6 2.8-.6.6-1.6.2-2-.9-.3-.8-.1-1.6.3-2.2Z" className="fill-sky-400" />
+    </>
+  ),
+  // Wow: round eyes, little round mouth.
+  wow: (
+    <>
+      <circle cx="12" cy="12" r="9.6" className="fill-amber-400 dark:fill-amber-300" />
+      <path d="M6.6 7.2c.8-.7 1.9-.9 2.8-.5M17.4 7.2c-.8-.7-1.9-.9-2.8-.5" fill="none" strokeWidth="1.3" strokeLinecap="round" className="stroke-amber-950" />
+      <ellipse cx="8.6" cy="10.4" rx="1.3" ry="1.7" className="fill-amber-950" />
+      <ellipse cx="15.4" cy="10.4" rx="1.3" ry="1.7" className="fill-amber-950" />
+      <ellipse cx="12" cy="16" rx="2" ry="2.5" className="fill-amber-950" />
+    </>
+  ),
+  // Aww: heart eyes, a smile, pink cheeks.
+  aww: (
+    <>
+      <circle cx="12" cy="12" r="9.6" className="fill-amber-400 dark:fill-amber-300" />
+      <path d="M8.6 12.2s-2.6-1.5-2.9-3.1c-.2-1.1.5-2 1.5-2 .6 0 1.1.3 1.4.8.3-.5.8-.8 1.4-.8 1 0 1.7.9 1.5 2-.3 1.6-2.9 3.1-2.9 3.1Z M15.4 12.2s-2.6-1.5-2.9-3.1c-.2-1.1.5-2 1.5-2 .6 0 1.1.3 1.4.8.3-.5.8-.8 1.4-.8 1 0 1.7.9 1.5 2-.3 1.6-2.9 3.1-2.9 3.1Z" className="fill-rose-500" />
+      <path d="M8.4 15.2c1.9 2 5.3 2 7.2 0" fill="none" strokeWidth="1.6" strokeLinecap="round" className="stroke-amber-950" />
+      <circle cx="5.6" cy="14.6" r="1.3" className="fill-rose-400/60" />
+      <circle cx="18.4" cy="14.6" r="1.3" className="fill-rose-400/60" />
+    </>
+  ),
+  // Star: a little star, smiling.
+  star: (
+    <>
+      <path d="M12 1.9 15 8.1l6.8.9-5 4.7 1.3 6.7-6.1-3.3-6.1 3.3 1.3-6.7-5-4.7L9 8.1Z" className="fill-amber-300 stroke-amber-500" strokeWidth="1.1" strokeLinejoin="round" />
+      <circle cx="10" cy="11.4" r=".9" className="fill-amber-950" />
+      <circle cx="14" cy="11.4" r=".9" className="fill-amber-950" />
+      <path d="M10.4 13.6c.9.8 2.3.8 3.2 0" fill="none" strokeWidth="1.1" strokeLinecap="round" className="stroke-amber-950" />
+    </>
+  ),
+  // Bloom: five pink petals round a sunny middle.
+  flower: (
+    <>
+      <g className="fill-pink-400 dark:fill-pink-300">
+        <circle cx="12" cy="5.6" r="3.9" />
+        <circle cx="18.1" cy="10" r="3.9" />
+        <circle cx="15.8" cy="17.2" r="3.9" />
+        <circle cx="8.2" cy="17.2" r="3.9" />
+        <circle cx="5.9" cy="10" r="3.9" />
+      </g>
+      <circle cx="12" cy="12" r="3.6" className="fill-amber-300" />
+      <circle cx="10.9" cy="11" r="1" className="fill-white/70" />
+    </>
+  ),
 };
 
-export function ReactionIcon({ reaction, className }: { reaction: Reaction; className?: string }) {
+// Each one's little motion (globals.css, .rx-*), played while `animate` is on: in the picker and
+// on a verse's corner, not in the small counts under cards.
+const MOTION: Partial<Record<Reaction, string>> = {
+  heart: "rx-beat",
+  amen: "rx-wiggle",
+  laugh: "rx-giggle",
+  wow: "rx-pop",
+  moved: "rx-drip",
+  aww: "rx-bob",
+  fire: "rx-flicker",
+  praise: "rx-twinkle",
+  sun: "rx-bob",
+  star: "rx-twinkle",
+  flower: "rx-spin",
+  rainbow: "rx-bob",
+  dove: "rx-flap",
+  lamb: "rx-hop",
+  seed: "rx-sway",
+};
+
+export function ReactionIcon({ reaction, animate, className }: { reaction: Reaction; animate?: boolean; className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={cn("size-6 shrink-0 overflow-visible", className)} aria-hidden>
-      {ICONS[reaction]}
+      <g className={animate ? cn("rx", MOTION[reaction]) : undefined}>{ICONS[reaction]}</g>
     </svg>
   );
 }

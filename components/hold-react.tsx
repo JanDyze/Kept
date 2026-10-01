@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createPortal } from "react-dom";
 import { ReactionIcon } from "@/components/reaction-icon";
-import { QUICK_DEFAULT, REACTION_GROUPS, REACTION_KEYS, REACTIONS, type Reaction } from "@/lib/reactions";
+import { QUICK_DEFAULT, REACTION_KEYS, REACTIONS, type Reaction } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
 
 const HOLD_MS = 420;
@@ -164,7 +164,7 @@ export function HoldReact({
         >
           {/* A ring bursts out as it lands. */}
           <span className="animate-burst absolute inset-0 rounded-full ring-2 ring-icon-accent" aria-hidden />
-          <ReactionIcon reaction={reaction} className="size-5" />
+          <ReactionIcon reaction={reaction} animate className="size-5" />
         </span>
       )}
       {open && !all && <Bar rect={open} current={reaction} hover={hover} onPick={pick} onMore={() => setAll(true)} onClose={close} />}
@@ -181,8 +181,7 @@ function useEscape(onClose: () => void) {
   }, [onClose]);
 }
 
-// The quick bar over what's held. Sliding across it names each one with its verse; ＋ (slid to
-// or tapped) opens them all.
+// The quick bar over what's held: the one under the finger grows; ＋ (slid to or tapped) opens them all.
 function Bar({
   rect,
   current,
@@ -200,7 +199,6 @@ function Bar({
 }) {
   useEscape(onClose);
   const [quick] = useState(() => quickSet(current));
-  const named = hover && hover !== "more" ? hover : null;
 
   const width = Math.min(7 * 46 + 12, innerWidth - 24);
   const left = Math.min(Math.max(12, rect.left + rect.width / 2 - width / 2), innerWidth - width - 12);
@@ -211,17 +209,6 @@ function Bar({
     <div data-react-bar>
       {/* Closes on press, not click: letting go of a mouse hold mustn't close it. */}
       <button type="button" aria-label="Close" tabIndex={-1} onPointerDown={onClose} className="fixed inset-0 z-[80] cursor-default" />
-      {named && (
-        <div
-          key={named}
-          className="animate-pop pointer-events-none fixed z-[82] flex items-center gap-1.5 rounded-full bg-foreground py-1 pr-3 pl-1.5 text-sm text-background shadow-lg"
-          style={{ left: Math.min(Math.max(12, left + width / 2 - 90), innerWidth - 192), top: top - 40, maxWidth: 180 }}
-        >
-          <ReactionIcon reaction={named} className="size-5" />
-          <span className="truncate font-semibold">{REACTIONS[named].label}</span>
-          <span className="shrink-0 text-xs opacity-70">{REACTIONS[named].ref}</span>
-        </div>
-      )}
       <div
         role="menu"
         aria-label="React"
@@ -234,7 +221,7 @@ function Bar({
             type="button"
             role="menuitemradio"
             aria-checked={current === r}
-            aria-label={`${REACTIONS[r].label}, ${REACTIONS[r].ref}`}
+            aria-label={REACTIONS[r].label}
             data-reaction={r}
             onClick={() => onPick(r)}
             style={{ animationDelay: `${i * 25}ms` }}
@@ -244,7 +231,7 @@ function Bar({
               current === r && "bg-primary/15",
             )}
           >
-            <ReactionIcon reaction={r} className="size-7" />
+            <ReactionIcon reaction={r} animate className="size-7" />
           </button>
         ))}
         <button
@@ -265,7 +252,7 @@ function Bar({
   );
 }
 
-// Every reaction, by theme, each with the verse it's drawn from.
+// Every reaction, in a grid, each moving.
 function AllReactions({ current, onPick, onClose }: { current: Reaction | null; onPick: (r: Reaction) => void; onClose: () => void }) {
   useEscape(onClose);
   // Opened by letting go over ＋: the click that release fires mustn't close or pick at once.
@@ -274,36 +261,24 @@ function AllReactions({ current, onPick, onClose }: { current: Reaction | null; 
   return createPortal(
     <div data-react-bar className="fixed inset-0 z-[80] flex flex-col justify-end sm:justify-center" role="dialog" aria-modal="true" aria-label="React">
       <button type="button" aria-label="Close" tabIndex={-1} onClick={() => settled() && onClose()} className="animate-fade-in absolute inset-0 bg-black/40" />
-      <div className="animate-rise relative mx-auto flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-3xl border bg-background shadow-[0_-12px_40px_-12px_rgb(0_0_0/0.35)] sm:rounded-3xl">
-        <div className="flex items-center justify-between px-5 pt-5 pb-2">
-          <h2 className="font-brand text-xl font-semibold tracking-tight">How does it speak to you?</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="-mr-2 flex size-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted">
-            <X className="size-5" aria-hidden />
-          </button>
-        </div>
-        <div className="overflow-y-auto overscroll-contain px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          {REACTION_GROUPS.map((g) => (
-            <section key={g.id} className="mt-2">
-              <h3 className="px-2 pb-1 text-xs font-medium text-muted-foreground">{g.label}</h3>
-              <div className="grid grid-cols-3 gap-1.5">
-                {REACTION_KEYS.filter((r) => REACTIONS[r].group === g.id).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => settled() && onPick(r)}
-                    aria-pressed={current === r}
-                    className={cn(
-                      "group flex flex-col items-center gap-1 rounded-2xl border bg-card px-1 py-2.5 transition-[transform,background-color] active:scale-95",
-                      current === r ? "border-primary bg-primary/10" : "hover:bg-muted",
-                    )}
-                  >
-                    <ReactionIcon reaction={r} className="size-9 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-110" />
-                    <span className="text-center text-xs leading-tight font-semibold">{REACTIONS[r].label}</span>
-                    <span className="text-[0.65rem] text-muted-foreground">{REACTIONS[r].ref}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
+      <div className="animate-rise relative mx-auto w-full max-w-md rounded-t-3xl border bg-background px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_-12px_rgb(0_0_0/0.35)] sm:rounded-3xl">
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/25" aria-hidden />
+        <div className="grid grid-cols-5 gap-2">
+          {REACTION_KEYS.map((r, i) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => settled() && onPick(r)}
+              aria-label={REACTIONS[r].label}
+              aria-pressed={current === r}
+              style={{ animationDelay: `${i * 18}ms` }}
+              className={cn(
+                "animate-rise flex aspect-square items-center justify-center rounded-2xl transition-transform duration-150 active:scale-90",
+                current === r ? "bg-primary/15 ring-2 ring-primary/40" : "hover:scale-110 hover:bg-muted",
+              )}
+            >
+              <ReactionIcon reaction={r} animate className="size-10" />
+            </button>
           ))}
         </div>
       </div>

@@ -366,6 +366,33 @@
 /* The verse a search or link landed on (components/chapter-reader.tsx): a warm pulse, then a ring. */
 .animate-found { animation: found 1.6s ease-out 2; }
 @keyframes found { 0%, 100% { background-color: transparent; } 30% { background-color: color-mix(in oklab, var(--primary) 22%, transparent); } }
+/* Reactions' little motions (components/reaction-icon.tsx), each on its own beat. */
+.rx { transform-box: fill-box; transform-origin: center; }
+.rx-beat { animation: rx-beat 1.2s ease-in-out infinite; }
+@keyframes rx-beat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.14); } 30% { transform: scale(0.98); } 45% { transform: scale(1.08); } }
+.rx-wiggle { animation: rx-wiggle 1.8s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes rx-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+.rx-giggle { animation: rx-giggle 0.9s ease-in-out infinite; }
+@keyframes rx-giggle { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-1.5px) rotate(-5deg); } 75% { transform: translateY(-1.5px) rotate(5deg); } }
+.rx-pop { animation: rx-pop 1.6s ease-in-out infinite; }
+@keyframes rx-pop { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(1.15); } 90% { transform: scale(0.96); } }
+.rx-drip { animation: rx-drip 1.8s ease-in-out infinite; }
+@keyframes rx-drip { 0%, 100% { transform: translateY(-1px) scale(1, 1); } 50% { transform: translateY(1.5px) scale(0.94, 1.06); } }
+.rx-bob { animation: rx-bob 1.6s ease-in-out infinite; }
+@keyframes rx-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+.rx-flicker { animation: rx-flicker 0.7s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+@keyframes rx-flicker { from { transform: scale(1, 1) skewX(-2deg); } to { transform: scale(0.95, 1.08) skewX(3deg); } }
+.rx-twinkle { animation: rx-twinkle 1.4s ease-in-out infinite; }
+@keyframes rx-twinkle { 0%, 100% { transform: scale(1) rotate(0); opacity: 1; } 50% { transform: scale(0.85) rotate(12deg); opacity: 0.8; } }
+.rx-spin { animation: rx-spin 6s linear infinite; }
+@keyframes rx-spin { to { transform: rotate(360deg); } }
+.rx-flap { animation: rx-flap 1.2s ease-in-out infinite; }
+@keyframes rx-flap { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2.5px) rotate(-6deg); } }
+.rx-hop { animation: rx-hop 1.1s cubic-bezier(0.3, 0, 0.3, 1) infinite; transform-origin: 50% 100%; }
+@keyframes rx-hop { 0%, 55%, 100% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(-3px) scale(0.97, 1.04); } 45% { transform: translateY(0) scale(1.05, 0.95); } }
+.rx-sway { animation: rx-sway 2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes rx-sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@media (prefers-reduced-motion: reduce) { .rx { animation: none !important; } }
 /* A reaction landing on a verse's corner (components/hold-react.tsx): a ring bursts out and fades. */
 .animate-burst { animation: burst 600ms ease-out both; }
 @keyframes burst { from { transform: scale(0.8); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }

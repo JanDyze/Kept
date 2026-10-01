@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.30.0 — Cuter reactions
+
+- Fifteen reactions that move: a beating heart, praying hands, a giggling face, a wow face, a tear, heart eyes, a flickering flame, sparkles, a sunny smile, a little star, a spinning flower, a rainbow, a fluttering dove, a hopping lamb and a swaying sprout.
+- The picker is simpler: no names or verses, just tap the one you feel.
+
 ## 0.29.2 — Email that reaches everyone
 
 - Reminder emails can be sent from Kept's Gmail, so they reach everyone, not just the developer.
