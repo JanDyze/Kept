@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { likeCard, likeVerse } from "@/app/cards/actions";
 import { askGuestToSave } from "@/components/guest-prompt";
 import { HoldReact } from "@/components/hold-react";
+import { ReactionIcon } from "@/components/reaction-icon";
 import { isReaction, REACTIONS, type Reaction } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
 
@@ -89,9 +90,7 @@ export function LikeButton({
       {shown.length > 0 ? (
         <span key={state.mine ?? "none"} className={cn("flex -space-x-1", state.mine && "animate-pop")} aria-hidden>
           {shown.map((r) => (
-            <span key={r} className={cn("leading-none", size === "sm" ? "text-[0.8rem]" : "text-base")}>
-              {REACTIONS[r].emoji}
-            </span>
+            <ReactionIcon key={r} reaction={r} className={size === "sm" ? "size-3.5" : "size-4"} />
           ))}
         </span>
       ) : (

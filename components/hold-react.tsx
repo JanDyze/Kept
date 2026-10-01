@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ReactionIcon } from "@/components/reaction-icon";
 import { REACTION_KEYS, REACTIONS, type Reaction } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
 
@@ -133,10 +134,10 @@ export function HoldReact({
       {badge && reaction && (
         <span
           key={reaction}
-          className="animate-pop pointer-events-none absolute -top-2.5 -right-1.5 z-10 flex size-8 items-center justify-center rounded-full bg-background text-base shadow-[0_2px_8px_rgb(0_0_0/0.18)] ring-1 ring-border"
+          className="animate-pop pointer-events-none absolute -top-2.5 -right-1.5 z-10 flex size-8 items-center justify-center rounded-full bg-background shadow-[0_2px_8px_rgb(0_0_0/0.18)] ring-1 ring-border"
           aria-label={`You reacted ${REACTIONS[reaction].label}`}
         >
-          {REACTIONS[reaction].emoji}
+          <ReactionIcon reaction={reaction} className="size-5" />
         </span>
       )}
       {open && <Bar rect={open} current={reaction} hover={hover} onPick={pick} onClose={close} />}
@@ -188,12 +189,12 @@ function Bar({
             data-reaction={r}
             onClick={() => onPick(r)}
             className={cn(
-              "flex size-11 items-center justify-center rounded-full text-[1.6rem] leading-none transition-transform duration-150",
+              "flex size-11 items-center justify-center rounded-full transition-transform duration-150",
               hover === r ? "-translate-y-2 scale-135" : "hover:-translate-y-1 hover:scale-125",
               current === r && "bg-primary/15",
             )}
           >
-            {REACTIONS[r].emoji}
+            <ReactionIcon reaction={r} className="size-7" />
           </button>
         ))}
       </div>

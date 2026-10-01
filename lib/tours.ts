@@ -72,7 +72,7 @@ export const TOURS: Record<TourId, TourInfo> = {
     where: "A card from Discover",
     steps: [
       { target: "card-card", title: "Swipe", body: "Swipe left or right for the next card." },
-      { target: "card-like", title: "Like", body: "Tap to like a card, or hold the card to react with 🙏, 🔥 and more. Liked cards rise in Discover." },
+      { target: "card-like", title: "Like", body: "Tap to like a card, or hold the card to react with Amen, Fire and more. Liked cards rise in Discover." },
       { target: "card-keep", title: "Keep it", body: "Keep the verse, with its card, in your own verses." },
     ],
   },
