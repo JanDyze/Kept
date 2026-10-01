@@ -11,6 +11,7 @@ import { Screen } from "@/components/screen";
 import { VerseReact } from "@/components/verse-react";
 import { BibleHold } from "@/components/bible-hold";
 import { Tour } from "@/components/tour";
+import { NotificationPrompt } from "@/components/notification-prompt";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
 import { getOrCreateDay, streak } from "@/lib/games/daily";
@@ -261,6 +262,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <AppBadge count={requests + left} />
       <HomeBackGuard />
       <Tour id="home" />
+      <NotificationPrompt />
     </Screen>
   );
 }

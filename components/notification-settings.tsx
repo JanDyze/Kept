@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Bell, BellOff, Loader2 } from "lucide-react";
-import { removePushSubscription, savePushSubscription, sendTestPush, setNotificationPref } from "@/app/settings/notify-actions";
+import { sendTestPush, setNotificationPref } from "@/app/settings/notify-actions";
+import { deviceState, PUSH_KEY, turnOffPush, turnOnPush, type DeviceState } from "@/lib/push-client";
 import { cn } from "@/lib/utils";
 
 export type NotificationPrefs = { daily: boolean; friends: boolean; updates: boolean; email: boolean };
 
-const KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+const KEY = PUSH_KEY;
 
 const KINDS: { kind: keyof NotificationPrefs; label: string; detail: string; soon?: boolean }[] = [
   { kind: "daily", label: "Morning reminder", detail: "Today's verse and games, at 8 each morning" },
@@ -15,17 +16,6 @@ const KINDS: { kind: keyof NotificationPrefs; label: string; detail: string; soo
   { kind: "updates", label: "What's new", detail: "When Kept gets something new" },
   { kind: "email", label: "Email too", detail: "The same by email — coming soon", soon: true },
 ];
-
-type DeviceState = "checking" | "unsupported" | "ios-install" | "blocked" | "off" | "on";
-
-function base64ToBytes(base64: string) {
-  const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/");
-  return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
-}
-
-async function registration() {
-  return (await navigator.serviceWorker.getRegistration("/")) ?? navigator.serviceWorker.register("/sw.js", { scope: "/" });
-}
 
 // Settings → Notifications: turn push on for this phone or browser, then choose what to hear about.
 export function NotificationSettings({ prefs: initial }: { prefs: NotificationPrefs | null }) {
@@ -36,51 +26,22 @@ export function NotificationSettings({ prefs: initial }: { prefs: NotificationPr
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const installed = matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
-    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    let next: Promise<DeviceState>;
-    if (!supported) next = Promise.resolve(ios && !installed ? "ios-install" : "unsupported");
-    else if (Notification.permission === "denied") next = Promise.resolve("blocked");
-    else
-      next = navigator.serviceWorker
-        .getRegistration("/")
-        .then((reg) => reg?.pushManager.getSubscription())
-        .then((sub): DeviceState => (sub ? "on" : "off"))
-        .catch((): DeviceState => "off");
-    void next.then(setState);
+    void deviceState().then(setState);
   }, []);
 
   async function turnOn() {
     setBusy(true);
     setNote(null);
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setState(permission === "denied" ? "blocked" : "off");
-        return;
-      }
-      const reg = await registration();
-      await navigator.serviceWorker.ready;
-      const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64ToBytes(KEY) }));
-      const result = await savePushSubscription(sub.toJSON(), Intl.DateTimeFormat().resolvedOptions().timeZone);
-      if (result.error) setNote(result.error);
-      else setState("on");
-    } catch {
-      setNote("Notifications couldn't be turned on here. Try again, or from the installed app.");
-    } finally {
-      setBusy(false);
-    }
+    const result = await turnOnPush();
+    setState(result.state);
+    if (result.error) setNote(result.error);
+    setBusy(false);
   }
 
   async function turnOff() {
     setBusy(true);
     try {
-      const sub = await (await navigator.serviceWorker.getRegistration("/"))?.pushManager.getSubscription();
-      if (sub) {
-        await removePushSubscription(sub.endpoint);
-        await sub.unsubscribe();
-      }
+      await turnOffPush();
       setState("off");
     } finally {
       setBusy(false);
