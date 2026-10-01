@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 import { Compass, Search } from "lucide-react";
+import { HighlightShelf } from "@/components/highlight-shelf";
+import { KeptNotice } from "@/components/keep-button";
 import { Screen } from "@/components/screen";
 import { readTranslation, TranslationToggle } from "@/components/translation-toggle";
 import { requireUser } from "@/lib/auth";
 import { BOOKS, bookSlug } from "@/lib/bible/books";
+import { recentHighlights } from "@/lib/bible/highlight-queries";
 
 export const metadata: Metadata = { title: "Bible" };
 
 export default async function BiblePage({ searchParams }: PageProps<"/bible">) {
-  await requireUser();
+  const user = await requireUser();
   const t = readTranslation((await searchParams).t);
+  const marked = await recentHighlights(user.id, t);
   const sections = [
     { title: "Old Testament", books: BOOKS.slice(0, 39) },
     { title: "New Testament", books: BOOKS.slice(39) },
@@ -49,6 +53,8 @@ export default async function BiblePage({ searchParams }: PageProps<"/bible">) {
         <TranslationToggle current={t} path="/bible" />
       </div>
 
+      <HighlightShelf items={marked} translation={t} />
+
       {sections.map((s) => (
         <section key={s.title} className="mb-6">
           <h2 className="mb-2 text-sm font-medium text-muted-foreground">{s.title}</h2>
@@ -71,6 +77,7 @@ export default async function BiblePage({ searchParams }: PageProps<"/bible">) {
           </ul>
         </section>
       ))}
+      <KeptNotice />
     </Screen>
   );
 }

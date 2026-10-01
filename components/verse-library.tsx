@@ -15,6 +15,7 @@ import { currentPath, rememberList, takeListMemory, type ListMemory } from "@/li
 import { rememberVerseOrder } from "@/lib/verse-order";
 import { cn } from "@/lib/utils";
 import { PracticeReference, PracticeText } from "@/components/verse-practice";
+import { VerseReact } from "@/components/verse-react";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { orderBy } from "@/lib/verses/order";
 import { LIBRARY_SORTS, SORT_COOKIE, type LibrarySort } from "@/lib/verses/view";
@@ -33,6 +34,7 @@ export type LibraryItem = {
   position?: number | null; // place in the user's own order; null (not yet placed) sits first
   starred?: boolean; // kept at the top whatever the order
   mastery?: Mastery; // shown at the tile's foot in My verses
+  reaction?: string | null; // your own reaction, held (components/verse-react.tsx)
 };
 
 // Saved for a year so the page renders in the same order next time, with no flash.
@@ -231,7 +233,9 @@ export function VerseLibrary({
               <ul className="flex flex-col gap-3">
                 {g.verses.map((v, i) => (
                   <li key={v.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
-                    <TextCard v={v} href={`/verses/${v.id}`} onOpen={rememberSpot} />
+                    <VerseReact verseId={v.id} reaction={v.reaction ?? null}>
+                      <TextCard v={v} href={`/verses/${v.id}`} onOpen={rememberSpot} />
+                    </VerseReact>
                   </li>
                 ))}
               </ul>

@@ -21,7 +21,7 @@ export const TOURS: Record<TourId, TourInfo> = {
     href: "/",
     steps: [
       { target: "home-add", title: "Add a verse", body: "Type a reference like “John 3:16”, and Kept fills in the words. Every verse you add turns into daily games." },
-      { target: "home-sections", title: "Four places", body: "Games are made from your verses. My verses is everything you've kept. Read the Bible, or Discover what others keep." },
+      { target: "home-sections", title: "Four places", body: "Games are made from your verses. My verses is everything you've kept. Read the Bible, or Discover what others keep. Hold the Bible card to slide straight to a book, chapter and verse." },
       { target: "home-you", title: "You", body: "Your streak and today's games. Tap for your profile, friends and settings." },
     ],
   },
@@ -33,7 +33,7 @@ export const TOURS: Record<TourId, TourInfo> = {
     steps: [
       { target: "verses-add", title: "Add more", body: "Add a verse any time from here." },
       { target: "verses-find", title: "Find and sort", body: "Search your verses, or sort them by Bible book, most recent, or your own order." },
-      { target: "verses-list", title: "Open one", body: "Tap a verse to open it. There, swipe left or right to go through them all." },
+      { target: "verses-list", title: "Open one", body: "Tap a verse to open it, then swipe left or right to go through them all. Hold one to react to it." },
     ],
   },
   verse: {
@@ -52,7 +52,7 @@ export const TOURS: Record<TourId, TourInfo> = {
     name: "Reading the Bible",
     where: "A Bible chapter",
     steps: [
-      { target: "bible-verse", title: "Keep from the Bible", body: "Tap a verse to select it, tap another to make it a range, then tap Keep to save it." },
+      { target: "bible-verse", title: "Keep or highlight", body: "Tap a verse to select it, and another to make it a range. Keep saves it in one tap; a color highlights it to come back to, from the Bible page." },
     ],
   },
   discover: {
@@ -72,7 +72,7 @@ export const TOURS: Record<TourId, TourInfo> = {
     where: "A card from Discover",
     steps: [
       { target: "card-card", title: "Swipe", body: "Swipe left or right for the next card." },
-      { target: "card-like", title: "Like", body: "Like a card to show it helped; liked cards rise in Discover." },
+      { target: "card-like", title: "Like", body: "Tap to like a card, or hold the card to react with 🙏, 🔥 and more. Liked cards rise in Discover." },
       { target: "card-keep", title: "Keep it", body: "Keep the verse, with its card, in your own verses." },
     ],
   },

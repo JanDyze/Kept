@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { Avatar } from "@/components/avatar";
-import { LikeButton } from "@/components/like-button";
+import { CardReact, LikeButton } from "@/components/like-button";
 import { MemoryCard } from "@/components/memory-card";
 import type { GalleryCard } from "@/lib/social/gallery";
 
@@ -25,6 +25,7 @@ export function CardGallery({
         const own = c.author.userId === viewerId;
         return (
           <li key={c.id} className="animate-rise relative break-inside-avoid" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+            <Wrap own={own} card={c.id} reaction={c.reaction}>
             <Link
               href={from ? `/cards/${c.id}?from=${encodeURIComponent(from)}` : `/cards/${c.id}`}
               transitionTypes={["nav-forward"]}
@@ -47,18 +48,29 @@ export function CardGallery({
                 )}
               </span>
             </Link>
+            </Wrap>
             {/* Outside the link, so a tap likes instead of opening the card. Your own show a count. */}
             <div className="absolute right-0 bottom-0">
               {own ? (
                 c.likes > 0 && <LikeCount n={c.likes} />
               ) : (
-                <LikeButton target={{ card: c.id }} likes={c.likes} liked={c.liked} size="sm" />
+                <LikeButton target={{ card: c.id }} likes={c.likes} liked={c.liked} reaction={c.reaction} top={c.top} size="sm" />
               )}
             </div>
           </li>
         );
       })}
     </ul>
+  );
+}
+
+// Someone else's card is held to react to it; your own just opens.
+function Wrap({ own, card, reaction, children }: { own: boolean; card: string; reaction: string | null; children: React.ReactNode }) {
+  if (own) return children;
+  return (
+    <CardReact card={card} reaction={reaction}>
+      {children}
+    </CardReact>
   );
 }
 

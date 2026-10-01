@@ -5,6 +5,7 @@ import { queueAlternatives } from "@/lib/games/ai/alternatives";
 import { readCardStyle, type CardStyle } from "@/lib/cards/style";
 import { db } from "@/lib/db";
 import { cardLikes, verses } from "@/lib/db/schema";
+import { topReactions } from "@/lib/social/likes";
 import { resolveVerse } from "@/lib/verses/resolve";
 import { friendIds } from "./friends";
 import { getProfiles, type Profile } from "./profiles";
@@ -23,11 +24,15 @@ export type GalleryCard = {
   author: Profile;
   likes: number;
   liked: boolean; // by the viewer
+  reaction: string | null; // the viewer's kind of like (lib/reactions.ts)
+  top: string[]; // the commonest reactions on it
 };
 
 const likeCount = sql<number>`(select count(*)::int from ${cardLikes} l where l.verse_id = ${verses.id})`;
 const likedBy = (viewerId: string) =>
   sql<boolean>`exists (select 1 from ${cardLikes} l where l.verse_id = ${verses.id} and l.user_id = ${viewerId})`;
+const reactionBy = (viewerId: string) =>
+  sql<string | null>`(select l.reaction from ${cardLikes} l where l.verse_id = ${verses.id} and l.user_id = ${viewerId})`;
 // Discover's order: likes lift a card, age lets it sink slowly (a like counts for about a day's
 // head start), so new cards still get seen.
 const hot = sql`(${likeCount} + 1) / power(extract(epoch from (now() - coalesce(${verses.publishedAt}, now()))) / 3600 + 2, 0.8)`;
@@ -66,6 +71,8 @@ export async function galleryCards(
       card: verses.card,
       likes: likeCount,
       liked: likedBy(viewerId),
+      reaction: reactionBy(viewerId),
+      top: topReactions(verses.id),
     })
     .from(verses)
     .where(
@@ -96,6 +103,8 @@ export async function galleryCards(
         author,
         likes: Number(r.likes),
         liked: Boolean(r.liked),
+        reaction: r.reaction,
+        top: r.top ?? [],
       },
     ];
   });

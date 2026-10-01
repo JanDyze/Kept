@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
 const KEPT_EVENT = "kept-verse";
 type Kept = { id: string; reference: string };
 
+// Shows the "Kept · Customize" notice (KeptNotice) for a verse kept somewhere else, like the Bible reader.
+export function announceKept(kept: Kept) {
+  window.dispatchEvent(new CustomEvent<Kept>(KEPT_EVENT, { detail: kept }));
+}
+
 export function KeepButton({ reference, translation }: { reference: string; translation: string }) {
   const [kept, setKept] = useState(false);
   const [error, setError] = useState<string | null>(null);

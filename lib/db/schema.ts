@@ -167,6 +167,9 @@ export const verses = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
     // Starred by its owner: kept at the top of My verses whatever the order. Null when not starred.
     starredAt: timestamp("starred_at", { withTimezone: true }),
+    // The owner's own reaction to it (held on Home or in My verses), an emoji from
+    // lib/reactions.ts; null for none.
+    reaction: text("reaction"),
   },
   (t) => [
     index("verses_user_due_idx").on(t.userId, t.dueAt),
@@ -274,6 +277,8 @@ export const cardLikes = pgTable(
       .notNull()
       .references(() => authUsers.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Which reaction (lib/reactions.ts): a tap gives the heart, holding the card picks another.
+    reaction: text("reaction").notNull().default("heart"),
   },
   (t) => [primaryKey({ columns: [t.verseId, t.userId] }), index("card_likes_user_idx").on(t.userId)],
 ).enableRLS();
@@ -294,6 +299,26 @@ export const verseLikes = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.bookNumber, t.chapter, t.verseStart] }),
     index("verse_likes_place_idx").on(t.bookNumber, t.chapter, t.verseStart),
+  ],
+).enableRLS();
+
+// Verses highlighted while reading the Bible, one row per verse, whatever the translation: a
+// lighter mark than keeping, to come back to and keep as a memory verse later.
+export const highlights = pgTable(
+  "highlights",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    bookNumber: integer("book_number").notNull(),
+    chapter: integer("chapter").notNull(),
+    verse: integer("verse").notNull(),
+    color: text("color").notNull(), // lib/bible/highlights.ts
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.bookNumber, t.chapter, t.verse] }),
+    index("highlights_user_created_idx").on(t.userId, t.createdAt),
   ],
 ).enableRLS();
 

@@ -14,6 +14,7 @@ import { verses } from "@/lib/db/schema";
 import type { VerseField } from "@/lib/verses/input";
 import { readCardStyle, type CardStyle } from "@/lib/cards/style";
 import { queueAlternatives } from "@/lib/games/ai/alternatives";
+import { isReaction, type Reaction } from "@/lib/reactions";
 import { insertNote } from "@/lib/verses/notes";
 import { resolveVerse } from "@/lib/verses/resolve";
 import { SKIP_FIRST_VERSE_COOKIE } from "@/lib/verses/view";
@@ -101,6 +102,21 @@ export async function setArchived(id: string, archived: boolean) {
 }
 
 // Stars a verse (kept at the top of My verses) or takes the star off.
+// Your own reaction to one of your verses (held on Home or in My verses), or none.
+export async function setVerseReaction(id: string, reaction: Reaction | null): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsedId = idSchema.safeParse(id);
+  if (!parsedId.success || (reaction !== null && !isReaction(reaction))) return { error: "That can't be saved." };
+  const updated = await db
+    .update(verses)
+    .set({ reaction })
+    .where(and(eq(verses.id, parsedId.data), eq(verses.userId, user.id)))
+    .returning({ id: verses.id });
+  if (updated.length === 0) return { error: "This verse can't be found." };
+  revalidatePath("/", "layout");
+  return {};
+}
+
 export async function setStarred(id: string, starred: boolean): Promise<{ error?: string }> {
   const user = await requireUser();
   const parsedId = idSchema.safeParse(id);

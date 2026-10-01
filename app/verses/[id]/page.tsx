@@ -14,6 +14,7 @@ import { PracticeBar, PracticeButton, PracticeCard, PracticeProvider, PracticeRe
 import { SwipeTarget } from "@/components/card-swiper";
 import { verseAction } from "@/components/verse-action";
 import { Tour } from "@/components/tour";
+import { VerseReact } from "@/components/verse-react";
 import { VerseSwiper } from "@/components/verse-swiper";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
@@ -101,6 +102,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
             {archived && <Badge variant="outline" className="mb-3">Archived</Badge>}
             {/* The verse as it looks in My verses, whole: the full card is in the card editor and when shared. */}
             <SwipeTarget tour="verse-card">
+            <VerseReact verseId={verse.id} reaction={verse.reaction}>
             <PracticeCard back={back}>
               <TextCard
                 full
@@ -117,10 +119,12 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
                 }}
               />
             </PracticeCard>
+            </VerseReact>
             </SwipeTarget>
           </>
         ) : (
           <SwipeTarget tour="verse-card">
+          <VerseReact verseId={verse.id} reaction={verse.reaction}>
           <PracticeCard back={back} plain>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{verse.translation}</Badge>
@@ -143,6 +147,7 @@ export default async function VersePage({ params }: PageProps<"/verses/[id]">) {
               </p>
             </Morph>
           </PracticeCard>
+          </VerseReact>
           </SwipeTarget>
         )}
 

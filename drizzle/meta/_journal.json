@@ -127,6 +127,13 @@
       "when": 1790696971886,
       "tag": "0017_drop_tips",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790873586012,
+      "tag": "0018_highlights_reactions",
+      "breakpoints": true
     }
   ]
 }

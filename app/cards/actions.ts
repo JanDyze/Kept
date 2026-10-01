@@ -5,6 +5,7 @@ import { z } from "zod";
 import { GUEST_NOT_ALLOWED, requireUser } from "@/lib/auth";
 import { galleryCard, keepCard, setCardVisibility, type Visibility } from "@/lib/social/gallery";
 import { setCardLike, setVerseLike } from "@/lib/social/likes";
+import { isReaction, type Reaction } from "@/lib/reactions";
 
 const id = z.uuid();
 
@@ -18,14 +19,15 @@ export async function keepSharedCard(verseId: string): Promise<{ id: string } | 
   return result;
 }
 
-// Likes someone's card (or takes the like back). Only cards the viewer may see, and not their own.
-export async function likeCard(verseId: string, liked: boolean): Promise<{ error?: string }> {
+// Likes someone's card, with a reaction when held (true is the heart), or takes it back (false).
+// Only cards the viewer may see, and not their own.
+export async function likeCard(verseId: string, liked: boolean | Reaction): Promise<{ error?: string }> {
   const user = await requireUser();
   if (user.guest) return { error: GUEST_NOT_ALLOWED };
-  if (!id.safeParse(verseId).success) return { error: "That card can't be liked." };
+  if (!id.safeParse(verseId).success || (typeof liked !== "boolean" && !isReaction(liked))) return { error: "That card can't be liked." };
   const found = await galleryCard(user.id, verseId);
   if (!found || found.isOwner) return { error: "That card can't be liked." };
-  await setCardLike(user.id, verseId, Boolean(liked));
+  await setCardLike(user.id, verseId, liked);
   return {};
 }
 

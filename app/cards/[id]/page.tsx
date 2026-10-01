@@ -6,7 +6,7 @@ import { Avatar } from "@/components/avatar";
 import { CardSwiper, SwipeTarget } from "@/components/card-swiper";
 import { Tour } from "@/components/tour";
 import { KeepCardButton } from "@/components/keep-card-button";
-import { LikeButton } from "@/components/like-button";
+import { CardReact, LikeButton } from "@/components/like-button";
 import { MemoryCard } from "@/components/memory-card";
 import { Screen } from "@/components/screen";
 import { requireUser } from "@/lib/auth";
@@ -32,7 +32,7 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
   ]);
   if (!found) notFound();
   const { row, style, author, isOwner, reference } = found;
-  const like = likes.get(id) ?? { count: 0, liked: false };
+  const like = likes.get(id) ?? { count: 0, liked: false, reaction: null, top: [] };
   const href = (to: string | null | undefined) => (to ? `/cards/${to}?from=${encodeURIComponent(from!)}` : null);
   const back = from?.startsWith("u:")
     ? { href: `/u/${from.slice(2)}${author.userId === user.id ? "?tab=shared" : ""}`, label: "Profile" }
@@ -62,12 +62,13 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
           )
         ) : (
           <span data-tour="card-like">
-            <LikeButton target={{ card: id }} likes={like.count} liked={like.liked} className="border" />
+            <LikeButton target={{ card: id }} likes={like.count} liked={like.liked} reaction={like.reaction} top={like.top} className="border" />
           </span>
         )}
       </div>
 
         <SwipeTarget tour="card-card">
+          <CardReactIf own={isOwner} card={id} reaction={like.reaction}>
           <MemoryCard
             style={style}
             reference={reference}
@@ -76,6 +77,7 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
             morphId={row.id}
             className={cn("mx-auto", style.shape === "landscape" ? "max-w-xl" : style.shape === "square" ? "max-w-md" : "max-w-sm")}
           />
+          </CardReactIf>
         </SwipeTarget>
 
       {around && around.total > 1 && (
@@ -102,5 +104,15 @@ export default async function CardPage({ params, searchParams }: PageProps<"/car
       </CardSwiper>
       <Tour id="card" />
     </Screen>
+  );
+}
+
+// Someone else's card can be held to react; your own can't.
+function CardReactIf({ own, card, reaction, children }: { own: boolean; card: string; reaction: string | null; children: React.ReactNode }) {
+  if (own) return children;
+  return (
+    <CardReact card={card} reaction={reaction}>
+      {children}
+    </CardReact>
   );
 }

@@ -83,6 +83,11 @@ export function CardSwiper({
           start.current = { x: e.clientX, y: e.clientY, id: e.pointerId, axis: null };
         }}
         onPointerMove={(e) => {
+          // Holding something to react to it (components/hold-react.tsx): not a swipe.
+          if (document.documentElement.dataset.holding) {
+            start.current = null;
+            return;
+          }
           const s = start.current;
           if (!s || s.id !== e.pointerId) return;
           const mx = e.clientX - s.x;

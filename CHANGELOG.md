@@ -2,6 +2,15 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.26.0 — Hold, highlight, keep in one tap
+
+- In the Bible, Keep saves the selected verse in one tap; the palette beside it still opens the full form for tags. Search results in the Bible have a Keep button too.
+- Opening a verse from a search marks it in the chapter, so it's easy to find.
+- Highlight verses while you read, in yellow, green, blue or pink. The Bible page lists your highlights, ready to keep as memory verses.
+- Hold a verse on Home or in My verses, or the verse on its page, to react to it: ❤️ 🙏 🙌 🔥 🥹 💪. Your reaction sits on its corner.
+- Hold someone's card in Discover to react to it the same way; a tap is still a heart. The card shows its top reactions.
+- Hold the Bible card on Home to slide straight to a book, then a chapter, then a verse.
+
 ## 0.25.2 — A Friends icon of its own
 
 - Discover's Friends button has its own two-tone icon, drawn like the ones on Home. The friend behind leans in when you hover it.

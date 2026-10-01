@@ -3,11 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ChapterReader } from "@/components/chapter-reader";
+import { KeptNotice } from "@/components/keep-button";
 import { Tour } from "@/components/tour";
 import { Screen } from "@/components/screen";
 import { readTranslation, TranslationToggle } from "@/components/translation-toggle";
 import { requireUser } from "@/lib/auth";
 import { adjacentChapter, bookBySlug, bookSlug } from "@/lib/bible/books";
+import { chapterHighlights } from "@/lib/bible/highlight-queries";
 import { getChapter } from "@/lib/bible/lookup";
 import { versesInChapter } from "@/lib/verses/queries";
 
@@ -25,7 +27,11 @@ export default async function ChapterPage({ params, searchParams }: PageProps<"/
   if (!book || !Number.isInteger(chapter) || chapter < 1 || chapter > book.verses.length) notFound();
   const t = readTranslation((await searchParams).t);
 
-  const [rows, saved] = await Promise.all([getChapter(t, book.number, chapter), versesInChapter(user.id, book.number, chapter)]);
+  const [rows, saved, marks] = await Promise.all([
+    getChapter(t, book.number, chapter),
+    versesInChapter(user.id, book.number, chapter),
+    chapterHighlights(user.id, book.number, chapter),
+  ]);
   const prev = adjacentChapter(book, chapter, -1);
   const next = adjacentChapter(book, chapter, 1);
   const name = t === "MBBTAG" ? book.tl : book.name;
@@ -43,10 +49,12 @@ export default async function ChapterPage({ params, searchParams }: PageProps<"/
       ) : (
         <ChapterReader
           bookName={book.name}
+          bookNumber={book.number}
           chapter={chapter}
           translation={t}
           rows={rows}
           saved={saved.map((v) => ({ start: v.verseStart, end: v.verseEnd ?? v.verseStart, id: v.id }))}
+          highlights={marks}
         />
       )}
 
@@ -75,6 +83,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps<"/
           </Link>
         )}
       </nav>
+      <KeptNotice />
       <Tour id="bible" />
     </Screen>
   );

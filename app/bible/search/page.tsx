@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
+import { KeepButton, KeptNotice } from "@/components/keep-button";
 import { redirect } from "next/navigation";
 import { Search } from "lucide-react";
 import { Screen } from "@/components/screen";
@@ -86,13 +87,13 @@ export default async function BibleSearchPage({ searchParams }: PageProps<"/bibl
               const book = BOOKS[r.bookNumber - 1];
               const name = t === "MBBTAG" ? book.tl : book.name;
               return (
-                <li key={`${r.bookNumber}:${r.chapter}:${r.verse}`}>
+                <li key={`${r.bookNumber}:${r.chapter}:${r.verse}`} className="relative">
                   <Link
                     href={`/bible/${bookSlug(book)}/${r.chapter}?t=${t}#v${r.verse}`}
                     transitionTypes={["nav-forward"]}
                     className="block rounded-2xl border bg-card p-4 transition-colors hover:bg-muted/40"
                   >
-                    <p className="text-sm font-medium">{formatReference(name, r.chapter, r.verse, r.verseEnd > r.verse ? r.verseEnd : null)}</p>
+                    <p className="pr-20 text-sm font-medium">{formatReference(name, r.chapter, r.verse, r.verseEnd > r.verse ? r.verseEnd : null)}</p>
                     <p className="mt-1 font-serif text-[1.05rem] leading-relaxed">
                       {highlight
                         ? r.text.split(highlight).map((part, i) =>
@@ -107,12 +108,17 @@ export default async function BibleSearchPage({ searchParams }: PageProps<"/bibl
                         : r.text}
                     </p>
                   </Link>
+                  {/* Keep in one tap, without opening the chapter (outside the link). */}
+                  <span className="absolute top-2.5 right-2.5">
+                    <KeepButton reference={formatReference(book.name, r.chapter, r.verse, r.verseEnd > r.verse ? r.verseEnd : null)} translation={t} />
+                  </span>
                 </li>
               );
             })}
           </ul>
         </>
       )}
+      <KeptNotice />
     </Screen>
   );
 }

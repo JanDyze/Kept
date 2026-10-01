@@ -8,6 +8,8 @@ import { GuestSave } from "@/components/guest-save";
 import { HomeBackGuard } from "@/components/home-back-guard";
 import { BibleIcon, DiscoverIcon, GamesIcon, VersesIcon } from "@/components/home-icons";
 import { Screen } from "@/components/screen";
+import { VerseReact } from "@/components/verse-react";
+import { BibleHold } from "@/components/bible-hold";
 import { Tour } from "@/components/tour";
 import { requireUser } from "@/lib/auth";
 import { getTimeZone, localDate } from "@/lib/day";
@@ -176,6 +178,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
 
         <nav data-tour="home-sections" className="grid grid-cols-2 gap-3" aria-label="Sections">
           {cards.map(({ href, title, detail, Icon, badge = 0 }, i) => (
+            <HoldIf key={href} bible={href === "/bible"}>
             <Link
               key={href}
               href={href}
@@ -198,6 +201,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 </span>
               </div>
             </Link>
+            </HoldIf>
           ))}
         </nav>
 
@@ -221,6 +225,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <h2 id="today-verse" className="mb-2 px-0.5 text-sm font-medium text-muted-foreground">
               Verse for today
             </h2>
+            <VerseReact verseId={todays.id} reaction={todays.reaction}>
             <TextCard
               v={{
                 id: todays.id,
@@ -234,6 +239,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               }}
               href={`/verses/${todays.id}`}
             />
+            </VerseReact>
           </section>
         )}
       </div>
@@ -257,4 +263,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <Tour id="home" />
     </Screen>
   );
+}
+
+// The Bible card can be held to jump straight to a book, chapter and verse (components/bible-hold.tsx).
+function HoldIf({ bible, children }: { bible: boolean; children: React.ReactNode }) {
+  return bible ? <BibleHold>{children}</BibleHold> : children;
 }

@@ -42,6 +42,7 @@ export default async function VersesPage({ searchParams }: PageProps<"/verses">)
       position: v.position,
       starred: v.starredAt !== null,
       mastery: archived ? undefined : mastery(v.srs, now),
+      reaction: v.reaction,
     };
   });
 
