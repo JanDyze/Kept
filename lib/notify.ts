@@ -1,5 +1,6 @@
 import "server-only";
-import { and, eq, exists, isNull, lte, or, sql } from "drizzle-orm";
+import { and, eq, exists, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { authUsers } from "drizzle-orm/supabase";
 import { APP_VERSION, compareVersions, getReleases } from "@/lib/changelog";
 import { db } from "@/lib/db";
 import { appState, notificationPrefs, pushSubscriptions, verses } from "@/lib/db/schema";
@@ -45,15 +46,18 @@ export async function notifyFriendAccepted(toId: string, byId: string) {
 
 // The morning reminder (the daily cron): today's verse and how many are ready to practise.
 export async function sendDailyReminders() {
+  // Everyone who wants it (no settings row means yes) and has a way to get it: a device, or an
+  // email address with email on.
   const people = await db
-    .select({ userId: notificationPrefs.userId })
-    .from(notificationPrefs)
+    .select({ userId: authUsers.id })
+    .from(authUsers)
+    .leftJoin(notificationPrefs, eq(notificationPrefs.userId, authUsers.id))
     .where(
       and(
-        eq(notificationPrefs.daily, true),
+        sql`coalesce(${notificationPrefs.daily}, true)`,
         or(
-          eq(notificationPrefs.email, true),
-          exists(db.select({ one: sql`1` }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, notificationPrefs.userId))),
+          and(isNotNull(authUsers.email), sql`coalesce(${notificationPrefs.email}, true)`),
+          exists(db.select({ one: sql`1` }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, authUsers.id))),
         ),
       ),
     );
@@ -92,7 +96,11 @@ export async function announceUpdate() {
   const [row] = await db.select().from(appState).where(eq(appState.key, "announced_version"));
   if (row && compareVersions(APP_VERSION, row.value) <= 0) return 0;
   const release = (await getReleases())[0];
-  const people = await db.select({ userId: notificationPrefs.userId }).from(notificationPrefs).where(eq(notificationPrefs.updates, true));
+  const people = await db
+    .select({ userId: authUsers.id })
+    .from(authUsers)
+    .leftJoin(notificationPrefs, eq(notificationPrefs.userId, authUsers.id))
+    .where(sql`coalesce(${notificationPrefs.updates}, true)`);
   const sent = release
     ? await deliver(
         people.map((p) => p.userId),

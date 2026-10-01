@@ -41,7 +41,7 @@ export function NotificationSettings({
   email: { ready: boolean; address: string | null }; // address null: a guest, no email to send to
 }) {
   const [state, setState] = useState<DeviceState>("checking");
-  const [prefs, setPrefs] = useState<NotificationPrefs>(initial ?? { daily: true, friends: true, updates: true, email: false });
+  const [prefs, setPrefs] = useState<NotificationPrefs>(initial ?? { daily: true, friends: true, updates: true, email: true });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [, startTransition] = useTransition();

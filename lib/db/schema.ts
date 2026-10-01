@@ -338,7 +338,8 @@ export const pushSubscriptions = pgTable(
   (t) => [index("push_subscriptions_user_idx").on(t.userId)],
 ).enableRLS();
 
-// What someone wants to hear about, made when they first turn notifications on.
+// What someone wants to hear about, made when they first turn notifications on or change a
+// setting. No row means the defaults: everything on (lib/push.ts).
 export const notificationPrefs = pgTable("notification_prefs", {
   userId: uuid("user_id")
     .primaryKey()
@@ -346,7 +347,8 @@ export const notificationPrefs = pgTable("notification_prefs", {
   daily: boolean("daily").notNull().default(true), // the morning reminder
   friends: boolean("friends").notNull().default(true), // reactions to your cards, friend requests
   updates: boolean("updates").notNull().default(true), // a new version of Kept
-  email: boolean("email").notNull().default(false), // the same by email, once email sending is set up
+  // The same by email. On unless turned off: someone with no row here gets email with every kind on.
+  email: boolean("email").notNull().default(true),
   timeZone: text("time_zone"), // the device's, for the morning reminder's wording
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }).enableRLS();

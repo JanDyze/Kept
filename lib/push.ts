@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
 import webpush from "web-push";
 import { emailReady, sendEmails } from "@/lib/email";
@@ -38,11 +38,19 @@ export async function deliver(userIds: string[], kind: PushKind, message: PushMe
 async function emailPeople(userIds: string[], kind: PushKind, message: PushMessage) {
   if (!emailReady() || userIds.length === 0) return 0;
   try {
+    // Email is on by default: people with no settings row get it too.
     const rows = await db
       .select({ email: authUsers.email })
-      .from(notificationPrefs)
-      .innerJoin(authUsers, eq(authUsers.id, notificationPrefs.userId))
-      .where(and(inArray(notificationPrefs.userId, userIds), eq(notificationPrefs.email, true), eq(notificationPrefs[kind], true)));
+      .from(authUsers)
+      .leftJoin(notificationPrefs, eq(notificationPrefs.userId, authUsers.id))
+      .where(
+        and(
+          inArray(authUsers.id, userIds),
+          isNotNull(authUsers.email),
+          sql`coalesce(${notificationPrefs.email}, true)`,
+          sql`coalesce(${notificationPrefs[kind]}, true)`,
+        ),
+      );
     return await sendEmails(rows.flatMap((r) => (r.email ? [r.email] : [])), message);
   } catch (e) {
     console.error("email lookup failed", e);

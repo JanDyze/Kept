@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.29.1 — Email on from the start
+
+- Email reminders are on for everyone with an email address, without having to set anything up. Turn them off, or choose which kinds, in Settings → Notifications.
+
 ## 0.29.0 — Email reminders
 
 - Turn on Email in Settings → Notifications to get the morning reminder, friends' reactions and what's new by email too, with or without notifications on your phone.
