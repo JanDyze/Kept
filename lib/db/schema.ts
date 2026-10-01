@@ -322,6 +322,42 @@ export const highlights = pgTable(
   ],
 ).enableRLS();
 
+// Devices that take push notifications (Web Push), one row per browser or installed app. A
+// subscription the push service reports gone (404/410) is deleted when a send fails (lib/push.ts).
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    endpoint: text("endpoint").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("push_subscriptions_user_idx").on(t.userId)],
+).enableRLS();
+
+// What someone wants to hear about, made when they first turn notifications on.
+export const notificationPrefs = pgTable("notification_prefs", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => authUsers.id, { onDelete: "cascade" }),
+  daily: boolean("daily").notNull().default(true), // the morning reminder
+  friends: boolean("friends").notNull().default(true), // reactions to your cards, friend requests
+  updates: boolean("updates").notNull().default(true), // a new version of Kept
+  email: boolean("email").notNull().default(false), // the same by email, once email sending is set up
+  timeZone: text("time_zone"), // the device's, for the morning reminder's wording
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}).enableRLS();
+
+// Small app-wide values, e.g. the last version announced by push ("announced_version").
+export const appState = pgTable("app_state", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}).enableRLS();
+
 // Usage, for the admin dashboard: one row per page opened by a signed-in person (paths with ids
 // folded to :id). Everything else it shows is counted from the other tables.
 export const appEvents = pgTable(

@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { notifyCardReaction } from "@/lib/notify";
 import { z } from "zod";
 import { GUEST_NOT_ALLOWED, requireUser } from "@/lib/auth";
 import { galleryCard, keepCard, setCardVisibility, type Visibility } from "@/lib/social/gallery";
@@ -27,7 +29,11 @@ export async function likeCard(verseId: string, liked: boolean | Reaction): Prom
   if (!id.safeParse(verseId).success || (typeof liked !== "boolean" && !isReaction(liked))) return { error: "That card can't be liked." };
   const found = await galleryCard(user.id, verseId);
   if (!found || found.isOwner) return { error: "That card can't be liked." };
-  await setCardLike(user.id, verseId, liked);
+  const isNew = await setCardLike(user.id, verseId, liked);
+  if (isNew && liked) {
+    const reaction = liked === true ? "heart" : liked;
+    after(() => notifyCardReaction(found.row.userId, user.id, { id: verseId, reference: found.reference }, reaction));
+  }
   return {};
 }
 

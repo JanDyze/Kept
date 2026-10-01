@@ -2,6 +2,13 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.28.0 — Notifications
+
+- Turn on notifications in Settings to get a gentle reminder each morning with today's verse and how many are ready to practise.
+- Hear when a friend reacts to one of your cards, sends you a friend request, or says yes to yours.
+- Hear when Kept gets something new.
+- Choose which of these you want, and send yourself a test. On iPhone, add Kept to your Home Screen first.
+
 ## 0.27.0 — Twenty reactions from Scripture
 
 - Twenty reactions, each drawn for Kept from a picture in the Bible, with the verse it comes from: Love, Amen, Glory, Crown of life, Joy; Peace (the dove), Tears, Shepherd, Hope (the anchor), Promise (the rainbow), Living water; My rock, Faith (the shield), Cut to the heart (the sword), On fire, Light (the lamp); Mustard seed, Abide (the vine), Daily bread, and Wonder (the burning bush).

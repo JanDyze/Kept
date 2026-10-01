@@ -15,14 +15,19 @@ export type Place = { bookNumber: number; chapter: number; verseStart: number };
 export const placeKey = (p: Place) => `${p.bookNumber}:${p.chapter}:${p.verseStart}`;
 
 // Likes a card with a reaction (true is the heart), changes the kind, or takes it back (false).
+// Returns true when it's a new like (not a change of reaction or a take-back), to notify the owner.
 export async function setCardLike(userId: string, verseId: string, liked: boolean | Reaction) {
   const reaction = liked === true ? "heart" : liked;
-  if (reaction)
-    await db
-      .insert(cardLikes)
-      .values({ userId, verseId, reaction })
-      .onConflictDoUpdate({ target: [cardLikes.verseId, cardLikes.userId], set: { reaction } });
-  else await db.delete(cardLikes).where(and(eq(cardLikes.userId, userId), eq(cardLikes.verseId, verseId)));
+  if (!reaction) {
+    await db.delete(cardLikes).where(and(eq(cardLikes.userId, userId), eq(cardLikes.verseId, verseId)));
+    return false;
+  }
+  const [row] = await db
+    .insert(cardLikes)
+    .values({ userId, verseId, reaction })
+    .onConflictDoUpdate({ target: [cardLikes.verseId, cardLikes.userId], set: { reaction } })
+    .returning({ inserted: sql<boolean>`(xmax = 0)` });
+  return Boolean(row?.inserted);
 }
 
 // The three commonest reactions on a card, as SQL over `verse id` (most first).

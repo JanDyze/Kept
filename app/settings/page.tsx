@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import Image from "next/image";
 import { ChartColumn, ChevronRight, Palette, Sparkles } from "lucide-react";
 import { GuestSave } from "@/components/guest-save";
 import { Screen } from "@/components/screen";
 import { SignOutForm } from "@/components/sign-out-form";
+import { NotificationSettings } from "@/components/notification-settings";
 import { TipsSettings } from "@/components/tips-settings";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdmin } from "@/lib/admin";
@@ -13,19 +14,23 @@ import { requireUser } from "@/lib/auth";
 import { APP_VERSION } from "@/lib/changelog";
 import { getTimeZone } from "@/lib/day";
 import { db } from "@/lib/db";
-import { bibleVerses } from "@/lib/db/schema";
+import { bibleVerses, notificationPrefs } from "@/lib/db/schema";
 import { signOut } from "../login/actions";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const [tz, copies] = await Promise.all([
+  const [tz, copies, [prefs]] = await Promise.all([
     getTimeZone(),
     db
       .select({ translation: bibleVerses.translation, count: sql<number>`count(*)::int` })
       .from(bibleVerses)
       .groupBy(bibleVerses.translation),
+    db
+      .select({ daily: notificationPrefs.daily, friends: notificationPrefs.friends, updates: notificationPrefs.updates, email: notificationPrefs.email })
+      .from(notificationPrefs)
+      .where(eq(notificationPrefs.userId, user.id)),
   ]);
 
   const links = [
@@ -59,6 +64,8 @@ export default async function SettingsPage() {
           </Link>
         ))}
       </nav>
+
+      <NotificationSettings prefs={prefs ?? null} />
 
       <TipsSettings />
 

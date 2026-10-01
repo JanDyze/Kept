@@ -29,7 +29,11 @@ export async function relationTo(viewerId: string, otherId: string): Promise<Rel
 }
 
 // Asks someone to be friends. If they had already asked you, this accepts instead.
-export async function requestFriend(userId: string, username: string): Promise<{ error?: string; relation?: Relation }> {
+// `event` says what changed for the other person, so they can be told (lib/notify.ts).
+export async function requestFriend(
+  userId: string,
+  username: string,
+): Promise<{ error?: string; relation?: Relation; event?: { otherId: string; kind: "requested" | "accepted" } }> {
   const other = await getProfileByUsername(username);
   if (!other) return { error: "No one has that username." };
   if (other.userId === userId) return { error: "That's you." };
@@ -39,18 +43,25 @@ export async function requestFriend(userId: string, username: string): Promise<{
   if (row && row.requesterId === userId) return { relation: "asked" };
   if (row) {
     await db.update(friendships).set({ status: "accepted", respondedAt: new Date() }).where(eq(friendships.id, row.id));
-    return { relation: "friends" };
+    return { relation: "friends", event: { otherId: other.userId, kind: "accepted" } };
   }
-  await db.insert(friendships).values({ requesterId: userId, addresseeId: other.userId }).onConflictDoNothing();
-  return { relation: "asked" };
+  const added = await db
+    .insert(friendships)
+    .values({ requesterId: userId, addresseeId: other.userId })
+    .onConflictDoNothing()
+    .returning({ id: friendships.id });
+  return { relation: "asked", event: added.length ? { otherId: other.userId, kind: "requested" } : undefined };
 }
 
 // Accepts a request someone sent you.
+// True when there was a request to accept.
 export async function acceptFriend(userId: string, otherId: string) {
-  await db
+  const rows = await db
     .update(friendships)
     .set({ status: "accepted", respondedAt: new Date() })
-    .where(and(eq(friendships.requesterId, otherId), eq(friendships.addresseeId, userId), eq(friendships.status, "pending")));
+    .where(and(eq(friendships.requesterId, otherId), eq(friendships.addresseeId, userId), eq(friendships.status, "pending")))
+    .returning({ id: friendships.id });
+  return rows.length > 0;
 }
 
 // Declines a request, cancels one you sent, or ends a friendship: either way the pair is removed.

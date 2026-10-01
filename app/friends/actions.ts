@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { notifyFriendAccepted, notifyFriendRequest } from "@/lib/notify";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { GUEST_NOT_ALLOWED, requireUser } from "@/lib/auth";
@@ -19,7 +21,9 @@ function refresh() {
 export async function addFriend(username: string): Promise<{ error?: string; relation?: Relation }> {
   const user = await requireUser();
   if (user.guest) return { error: GUEST_NOT_ALLOWED };
-  const result = await requestFriend(user.id, username);
+  const { event, ...result } = await requestFriend(user.id, username);
+  if (event)
+    after(() => (event.kind === "requested" ? notifyFriendRequest(event.otherId, user.id) : notifyFriendAccepted(event.otherId, user.id)));
   refresh();
   return result;
 }
@@ -27,7 +31,7 @@ export async function addFriend(username: string): Promise<{ error?: string; rel
 export async function acceptFriendRequest(otherId: string) {
   const user = await requireUser();
   if (user.guest || !id.safeParse(otherId).success) return;
-  await acceptFriend(user.id, otherId);
+  if (await acceptFriend(user.id, otherId)) after(() => notifyFriendAccepted(otherId, user.id));
   refresh();
 }
 
