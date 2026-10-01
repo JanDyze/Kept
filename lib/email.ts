@@ -1,9 +1,9 @@
 import "server-only";
 
-// Email through Resend's API (https://resend.com). Needs RESEND_API_KEY, and EMAIL_FROM: an
-// address on a domain verified in Resend, like "Kept <hello@yourdomain.com>". Without a verified
-// domain Resend only delivers to the account owner, from onboarding@resend.dev. Without the key
-// nothing is sent.
+// Email through Resend's API (https://resend.com). Needs RESEND_API_KEY. EMAIL_FROM is the sender:
+// an address on a domain verified in Resend, like "Kept <hello@yourdomain.com>". Until there is
+// one, mail goes from onboarding@resend.dev, which Resend only delivers to the account owner's own
+// address; a Gmail-style EMAIL_FROM is used as the reply-to then. Without the key nothing is sent.
 
 export const emailReady = () => Boolean(process.env.RESEND_API_KEY);
 
@@ -13,6 +13,21 @@ export function publicOrigin() {
   if (pinned) return pinned;
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   return vercel ? `https://${vercel}` : "http://localhost:3000";
+}
+
+// Free mailboxes can't be verified in Resend, so they can't send; they can take replies.
+const FREE_MAIL = /@(gmail|googlemail|yahoo|ymail|outlook|hotmail|live|msn|icloud|me|mac|aol|proton|protonmail)\.[a-z.]+$/i;
+const RESEND_SENDER = "onboarding@resend.dev";
+
+// Reads EMAIL_FROM loosely ("Kept <a@b.com>", "Kept a@b.com" or just "a@b.com"). A free-mail
+// address (Gmail and the like) becomes the reply-to, sending from Resend's own address instead.
+export function senderFrom(value: string | undefined) {
+  const raw = (value ?? "").trim();
+  const address = raw.match(/[^\s<>"]+@[^\s<>"]+\.[^\s<>"]+/)?.[0] ?? null;
+  const name = (address ? raw.replace(address, "") : raw).replace(/[<>"]/g, "").trim() || "Kept";
+  if (!address) return { from: `${name} <${RESEND_SENDER}>`, replyTo: undefined };
+  if (FREE_MAIL.test(address)) return { from: `${name} <${RESEND_SENDER}>`, replyTo: address };
+  return { from: `${name} <${address}>`, replyTo: undefined };
 }
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -39,12 +54,12 @@ function render(message: { title: string; body: string; url?: string }) {
 export async function sendEmails(to: string[], message: { title: string; body: string; url?: string }) {
   const key = process.env.RESEND_API_KEY;
   if (!key || to.length === 0) return 0;
-  const from = process.env.EMAIL_FROM || "Kept <onboarding@resend.dev>";
+  const { from, replyTo } = senderFrom(process.env.EMAIL_FROM);
   const { html, text } = render(message);
   let sent = 0;
   // Resend's batch endpoint takes up to 100 messages a call.
   for (let i = 0; i < to.length; i += 100) {
-    const batch = to.slice(i, i + 100).map((address) => ({ from, to: [address], subject: message.title, html, text }));
+    const batch = to.slice(i, i + 100).map((address) => ({ from, to: [address], subject: message.title, html, text, ...(replyTo ? { reply_to: replyTo } : {}) }));
     try {
       const res = await fetch("https://api.resend.com/emails/batch", {
         method: "POST",
