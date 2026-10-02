@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.30.1 — Reactions in Kept's own style
+
+- Reactions are redrawn to match the logo: bold rounded ribbons in Kept's ink and gold, woven where they cross, and a Kept reaction that's the logo itself. Their movements come from the logo too: a gentle squeeze, a slow orbit, a sway.
+
 ## 0.30.0 — Cuter reactions
 
 - Fifteen reactions that move: a beating heart, praying hands, a giggling face, a wow face, a tear, heart eyes, a flickering flame, sparkles, a sunny smile, a little star, a spinning flower, a rainbow, a fluttering dove, a hopping lamb and a swaying sprout.

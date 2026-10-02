@@ -5,6 +5,8 @@
 // reactions already given still show, but only OFFERED ones are in the picker.
 export const REACTIONS = {
   heart: { label: "Love" },
+  kept: { label: "Kept" },
+  hug: { label: "Together" },
   amen: { label: "Amen" },
   praise: { label: "Sparkle" },
   fire: { label: "Fire" },
@@ -12,14 +14,14 @@ export const REACTIONS = {
   sun: { label: "Joy" },
   laugh: { label: "Haha" },
   wow: { label: "Wow" },
-  aww: { label: "Aww" },
   star: { label: "Star" },
   flower: { label: "Bloom" },
   rainbow: { label: "Rainbow" },
   dove: { label: "Peace" },
-  lamb: { label: "Lamb" },
   seed: { label: "Growing" },
-  // Retired from the picker (0.27); still drawn for reactions already given.
+  // Retired from the picker; still drawn for reactions already given.
+  aww: { label: "Aww" },
+  lamb: { label: "Lamb" },
   crown: { label: "Crown" },
   anchor: { label: "Hope" },
   water: { label: "Water" },
@@ -37,10 +39,10 @@ export const isReaction = (r: unknown): r is Reaction => typeof r === "string" &
 
 // What the picker offers, in order.
 export const REACTION_KEYS: Reaction[] = [
-  "heart", "amen", "laugh", "wow", "moved",
-  "aww", "fire", "praise", "sun", "star",
-  "flower", "rainbow", "dove", "lamb", "seed",
+  "heart", "amen", "kept", "laugh", "wow",
+  "moved", "fire", "praise", "sun", "star",
+  "hug", "flower", "rainbow", "dove", "seed",
 ];
 
 // The quick bar's six when nothing's been used yet; recent picks take the front (hold-react.tsx).
-export const QUICK_DEFAULT: Reaction[] = ["heart", "amen", "laugh", "wow", "moved", "fire"];
+export const QUICK_DEFAULT: Reaction[] = ["heart", "amen", "kept", "laugh", "moved", "fire"];

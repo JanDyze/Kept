@@ -392,6 +392,13 @@
 @keyframes rx-hop { 0%, 55%, 100% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(-3px) scale(0.97, 1.04); } 45% { transform: translateY(0) scale(1.05, 0.95); } }
 .rx-sway { animation: rx-sway 2s ease-in-out infinite; transform-origin: 50% 100%; }
 @keyframes rx-sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+/* From the logo's own motion: a squeeze-and-release like its "hold", and a slow rock like its rings. */
+.rx-hold { animation: rx-hold 1.6s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+@keyframes rx-hold { 0%, 55%, 100% { transform: scale(1); } 25% { transform: scale(0.88); } 40% { transform: scale(1.08); } }
+.rx-press { animation: rx-press 1.8s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes rx-press { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.86) scaleY(1.04); } }
+.rx-orbit { animation: rx-orbit 3.2s cubic-bezier(0.5, 0, 0.3, 1) infinite; }
+@keyframes rx-orbit { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(14deg); } }
 @media (prefers-reduced-motion: reduce) { .rx { animation: none !important; } }
 /* A reaction landing on a verse's corner (components/hold-react.tsx): a ring bursts out and fades. */
 .animate-burst { animation: burst 600ms ease-out both; }
