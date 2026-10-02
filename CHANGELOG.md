@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.30.2 — Little moments
+
+- Reactions rest, and every few seconds each has a little moment of its own: the sprout sprouts, the gold heart fills, the rainbow draws itself, the page pops into the Kept rings, the dove's wing beats.
+- Fixed: reopening Kept could leave the page a little wider than the screen, so it needed zooming out.
+
 ## 0.30.1 — Reactions in Kept's own style
 
 - Reactions are redrawn to match the logo: bold rounded ribbons in Kept's ink and gold, woven where they cross, and a Kept reaction that's the logo itself. Their movements come from the logo too: a gentle squeeze, a slow orbit, a sway.

@@ -55,6 +55,7 @@ export function HoldReact({
   const [open, setOpen] = useState<DOMRect | null>(null);
   const [hover, setHover] = useState<Hover>(null);
   const [all, setAll] = useState(false); // the full picker, from ＋
+  const [burst, setBurst] = useState<Reaction | null>(null); // the one just picked, for its landing
 
   const close = () => {
     setOpen(null);
@@ -70,6 +71,7 @@ export function HoldReact({
     if (Date.now() - lastPick.current < 500) return;
     lastPick.current = Date.now();
     if (r !== reaction) remember(r);
+    setBurst(r === reaction ? null : r);
     onReact(r === reaction ? null : r);
     close();
   };
@@ -162,8 +164,8 @@ export function HoldReact({
           className="animate-pop pointer-events-none absolute -top-2.5 -right-1.5 z-10 flex size-8 items-center justify-center rounded-full bg-background shadow-[0_2px_8px_rgb(0_0_0/0.18)] ring-1 ring-border"
           aria-label={`You reacted ${REACTIONS[reaction].label}`}
         >
-          {/* A ring bursts out as it lands. */}
-          <span className="animate-burst absolute inset-0 rounded-full ring-2 ring-icon-accent" aria-hidden />
+          {/* A ring bursts out as it lands: only when just picked, not every time the page opens. */}
+          {burst === reaction && <span className="animate-burst pointer-events-none absolute inset-0 rounded-full ring-2 ring-icon-accent" aria-hidden />}
           <ReactionIcon reaction={reaction} animate className="size-5" />
         </span>
       )}
