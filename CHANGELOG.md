@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.31.1 — One thing at a time
+
+- Tips, the offer to turn on notifications and What's new no longer all arrive at once: at most one pops up a day. Tips for each page come on later days, and the notification offer waits until your second day.
+- Tips you ask for again in Settings still show right away.
+
 ## 0.31.0 — Your time
 
 - The daily reminder comes at 7 am, or whenever you choose in Settings → Notifications, in your own time zone.

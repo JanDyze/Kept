@@ -79,6 +79,24 @@ export const TOURS: Record<TourId, TourInfo> = {
 };
 
 const KEY = "kept:tours-seen";
+const ASKED_KEY = "kept:tours-asked"; // asked for again in Settings: shown without waiting its turn
+
+export function askForTour(id: TourId, asked: boolean) {
+  try {
+    const all = new Set(JSON.parse(localStorage.getItem(ASKED_KEY) ?? "[]") as string[]);
+    if (asked) all.add(id);
+    else all.delete(id);
+    localStorage.setItem(ASKED_KEY, JSON.stringify([...all]));
+  } catch {}
+}
+
+export function tourAskedFor(id: TourId) {
+  try {
+    return (JSON.parse(localStorage.getItem(ASKED_KEY) ?? "[]") as string[]).includes(id);
+  } catch {
+    return false;
+  }
+}
 
 export function seenTours(): Set<string> {
   try {

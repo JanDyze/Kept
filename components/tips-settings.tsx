@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Lightbulb } from "lucide-react";
-import { markTour, TOURS, type TourId } from "@/lib/tours";
+import { askForTour, markTour, TOURS, type TourId } from "@/lib/tours";
 
 // Settings → Tips: show any of the guided tours (lib/tours.ts) again. One with a page of its own
 // opens it and starts; one on a detail page (a verse, a card) waits for the next one opened.
@@ -14,6 +14,7 @@ export function TipsSettings() {
 
   const show = (id: TourId) => {
     markTour(id, false);
+    askForTour(id, true);
     const href = TOURS[id].href;
     if (href) router.push(`${href}?tour=${id}`, { transitionTypes: ["nav-forward"] });
     else setQueued((q) => new Set(q).add(id));
@@ -28,7 +29,10 @@ export function TipsSettings() {
         <button
           type="button"
           onClick={() => {
-            tours.forEach((t) => markTour(t.id, false));
+            tours.forEach((t) => {
+              markTour(t.id, false);
+              askForTour(t.id, true);
+            });
             setQueued(new Set(tours.map((t) => t.id)));
           }}
           className="rounded-lg px-2 py-1 text-sm font-medium text-primary hover:bg-muted"

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { markTour, seenTours, TOURS, type TourId, type TourStep } from "@/lib/tours";
+import { claimToday } from "@/lib/attention";
+import { askForTour, markTour, seenTours, tourAskedFor, TOURS, type TourId, type TourStep } from "@/lib/tours";
 import { cn } from "@/lib/utils";
 
 // Put <Tour id="…" /> on a page to walk a first-time visitor through its non-obvious parts
@@ -21,7 +22,9 @@ export function Tour({ id }: { id: TourId }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
-    const forced = new URLSearchParams(location.search).get("tour") === id;
+    // Asked for (Settings → Tips): shown now. Otherwise it waits for the day's one pop-up
+    // (lib/attention.ts), so a new person meets the tips one day at a time.
+    const forced = new URLSearchParams(location.search).get("tour") === id || tourAskedFor(id);
     if (!forced && seenTours().has(id)) return;
     let timer = 0;
     const begin = () => {
@@ -31,7 +34,8 @@ export function Tour({ id }: { id: TourId }) {
         return;
       }
       const shown = TOURS[id].steps.filter((s) => find(s));
-      if (shown.length) setSteps(shown);
+      if (!shown.length || (!forced && !claimToday())) return;
+      setSteps(shown);
     };
     timer = window.setTimeout(begin, START_DELAY);
     return () => clearTimeout(timer);
@@ -68,6 +72,7 @@ export function Tour({ id }: { id: TourId }) {
 
   const end = useCallback(() => {
     markTour(id, true);
+    askForTour(id, false);
     setSteps(null);
     // Drop ?tour= so a reload doesn't start it again.
     const url = new URL(location.href);

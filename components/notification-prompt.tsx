@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { BellRing, Loader2 } from "lucide-react";
 import { Sheet } from "@/components/sheet";
 import { deviceState, turnOnPush } from "@/lib/push-client";
+import { claimToday, pastFirstDay } from "@/lib/attention";
 import { seenTours } from "@/lib/tours";
 
-// The first time someone opens Kept on a device that can take notifications, a sheet offers them
+// From someone's second day, on a day nothing else has popped up, a sheet offers notifications
 // (the browser's own permission prompt only comes on the tap). "Not now" asks again in two weeks;
 // Settings → Notifications is always there.
 const KEY = "kept:push-asked";
@@ -44,6 +45,8 @@ export function NotificationPrompt() {
           timer = window.setTimeout(tryOpen, 1500);
           return;
         }
+        // Not on someone's first day, and only if nothing else has popped up today.
+        if (!pastFirstDay() || !claimToday()) return;
         setOpen(true);
       };
       timer = window.setTimeout(tryOpen, 2500);

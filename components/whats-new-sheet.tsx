@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { dismissWhatsNew } from "@/app/whats-new/actions";
+import { spendToday } from "@/lib/attention";
 
 // After an update, once: a sheet with what changed since the last version they saw. Closing it,
 // or opening all the notes, marks this version seen.
 export function WhatsNewSheet({ version, title, children }: { version: string; title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
+  // It counts as the day's pop-up: tips and the notification offer wait for another day.
+  useEffect(() => spendToday(), []);
   const close = () => {
     setOpen(false);
     void dismissWhatsNew();
