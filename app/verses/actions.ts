@@ -9,6 +9,7 @@ import { GUEST_VERSE_LIMIT, requireUser, type SessionUser } from "@/lib/auth";
 import { formatReference, parseReference } from "@/lib/bible/books";
 import { getPassage } from "@/lib/bible/lookup";
 import { isLookupTranslation } from "@/lib/bible/translations";
+import { searchVerses } from "@/lib/search";
 import { db } from "@/lib/db";
 import { verses } from "@/lib/db/schema";
 import type { VerseField } from "@/lib/verses/input";
@@ -102,6 +103,20 @@ export async function setArchived(id: string, archived: boolean) {
 }
 
 // Stars a verse (kept at the top of My verses) or takes the star off.
+// Add verse, typed a topic or words instead of a reference: verses to pick from, the same search
+// as Discover's (topics, then verses containing the words).
+export async function findVerses(query: string, translation: string): Promise<{ reference: string; text: string; saved: boolean }[]> {
+  const user = await requireUser();
+  const q = String(query ?? "").slice(0, 100);
+  if (q.trim().length < 2) return [];
+  const result = await searchVerses(q, isLookupTranslation(translation) ? translation : "ESV", user.id);
+  const seen = new Set<string>();
+  return [...result.hits, ...result.textHits]
+    .filter((h) => h.text && !seen.has(h.reference) && seen.add(h.reference))
+    .slice(0, 8)
+    .map((h) => ({ reference: h.reference, text: h.text, saved: h.saved }));
+}
+
 // Your own reaction to one of your verses (held on Home or in My verses), or none.
 export async function setVerseReaction(id: string, reaction: Reaction | null): Promise<{ error?: string }> {
   const user = await requireUser();

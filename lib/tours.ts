@@ -20,7 +20,7 @@ export const TOURS: Record<TourId, TourInfo> = {
     where: "Home",
     href: "/",
     steps: [
-      { target: "home-add", title: "Add a verse", body: "Type a reference like “John 3:16”, and Kept fills in the words. Every verse you add turns into daily games." },
+      { target: "home-add", title: "Add a verse", body: "Type a reference like “John 3:16”, or a topic like “peace”, and pick the verse. Every verse you add turns into daily games." },
       { target: "home-sections", title: "Four places", body: "Games are made from your verses. My verses is everything you've kept. Read the Bible, or Discover what others keep. Hold the Bible card to slide straight to a book, chapter and verse." },
       { target: "home-you", title: "You", body: "Your streak and today's games. Tap for your profile, friends and settings." },
     ],

@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { Ban, Check, ChevronDown, Loader2, Plus } from "lucide-react";
-import { lookupPassage, saveVerse, type VerseFormState } from "@/app/verses/actions";
+import { Ban, BookmarkCheck, Check, ChevronDown, Loader2, Plus, Search } from "lucide-react";
+import { findVerses, lookupPassage, saveVerse, type VerseFormState } from "@/app/verses/actions";
+import { DEFAULT_TAGS } from "@/lib/verses/default-tags";
 import { TagChip } from "@/components/tag-chip";
 import { tagLabel } from "@/lib/verses/tag-label";
 import { MemoryCard } from "@/components/memory-card";
@@ -79,6 +80,28 @@ export function VerseForm({
   const previewKey = canonical && locked ? `${canonical}|${translation}` : null;
   const shown = previewKey && preview.state !== "idle" && preview.key === previewKey ? preview : null;
 
+  // Typed a topic, a feeling or words instead of a reference (no digits, not a reference): verses
+  // to pick from, as in Discover.
+  const topicQuery = reference.trim().length >= 3 && !/\d/.test(reference) && !parsed?.ok ? reference.trim() : null;
+  const [found, setFound] = useState<{ query: string; items: { reference: string; text: string; saved: boolean }[] } | null>(null);
+  const findRequest = useRef(0);
+  useEffect(() => {
+    if (!topicQuery) return;
+    const id = ++findRequest.current;
+    const timer = setTimeout(async () => {
+      const items = await findVerses(topicQuery, isLookupTranslation(translation) ? translation : "ESV").catch(() => []);
+      if (id === findRequest.current) setFound({ query: topicQuery, items });
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topicQuery]);
+  const results = topicQuery && found?.query === topicQuery ? found.items : null;
+  const pick = (ref: string) => {
+    setReference(ref);
+    setRefTouched(false);
+    setFound(null);
+  };
+
   const request = useRef(0);
   useEffect(() => {
     if (!previewKey || !canonical || !isLookupTranslation(translation)) return;
@@ -103,9 +126,10 @@ export function VerseForm({
     setTags(next);
     setDraftTag("");
   };
-  const suggestions = allTags.filter((t) => !tags.includes(t)).slice(0, 12);
+  // Your own tags first, then the usual ones.
+  const suggestions = [...new Set([...allTags, ...DEFAULT_TAGS])].filter((t) => !tags.includes(t)).slice(0, 16);
   const errors = state.errors ?? {};
-  const refError = errors.reference ?? (refTouched && parsed && !parsed.ok ? parsed.error : undefined);
+  const refError = errors.reference ?? (refTouched && parsed && !parsed.ok && !topicQuery ? parsed.error : undefined);
   const ready = Boolean(canonical) && (locked ? shown?.state === "filled" : Boolean(translation && text.trim()));
   const extrasCount = tags.length + (notes.trim() ? 1 : 0);
 
@@ -118,7 +142,7 @@ export function VerseForm({
 
       <div className="flex flex-col gap-2">
         <label htmlFor="reference" className={label}>
-          Reference
+          Reference, topic or words
         </label>
         <div className="relative">
           <Input
@@ -127,7 +151,7 @@ export function VerseForm({
             value={reference}
             onChange={(e) => setReference(e.target.value)}
             onBlur={() => setRefTouched(true)}
-            placeholder="John 3:16"
+            placeholder="John 3:16, or peace"
             autoComplete="off"
             autoCapitalize="words"
             enterKeyHint="done"
@@ -139,6 +163,48 @@ export function VerseForm({
             <Check className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-primary" aria-hidden />
           )}
         </div>
+        {!reference.trim() && (
+          <p className="text-sm text-muted-foreground">
+            Type a reference, or a topic, a feeling or words you remember (like <em>anxiety</em> or <em>new job</em>) to find one.
+          </p>
+        )}
+        {topicQuery && (
+          <div aria-live="polite" className="animate-rise mt-1">
+            {!results ? (
+              <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" aria-hidden /> Finding verses about “{topicQuery}”…
+              </p>
+            ) : results.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No verses found for “{topicQuery}”. Try a simpler word, or a reference like John 3:16.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2" aria-label={`Verses about ${topicQuery}`}>
+                {results.map((v) => (
+                  <li key={v.reference}>
+                    <button
+                      type="button"
+                      disabled={v.saved}
+                      onClick={() => pick(v.reference)}
+                      className="flex w-full flex-col gap-1 rounded-2xl border bg-card p-3.5 text-left transition-colors hover:bg-muted/50 disabled:opacity-60"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold">
+                        <Search className="size-3.5 text-muted-foreground" aria-hidden />
+                        <span className="flex-1">{v.reference}</span>
+                        {v.saved && (
+                          <span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                            <BookmarkCheck className="size-3.5" aria-hidden /> Kept
+                          </span>
+                        )}
+                      </span>
+                      <span className="line-clamp-2 font-serif text-[0.95rem] leading-relaxed text-foreground/85">{v.text}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         {refError ? (
           <p id="reference-status" className="text-sm text-destructive">
             {refError}

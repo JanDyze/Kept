@@ -2,6 +2,11 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.32.0 — Add by topic
+
+- In Add verse, type a topic, a feeling or words you remember (like "anxiety" or "new job") instead of a reference, and pick from the verses found, as in Discover.
+- Tags come with suggestions to start from: faith, hope, love, peace, strength, comfort and more, after the tags you already use.
+
 ## 0.31.1 — One thing at a time
 
 - Tips, the offer to turn on notifications and What's new no longer all arrive at once: at most one pops up a day. Tips for each page come on later days, and the notification offer waits until your second day.
