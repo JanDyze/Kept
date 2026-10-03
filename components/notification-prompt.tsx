@@ -78,8 +78,8 @@ export function NotificationPrompt() {
             <BellRing className="size-5 text-icon-ink" aria-hidden />
           </span>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            At 8 each morning: today&apos;s verse and how many are ready to practise. You&apos;ll also hear when a friend reacts to your card.
-            Change it any time in Settings.
+            At 7 each morning: today&apos;s verse and how many are ready to practise. You&apos;ll also hear when a friend reacts to your card.
+            Change the time, or turn it off, in Settings.
           </p>
         </div>
         {error && (

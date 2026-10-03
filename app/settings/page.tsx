@@ -29,7 +29,13 @@ export default async function SettingsPage() {
       .from(bibleVerses)
       .groupBy(bibleVerses.translation),
     db
-      .select({ daily: notificationPrefs.daily, friends: notificationPrefs.friends, updates: notificationPrefs.updates, email: notificationPrefs.email })
+      .select({
+        daily: notificationPrefs.daily,
+        friends: notificationPrefs.friends,
+        updates: notificationPrefs.updates,
+        email: notificationPrefs.email,
+        dailyHour: notificationPrefs.dailyHour,
+      })
       .from(notificationPrefs)
       .where(eq(notificationPrefs.userId, user.id)),
   ]);

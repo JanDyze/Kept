@@ -1,0 +1,28 @@
+# Calls Kept's reminder run every hour, so each person's daily reminder comes at the time they
+# chose (Vercel's free plan can only schedule it once a day). Needs, in this repo's
+# Settings -> Secrets and variables -> Actions:
+#   secret   CRON_SECRET  the same value as in Vercel
+#   variable KEPT_URL     e.g. https://kept-mv.vercel.app
+# Without them it does nothing.
+name: Reminders
+
+on:
+  schedule:
+    - cron: "2 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call the reminder run
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          KEPT_URL: ${{ vars.KEPT_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$KEPT_URL" ]; then
+            echo "CRON_SECRET or KEPT_URL isn't set; nothing to do."
+            exit 0
+          fi
+          curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$KEPT_URL/api/cron/daily"

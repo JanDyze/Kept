@@ -55,6 +55,22 @@ export async function setNotificationPref(kind: string, on: boolean): Promise<{ 
   return {};
 }
 
+// What time the daily reminder comes (0–23, in this device's time zone).
+export async function setDailyHour(hour: number, timeZone: string | null): Promise<{ error?: string }> {
+  const user = await requireUser();
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) return { error: "That time can't be saved." };
+  const tz = timeZone && timeZone.length < 64 ? timeZone : null;
+  await db
+    .insert(notificationPrefs)
+    .values({ userId: user.id, dailyHour: hour, timeZone: tz })
+    .onConflictDoUpdate({
+      target: notificationPrefs.userId,
+      set: { dailyHour: hour, ...(tz ? { timeZone: tz } : {}), updatedAt: new Date() },
+    });
+  revalidatePath("/settings");
+  return {};
+}
+
 // A test, to see that it works: to this person's devices and their email, whatever the switches,
 // saying plainly what was sent and what's missing or went wrong.
 export async function sendTestPush(): Promise<{ sent: number; lines: string[] }> {

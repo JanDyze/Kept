@@ -148,6 +148,13 @@
       "when": 1790877985927,
       "tag": "0020_email_on_by_default",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791070401980,
+      "tag": "0021_daily_hour",
+      "breakpoints": true
     }
   ]
 }

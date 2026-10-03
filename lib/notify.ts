@@ -3,6 +3,8 @@ import { and, eq, exists, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
 import { APP_VERSION, compareVersions, getReleases } from "@/lib/changelog";
 import { db } from "@/lib/db";
+import { DEFAULT_DAILY_HOUR, reminderDue } from "@/lib/daily-time";
+import { FALLBACK_TZ, isTimeZone } from "@/lib/day";
 import { appState, notificationPrefs, pushSubscriptions, verses } from "@/lib/db/schema";
 import { deliver } from "@/lib/push";
 import { isReaction, REACTIONS } from "@/lib/reactions";
@@ -44,12 +46,13 @@ export async function notifyFriendAccepted(toId: string, byId: string) {
   });
 }
 
-// The morning reminder (the daily cron): today's verse and how many are ready to practise.
+// The daily reminder (the hourly cron): today's verse and how many are ready to practise, at
+// each person's own hour.
 export async function sendDailyReminders() {
   // Everyone who wants it (no settings row means yes) and has a way to get it: a device, or an
   // email address with email on.
   const people = await db
-    .select({ userId: authUsers.id })
+    .select({ userId: authUsers.id, timeZone: notificationPrefs.timeZone, hour: notificationPrefs.dailyHour, lastOn: notificationPrefs.lastDailyOn })
     .from(authUsers)
     .leftJoin(notificationPrefs, eq(notificationPrefs.userId, authUsers.id))
     .where(
@@ -62,7 +65,20 @@ export async function sendDailyReminders() {
       ),
     );
   let sent = 0;
-  for (const { userId } of people) {
+  const now = new Date();
+  for (const person of people) {
+    // At their chosen hour (7 am unless changed), in their time zone, once a day.
+    const timeZone = person.timeZone && isTimeZone(person.timeZone) ? person.timeZone : FALLBACK_TZ;
+    const hour = person.hour ?? DEFAULT_DAILY_HOUR;
+    const { due, date } = reminderDue({ timeZone, hour, lastOn: person.lastOn }, now);
+    if (!due) continue;
+    const userId = person.userId;
+    // Marked first, so a slow or failing send isn't retried every hour.
+    await db
+      .insert(notificationPrefs)
+      .values({ userId, lastDailyOn: date })
+      .onConflictDoUpdate({ target: notificationPrefs.userId, set: { lastDailyOn: date } });
+    const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
     const [counts] = await db
       .select({
         total: sql<number>`count(*)::int`,
@@ -77,9 +93,9 @@ export async function sendDailyReminders() {
       .orderBy(verses.dueAt, sql`${verses.createdAt} desc`)
       .limit(1);
     const message = !counts?.total
-      ? { title: "Good morning", body: "Keep one verse today, and Kept turns it into games to help you remember it.", url: "/verses/new" }
+      ? { title: greeting, body: "Keep one verse today, and Kept turns it into games to help you remember it.", url: "/verses/new" }
       : {
-          title: `Good morning · ${first.reference}`,
+          title: `${greeting} · ${first.reference}`,
           body:
             counts.due > 0
               ? `${counts.due} ${counts.due === 1 ? "verse is" : "verses are"} ready to practise, and today's games are waiting.`

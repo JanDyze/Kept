@@ -349,7 +349,9 @@ export const notificationPrefs = pgTable("notification_prefs", {
   updates: boolean("updates").notNull().default(true), // a new version of Kept
   // The same by email. On unless turned off: someone with no row here gets email with every kind on.
   email: boolean("email").notNull().default(true),
-  timeZone: text("time_zone"), // the device's, for the morning reminder's wording
+  timeZone: text("time_zone"), // the device's: the morning reminder comes at dailyHour there
+  dailyHour: integer("daily_hour").notNull().default(7), // 0–23, local time
+  lastDailyOn: text("last_daily_on"), // YYYY-MM-DD (local) of the last reminder sent: once a day
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }).enableRLS();
 

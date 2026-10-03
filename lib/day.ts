@@ -4,9 +4,9 @@ import { cookies } from "next/headers";
 // The browser stores its time zone in this cookie (components/timezone-sync.tsx), so "today"
 // follows the phone's clock rather than the server's.
 export const TZ_COOKIE = "kept-tz";
-const FALLBACK_TZ = "Asia/Manila";
+export const FALLBACK_TZ = "Asia/Manila";
 
-function isTimeZone(tz: string) {
+export function isTimeZone(tz: string) {
   try {
     new Intl.DateTimeFormat("en", { timeZone: tz });
     return true;

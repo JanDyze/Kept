@@ -1,0 +1,2 @@
+ALTER TABLE "notification_prefs" ADD COLUMN IF NOT EXISTS "daily_hour" integer DEFAULT 7 NOT NULL;--> statement-breakpoint
+ALTER TABLE "notification_prefs" ADD COLUMN IF NOT EXISTS "last_daily_on" text;

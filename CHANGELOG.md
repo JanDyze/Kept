@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.31.0 — Your time
+
+- The daily reminder comes at 7 am, or whenever you choose in Settings → Notifications, in your own time zone.
+
 ## 0.30.2 — Little moments
 
 - Reactions rest, and every few seconds each has a little moment of its own: the sprout sprouts, the gold heart fills, the rainbow draws itself, the page pops into the Kept rings, the dove's wing beats.

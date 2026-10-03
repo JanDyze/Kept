@@ -2,8 +2,11 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { announceUpdate, sendDailyReminders } from "@/lib/notify";
 
-// Daily Vercel cron (vercel.json, 00:00 UTC = 8:00 in the Philippines): the morning reminder, a
-// new version's announcement (once), and a query that keeps the free Supabase project awake.
+// The reminder run: daily reminders for everyone whose own hour it is (lib/daily-time.ts), a new
+// version's announcement (once), and a query that keeps the free Supabase project awake. Safe to
+// call as often as you like. GitHub Actions calls it every hour (.github/workflows/reminders.yml)
+// so people's chosen times work; Vercel's free cron calls it once a day (vercel.json, 23:00 UTC =
+// 7:00 in the Philippines) as a fallback for the default time.
 export const maxDuration = 60;
 
 export async function GET(request: Request) {

@@ -2,16 +2,17 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Bell, BellOff, Loader2, Mail } from "lucide-react";
-import { sendTestPush, setNotificationPref } from "@/app/settings/notify-actions";
+import { sendTestPush, setDailyHour, setNotificationPref } from "@/app/settings/notify-actions";
+import { DEFAULT_DAILY_HOUR, hourLabel } from "@/lib/daily-time";
 import { deviceState, PUSH_KEY, turnOffPush, turnOnPush, type DeviceState } from "@/lib/push-client";
 import { cn } from "@/lib/utils";
 
-export type NotificationPrefs = { daily: boolean; friends: boolean; updates: boolean; email: boolean };
+export type NotificationPrefs = { daily: boolean; friends: boolean; updates: boolean; email: boolean; dailyHour: number };
 
 const KEY = PUSH_KEY;
 
-const KINDS: { kind: Exclude<keyof NotificationPrefs, "email">; label: string; detail: string }[] = [
-  { kind: "daily", label: "Morning reminder", detail: "Today's verse and games, at 8 each morning" },
+const KINDS: { kind: Exclude<keyof NotificationPrefs, "email" | "dailyHour">; label: string; detail: string }[] = [
+  { kind: "daily", label: "Daily reminder", detail: "Today's verse and games" },
   { kind: "friends", label: "Friends", detail: "Reactions to your cards, and friend requests" },
   { kind: "updates", label: "What's new", detail: "When Kept gets something new" },
 ];
@@ -41,7 +42,7 @@ export function NotificationSettings({
   email: { ready: boolean; address: string | null }; // address null: a guest, no email to send to
 }) {
   const [state, setState] = useState<DeviceState>("checking");
-  const [prefs, setPrefs] = useState<NotificationPrefs>(initial ?? { daily: true, friends: true, updates: true, email: true });
+  const [prefs, setPrefs] = useState<NotificationPrefs>(initial ?? { daily: true, friends: true, updates: true, email: true, dailyHour: DEFAULT_DAILY_HOUR });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
@@ -70,7 +71,16 @@ export function NotificationSettings({
     }
   }
 
-  function toggle(kind: keyof NotificationPrefs) {
+  function setHour(hour: number) {
+    const was = prefs;
+    setPrefs({ ...prefs, dailyHour: hour });
+    startTransition(async () => {
+      const r = await setDailyHour(hour, Intl.DateTimeFormat().resolvedOptions().timeZone).catch(() => ({ error: "offline" }));
+      if (r.error) setPrefs(was);
+    });
+  }
+
+  function toggle(kind: Exclude<keyof NotificationPrefs, "dailyHour">) {
     const was = prefs;
     const next = { ...prefs, [kind]: !prefs[kind] };
     setPrefs(next);
@@ -136,7 +146,27 @@ export function NotificationSettings({
               <li key={kind} className="flex items-center gap-3 px-4 py-3">
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{label}</span>
-                  <span className="block text-xs text-muted-foreground">{detail}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {detail}
+                    {kind === "daily" && (
+                      <>
+                        , at{" "}
+                        {/* The hour, in this phone's time zone. */}
+                        <select
+                          value={prefs.dailyHour}
+                          onChange={(e) => setHour(Number(e.target.value))}
+                          aria-label="Time of the daily reminder"
+                          className="rounded-md bg-muted px-1 py-0.5 text-base font-medium text-foreground md:text-xs"
+                        >
+                          {Array.from({ length: 24 }, (_, h) => (
+                            <option key={h} value={h}>
+                              {hourLabel(h)}
+                            </option>
+                          ))}
+                        </select>
+                      </>
+                    )}
+                  </span>
                 </span>
                 <Switch on={prefs[kind]} label={label} onToggle={() => toggle(kind)} />
               </li>
