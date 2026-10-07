@@ -2,6 +2,10 @@
 
 All notable changes to Kept, one version per feature.
 
+## 0.32.1 — Tap to guess
+
+- In Reference, choose the chapter and verse from a grid, like in the Bible, instead of typing them. Picking a book opens its chapters, and a chapter opens its verses.
+
 ## 0.32.0 — Add by topic
 
 - In Add verse, type a topic, a feeling or words you remember (like "anxiety" or "new job") instead of a reference, and pick from the verses found, as in Discover.

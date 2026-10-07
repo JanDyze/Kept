@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { BOOKS } from "@/lib/bible/books";
 import {
   isValidGuess,
@@ -18,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { gameScore } from "@/lib/games/summary";
 import { BookPicker } from "./book-picker";
+import { NumberPicker } from "./number-picker";
 import { ActionBar, countText, GameError, GameResult, useResultShown, VerseCard } from "./game-parts";
 import { useGame, type GameStatus } from "./use-game";
 
@@ -38,6 +38,8 @@ export function ReferenceWordleGame({
   const [book, setBook] = useState("");
   const [chapter, setChapter] = useState("");
   const [verse, setVerse] = useState("");
+  // Picking runs on by itself: a book opens its chapters, a chapter opens its verses.
+  const [picking, setPicking] = useState<"chapter" | "verse" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
   const { guesses } = game.state;
@@ -122,29 +124,45 @@ export function ReferenceWordleGame({
         onGiveUp={() => void game.finish({ guesses, gaveUp: true })}
       >
         <form key={shake} onSubmit={submit} className={cn("flex flex-col gap-2", shake > 0 && message && "animate-shake")}>
-          <BookPicker value={book ? Number(book) : null} disabled={!game.playing} onChange={(n) => setBook(String(n))} />
+          <BookPicker
+            value={book ? Number(book) : null}
+            disabled={!game.playing}
+            onChange={(n) => {
+              if (String(n) !== book) {
+                setChapter("");
+                setVerse("");
+              }
+              setBook(String(n));
+              setPicking("chapter");
+            }}
+          />
           <div className="flex gap-2">
-            <Input
-              id="chapter"
-              aria-label="Chapter"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={chapter}
+            <NumberPicker
+              label="Ch."
+              title={selected ? `${selected.name} · chapter` : "Chapter"}
+              count={chapters}
+              value={chapter ? Number(chapter) : null}
               disabled={!game.playing}
-              onChange={(e) => setChapter(e.target.value.replace(/\D/g, ""))}
-              placeholder={chapters ? `Ch. 1–${chapters}` : "Chapter"}
-              className="h-11 min-w-0 flex-1 rounded-xl bg-card text-base"
+              open={picking === "chapter"}
+              onOpenChange={(o) => setPicking(o ? "chapter" : null)}
+              onChange={(n) => {
+                if (String(n) !== chapter) setVerse("");
+                setChapter(String(n));
+                setPicking("verse");
+              }}
             />
-            <Input
-              id="verse"
-              aria-label="Verse"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={verse}
+            <NumberPicker
+              label="V."
+              title={selected && chapter ? `${selected.name} ${chapter} · verse` : "Verse"}
+              count={versesInChapter}
+              value={verse ? Number(verse) : null}
               disabled={!game.playing}
-              onChange={(e) => setVerse(e.target.value.replace(/\D/g, ""))}
-              placeholder={versesInChapter ? `V. 1–${versesInChapter}` : "Verse"}
-              className="h-11 min-w-0 flex-1 rounded-xl bg-card text-base"
+              open={picking === "verse"}
+              onOpenChange={(o) => setPicking(o ? "verse" : null)}
+              onChange={(n) => {
+                setVerse(String(n));
+                setPicking(null);
+              }}
             />
             <Button type="submit" disabled={!game.playing} className="h-11 rounded-xl px-5 text-base">
               Guess
